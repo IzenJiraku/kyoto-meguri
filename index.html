@@ -416,6 +416,27 @@ body.menu-open #searchBtn { visibility: hidden; }
 .marks button[aria-pressed="true"] i { background: currentColor; }
 .marks button:focus-visible { outline: 1px solid #fff; outline-offset: -3px; }
 @media (prefers-reduced-motion: reduce) { .lines, .slides, .cover-logo path, .cover-cap { transition: none !important; } }
+
+/* ==== v7 ==== */
+/* マスの左下に名前 */
+.pin.has .nm { opacity: 1 !important; inset: auto 0 0 0; padding: 26px 8px 7px; font-size: 10px; letter-spacing: .06em; line-height: 1.4; background: linear-gradient(to top, rgba(0, 0, 0, .62), transparent); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: none; }
+@media (min-width: 600px) { .pin .nm { font-size: 11px !important; padding-inline: 10px !important; } }
+.pin .ph img { transition: filter .4s; }
+.pin:hover .ph img { transform: none; }
+/* スクロールを軽く */
+#hdr { will-change: background-color; transform: translateZ(0); }
+.slides img { will-change: opacity; }
+/* 印: 碁盤の1本の線に3つの交点。選んだ所に石が置かれる */
+.marks { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; background: none; border: 0; padding: 4px 0 0; }
+.marks::before { content: ""; position: absolute; left: 0; right: 0; top: 20px; height: 1px; background: rgba(255, 255, 255, .28); }
+.marks button { position: relative; background: none !important; color: var(--muted) !important; padding: 0 0 4px; display: grid; justify-items: center; gap: 10px; }
+.marks button::before { content: ""; position: absolute; left: 50%; top: 8px; width: 1px; height: 24px; background: rgba(255, 255, 255, .28); }
+.marks button i { position: relative; z-index: 1; width: 13px; height: 13px; margin-top: 10px; border: 0; border-radius: 50%; background: transparent; transform: scale(.4); transition: transform .25s cubic-bezier(.3, 1.6, .5, 1), background-color .2s; }
+.marks button[aria-pressed="true"] i { background: #EDEDEA; transform: none; box-shadow: 0 0 0 4px #0D0D0D; }
+.marks button b { font-family: var(--f-mono); font-weight: 400; font-size: 10px; letter-spacing: .24em; padding-left: .24em; }
+.marks button[aria-pressed="true"] { color: #EDEDEA !important; }
+.marks button:hover { color: #EDEDEA !important; }
+.pin:not(.has) .nm { inset: auto 0 0 0; display: block; text-align: left; padding: 7px 8px; font-size: 10px; line-height: 1.4; }
 </style>
 
 </head>
@@ -1176,7 +1197,7 @@ function photoOf(s) {
   if (p) {
     const f = encodeURIComponent(p.f);
     const src = "https://commons.wikimedia.org/wiki/File:" + f;
-    return { url: COMMONS_UP + (p.o ? p.p + "/" + f : "thumb/" + p.p + "/" + f + "/960px-" + f), credit: photoCredits[s.id] || "作者・ライセンスはリンク先", src };
+    return { url: COMMONS_UP + (p.o ? p.p + "/" + f : "thumb/" + p.p + "/" + f + "/960px-" + f), thumb: p.o ? "" : COMMONS_UP + "thumb/" + p.p + "/" + f + "/500px-" + f, credit: photoCredits[s.id] || "作者・ライセンスはリンク先", src };
   }
   return null;
 }
@@ -1233,7 +1254,7 @@ function pin(s) {
   const mk = want ? `<span class="mk" aria-hidden="true"></span>` : again ? `<span class="mk again" aria-hidden="true"></span>` : "";
   const st = done ? "行った" : want ? "行きたい" : "まだ";
   return `<div class="pin${p ? " has" : ""}${done ? " done" : ""}" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.name)}（${st}）">
-    <div class="ph">${p ? `<img src="${esc(p.url)}" alt="" loading="lazy">` : ""}</div>
+    <div class="ph">${p ? `<img src="${esc(p.thumb || p.url)}" alt="" loading="lazy" decoding="async">` : ""}</div>
     <span class="nm">${esc(shortName(s))}</span>${mk}
   </div>`;
 }
@@ -1279,9 +1300,9 @@ function openSheet(id) {
         <div class="kind">${esc(KIND[s.kind] || "")}</div>
         <h2 id="sh-title">${esc(s.name)}</h2>
         <div class="marks" role="group" aria-label="印">
-          <button type="button" data-act="toggle" aria-pressed="${done}"><i></i>${s.kind === "festival" ? "見た" : "行った"}</button>
-          <button type="button" data-act="want" aria-pressed="${want}"><i></i>行きたい</button>
-          <button type="button" data-act="again" aria-pressed="${again}"><i></i>また行きたい</button>
+          <button type="button" data-act="toggle" aria-pressed="${done}" aria-label="${s.kind === "festival" ? "見た" : "行った"}"><i></i><b>${s.kind === "festival" ? "SEEN" : "VISITED"}</b></button>
+          <button type="button" data-act="want" aria-pressed="${want}" aria-label="行きたい"><i></i><b>WANT</b></button>
+          <button type="button" data-act="again" aria-pressed="${again}" aria-label="また行きたい"><i></i><b>AGAIN</b></button>
         </div>
         <dl class="facts">
           <dt>エリア</dt><dd>${esc(s.area)}</dd>
@@ -1572,9 +1593,10 @@ function renderCover() {
   if (list.length > 1) slideTimer = setInterval(() => { i = (i + 1) % list.length; show(); }, 6000);
 }
 // 表紙を過ぎたらヘッダーを黒くしてロゴを出す
-function hdrState() { $("#hdr").classList.toggle("solid", window.scrollY > $("#cover").offsetHeight - 60); }
-window.addEventListener("scroll", hdrState, { passive: true });
-hdrState();
+const hdrSentinel = document.createElement("div");
+hdrSentinel.style.cssText = "position:absolute;left:0;bottom:60px;width:1px;height:1px;pointer-events:none";
+$("#cover").appendChild(hdrSentinel);
+new IntersectionObserver(([e]) => $("#hdr").classList.toggle("solid", !e.isIntersecting && e.boundingClientRect.top < 0)).observe(hdrSentinel);
 $("#searchBtn").addEventListener("click", () => {
   const h = $("#hdr"), on = !h.classList.contains("searching");
   h.classList.toggle("searching", on);
