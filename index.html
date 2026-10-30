@@ -512,6 +512,24 @@ body.menu-open #hdr .current, body.menu-open #hdr .search { visibility: hidden; 
 
 .vnav .seg { font-family: var(--f-mono); font-size: 10px; letter-spacing: .2em; padding: 8px 10px; color: var(--muted); }
 .vnav .seg[aria-pressed="true"] { color: #EDEDEA; text-decoration: underline; text-underline-offset: 5px; }
+
+/* エリアの地図 */
+.amap { position: relative; border-top: 1px solid var(--lc); }
+.amap .map .stone circle { fill: #0D0D0D; stroke: #EDEDEA; stroke-width: 1.2; }
+.amap .map .stone.done circle { fill: #EDEDEA; stroke: #0D0D0D; stroke-width: 1.5; }
+.amap .map .stone .hit { fill: transparent !important; stroke: none !important; }
+.amap .map .stone.sel circle:last-of-type { stroke: #fff; stroke-width: 2; }
+.amap .map .walk { fill: rgba(255, 255, 255, .06); stroke: rgba(255, 255, 255, .55); stroke-width: 1; stroke-dasharray: 3 4; }
+.amap .map .scale line { stroke: #EDEDEA; stroke-width: 1; }
+.amap .map .scale text { fill: rgba(255, 255, 255, .6); }
+.amap-key { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 10px 16px 0; font-size: 10px; color: var(--muted); letter-spacing: .06em; }
+.amap-key span { display: inline-flex; align-items: center; gap: 6px; }
+.amap-key i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid #EDEDEA; }
+.amap-key i.k-done { background: #EDEDEA; }
+.amap-key i.k-walk { border-style: dashed; width: 12px; height: 12px; }
+
+.amap .map .stone.near { opacity: .5; }
+.amap-key i.k-near { width: 7px; height: 7px; opacity: .5; }
 </style>
 
 </head>
@@ -568,6 +586,7 @@ body.menu-open #hdr .current, body.menu-open #hdr .search { visibility: hidden; 
     <div class="tip" id="tip" role="button" tabindex="0"></div>
   </div>
   <div class="grid" id="grid"></div>
+  <div class="amap" id="areaMap" hidden></div>
   <p class="fine" style="margin-top:48px">年は竣工年・創業年・始まりの年です。営業時間や公開日は変わるので、出かける前に公式情報を確かめてください。印・メモ・写真はこのスマホの中に保存されます。機種変更の前などは、下の「記録を書き出す」でバックアップしてください。</p>
   <div class="actions" style="margin-top:12px"><button type="button" class="btn" id="exportBtn">記録を書き出す</button><label class="btn" for="importFile">記録を読み込む</label><input type="file" id="importFile" accept="application/json,.json" hidden><span class="fine" id="bkmsg"></span></div>
 </div>
@@ -1373,6 +1392,7 @@ function render() {
   const cols = colCount(), rest = (cols - list.length % cols) % cols;
   grid.innerHTML = list.length ? list.map(pin).join("") + `<div class="pin void" aria-hidden="true"></div>`.repeat(rest) : `<div class="empty">ここにはまだ何もありません</div>`;
   layoutBoard();
+  if (typeof renderAreaMap === "function") renderAreaMap(list);
   if (typeof renderCurrent === "function") renderCurrent();
 }
 
@@ -1931,6 +1951,64 @@ $("#viewNav").addEventListener("click", e => {
   calMonth = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
   renderCal();
 });
+
+
+/* ---- エリアの地図: 一覧の下に、そのエリアのスポットの位置関係 ---- */
+const WALK_M = 1000;  // 徒歩15分ほど
+let amapSel = null;
+function renderAreaMap(list) {
+  const box = $("#areaMap");
+  const pins = (ui.area ? list : []).map(s => ({ s, c: coordOf(s) })).filter(x => x.c);
+  if (!pins.length) { box.hidden = true; box.innerHTML = ""; return; }
+  box.hidden = false;
+  const kx = Math.cos(35 * Math.PI / 180), M = 111320;  // 緯度1度 ≒ 111.32km
+  let n = -90, so = 90, w = 180, e = -180;
+  pins.forEach(({ c }) => { n = Math.max(n, c[0]); so = Math.min(so, c[0]); w = Math.min(w, c[1]); e = Math.max(e, c[1]); });
+  // 最低でも1.4km四方は見せる
+  const minSpan = 1400 / M, cy = (n + so) / 2, cx = (w + e) / 2;
+  if (n - so < minSpan) { n = cy + minSpan / 2; so = cy - minSpan / 2; }
+  if ((e - w) * kx < minSpan) { w = cx - minSpan / kx / 2; e = cx + minSpan / kx / 2; }
+  const W = box.clientWidth || document.documentElement.clientWidth, H = Math.round(Math.min(W * .9, 560)), pad = 28;
+  const sc = Math.min((W - pad * 2) / ((e - w) * kx), (H - pad * 2) / (n - so));
+  const ox = (W - (e - w) * kx * sc) / 2, oy = (H - (n - so) * sc) / 2;
+  const X = lng => ox + (lng - w) * kx * sc, Y = lat => oy + (n - lat) * sc;
+  const mpx = sc / M;  // 1mあたりのpx
+  let g = "";
+  STREETS_EW.forEach(([nm, lat]) => { const y = Y(lat); if (y > -10 && y < H + 10) g += `<line x1="0" y1="${y.toFixed(1)}" x2="${W}" y2="${y.toFixed(1)}"/><text x="6" y="${(y - 4).toFixed(1)}">${nm}</text>`; });
+  STREETS_NS.forEach(([nm, lng]) => { const x = X(lng); if (x > -10 && x < W + 10) g += `<line x1="${x.toFixed(1)}" y1="0" x2="${x.toFixed(1)}" y2="${H}"/><text x="${(x + 4).toFixed(1)}" y="${H - 6}" transform="rotate(-90 ${(x + 4).toFixed(1)} ${H - 6})">${nm}</text>`; });
+  g += [KAMO, TAKANO].map(pts => `<polyline class="river" points="${pts.map(([la, lo]) => X(lo).toFixed(1) + "," + Y(la).toFixed(1)).join(" ")}"/>`).join("");
+  const sel = pins.find(p => p.s.id === amapSel);
+  if (sel) g += `<circle class="walk" cx="${X(sel.c[1]).toFixed(1)}" cy="${Y(sel.c[0]).toFixed(1)}" r="${(WALK_M * mpx).toFixed(1)}"/>`;
+  // ほかのエリアでも画面に入る所は小さく出す（エリアの境目をまたいで歩けるので）
+  const inIds = new Set(pins.map(p => p.s.id)), saveArea = ui.area;
+  ui.area = ""; const wider = filtered(); ui.area = saveArea;
+  const near = wider.filter(s => !inIds.has(s.id)).map(s => ({ s, c: coordOf(s), near: true })).filter(x => x.c && x.c[0] <= n && x.c[0] >= so && x.c[1] >= w && x.c[1] <= e);
+  const all = near.concat(pins);
+  const sel2 = all.find(p => p.s.id === amapSel);
+  if (sel2 && !sel) g += `<circle class="walk" cx="${X(sel2.c[1]).toFixed(1)}" cy="${Y(sel2.c[0]).toFixed(1)}" r="${(WALK_M * mpx).toFixed(1)}"/>`;
+  const stones = all.map(({ s, c, near }) => `<g class="stone${near ? " near" : ""}${isDone(s.id) ? " done" : ""}${s.id === amapSel ? " sel" : ""}" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(shortName(s))}"><circle cx="${X(c[1]).toFixed(1)}" cy="${Y(c[0]).toFixed(1)}" r="14" class="hit"/><circle cx="${X(c[1]).toFixed(1)}" cy="${Y(c[0]).toFixed(1)}" r="${near ? 3.5 : 5}"/></g>`).join("");
+  const bar = 500 * mpx;
+  box.innerHTML = `<svg class="map" overflow="hidden" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${g}${stones}
+    <g class="scale"><line x1="${(W - 16 - bar).toFixed(1)}" y1="${H - 14}" x2="${W - 16}" y2="${H - 14}"/><text x="${W - 16}" y="${H - 20}" text-anchor="end">500 m</text></g></svg>
+    <div class="amap-key"><span><i class="k-done"></i>行った</span><span><i></i>まだ</span><span><i class="k-near"></i>となりのエリア</span><span><i class="k-walk"></i>石を押すと徒歩15分（約1km）の円</span></div>
+    <div class="maplabel" id="amapLabel" hidden></div>`;
+  if (sel2) showAmapLabel(sel2.s.id);
+}
+function showAmapLabel(id) {
+  const box = $("#areaMap"), lb = $("#amapLabel"), st = box.querySelector(`.stone[data-id="${CSS.escape(id)}"]`);
+  if (!st || !lb) return;
+  const s = findSpot(id), r = st.querySelector("circle:last-of-type").getBoundingClientRect(), br = box.getBoundingClientRect();
+  lb.hidden = false; lb.dataset.id = id; lb.textContent = shortName(s) + " →";
+  const half = lb.offsetWidth / 2 + 8;
+  lb.style.left = Math.min(br.width - half, Math.max(half, r.left - br.left + r.width / 2)) + "px"; lb.style.top = (r.top - br.top - 8) + "px";
+}
+$("#areaMap").addEventListener("click", e => {
+  const lb = e.target.closest(".maplabel"); if (lb) { openSheet(lb.dataset.id); return; }
+  const st = e.target.closest(".stone");
+  amapSel = st ? st.dataset.id : null;
+  renderAreaMap(filtered());
+});
+$("#areaMap").addEventListener("keydown", e => { const st = e.target.closest && e.target.closest(".stone"); if (st && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openSheet(st.dataset.id); } });
 
 /* ---- events ---- */
 $("#pills").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; ui.filter = b.dataset.f; saveUi(); render(); renderTip(); });
