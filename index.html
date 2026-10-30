@@ -533,6 +533,15 @@ body.menu-open #hdr .current, body.menu-open #hdr .search { visibility: hidden; 
 #hdr.searching::after { opacity: 1; }
 #hdr.searching .hlogo { opacity: 1; pointer-events: auto; }
 #list { min-height: 100vh; min-height: 100svh; }
+
+/* 近くにあるもの */
+.near ul { list-style: none; padding: 0 !important; gap: 0 !important; }
+.near li { border-bottom: 1px solid var(--line); }
+.near li:last-child { border-bottom: 0; }
+.near button { width: 100%; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 0; text-align: left; }
+.near .nm2 { font-size: 13px; }
+.near .nm2::after { content: " →"; color: var(--muted); font-family: var(--f-mono); }
+.near .nk { flex: none; font-size: 11px; color: var(--muted); }
 </style>
 
 </head>
@@ -1489,6 +1498,7 @@ function openSheet(id) {
         ${s.tips && s.tips.length ? `<div class="mame"><h3>豆知識</h3><ul>${s.tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>` : ""}
         ${s.note ? `<div class="note">${esc(s.note)}</div>` : ""}
         ${s.fest ? `<div class="fine">京都モダン建築祭2026（10/31〜11/8）の公開・特典の対象です。普段は入れない所が公開されることも。<a href="https://kyoto.kenchikusai.jp/program/" target="_blank" rel="noopener">プログラムを見る ↗</a></div>` : ""}
+        ${nearbyHtml(s)}
         <div class="actions">
           <a class="btn" href="${map}" target="_blank" rel="noopener">地図 ↗</a>
           ${assets ? `<label class="btn" for="up-${esc(s.id)}">写真を追加</label><input type="file" id="up-${esc(s.id)}" accept="image/*" multiple data-act="upload" hidden>` : ""}
@@ -1519,6 +1529,20 @@ function setupHero(id) {
   if (heroIdx) tr.scrollLeft = heroIdx * tr.clientWidth;
   sync();
   tr.addEventListener("scroll", () => requestAnimationFrame(sync), { passive: true });
+}
+// 近くにあるもの: 歩いて行ける距離（約1.2km以内）の近い順に6件
+function distM(a, b) {
+  const R = 6371000, r = Math.PI / 180;
+  const dLat = (b[0] - a[0]) * r, dLng = (b[1] - a[1]) * r;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+function nearbyHtml(s) {
+  const c = coordOf(s); if (!c) return "";
+  const list = allSpots().filter(x => x.id !== s.id && !x.months).map(x => ({ x, c: coordOf(x) })).filter(o => o.c)
+    .map(o => ({ x: o.x, d: distM(c, o.c) })).filter(o => o.d <= 1200).sort((a, b) => a.d - b.d).slice(0, 6);
+  if (!list.length) return "";
+  return `<div class="mame near"><h3>近くにあるもの</h3><ul>${list.map(({ x, d }) => `<li><button type="button" data-near="${esc(x.id)}"><span class="nm2">${esc(shortName(x))}</span><span class="nk">${esc(KIND[x.kind] || "")} · 徒歩${Math.max(1, Math.round(d * 1.3 / 80))}分</span></button></li>`).join("")}</ul></div>`;
 }
 function closeSheet() { heroIdx = 0; openId = null; confirmDelete = false; $("#sheetRoot").innerHTML = ""; }
 
@@ -2212,6 +2236,8 @@ $("#grid").addEventListener("keydown", e => {
 });
 $("#sheetRoot").addEventListener("submit", e => { e.preventDefault(); saveForm(e.target); });
 $("#sheetRoot").addEventListener("click", e => {
+  const nb = e.target.closest("[data-near]");
+  if (nb) { openSheet(nb.dataset.near); const sh = $("#sheetRoot .sheet"); if (sh) sh.scrollTop = 0; return; }
   const act = e.target.closest("[data-act]");
   if (!act) return;
   const a = act.dataset.act;
