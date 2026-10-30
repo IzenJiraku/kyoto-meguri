@@ -527,6 +527,12 @@ body.menu-open #hdr .current, body.menu-open #hdr .search { visibility: hidden; 
 .amap .leaflet-bar { border: 1px solid var(--lc); border-radius: 0; box-shadow: none; }
 .amap-credit { padding: 6px 16px 0; font-size: 10px; color: var(--muted); }
 .amap-credit a { color: inherit; }
+
+/* 検索中はヘッダーを黒のまま、一覧は画面の高さを保つ */
+#hdr.searching { background: #0D0D0D !important; }
+#hdr.searching::after { opacity: 1; }
+#hdr.searching .hlogo { opacity: 1; pointer-events: auto; }
+#list { min-height: 100vh; min-height: 100svh; }
 </style>
 
 </head>
@@ -2137,7 +2143,12 @@ $("#sheetRoot").addEventListener("click", e => {
 $("#pills").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; ui.filter = b.dataset.f; saveUi(); render(); renderTip(); });
 $("#status").addEventListener("change", e => { ui.status = e.target.value; saveUi(); render(); });
 $("#sort").addEventListener("change", e => { ui.sort = e.target.value; saveUi(); render(); });
-$("#q").addEventListener("input", e => { ui.q = e.target.value; render(); });
+$("#q").addEventListener("input", e => {
+  ui.q = e.target.value; render();
+  // 結果が少なくても一覧の頭が見えている状態を保つ
+  const top = $("#cover").offsetHeight;
+  if (Math.abs(window.scrollY - top) > 2) window.scrollTo({ top });
+});
 $("#addBtn").addEventListener("click", () => openForm(null));
 $("#area").addEventListener("change", e => { ui.area = e.target.value; render(); });
 $("#tip").addEventListener("click", () => { if (tipSpot) openSheet(tipSpot); });
