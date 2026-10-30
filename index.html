@@ -546,6 +546,15 @@ body.menu-open #hdr .current, body.menu-open #hdr .search { visibility: hidden; 
 .menu-reset { display: flex; align-items: baseline; gap: 14px; margin-bottom: -16px; font-family: var(--f-mono); font-size: 10px; letter-spacing: .16em; color: var(--muted); }
 .menu-reset span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--f-body); letter-spacing: .06em; font-size: 11px; }
 .menu-reset button { flex: none; color: #EDEDEA; border-bottom: 1px solid var(--lc); padding-bottom: 1px; }
+
+/* 絞り込み中は表紙なし */
+body.filtered #cover { display: none; }
+body.filtered #list { padding-top: calc(var(--hh) + env(safe-area-inset-top, 0px)) !important; }
+body.filtered #hdr { background: #0D0D0D; }
+body.filtered #hdr::after { opacity: 1; }
+body.filtered #hdr .hlogo { opacity: 1; pointer-events: auto; }
+body.filtered #hdr .current, body.filtered #hdr .clear { opacity: 1; visibility: visible; }
+body.menu-open.filtered #hdr::after { opacity: 0; }
 </style>
 
 </head>
@@ -1457,6 +1466,10 @@ function render() {
   const grid = $("#grid");
   const cols = colCount(), rest = (cols - list.length % cols) % cols;
   grid.innerHTML = list.length ? list.map(pin).join("") + `<div class="pin void" aria-hidden="true"></div>`.repeat(rest) : `<div class="empty">ここにはまだ何もありません</div>`;
+  // 絞り込み中は表紙を出さず、結果から始める
+  const wasF = document.body.classList.contains("filtered"), isF = typeof filtersActive === "function" && filtersActive();
+  document.body.classList.toggle("filtered", isF);
+  if (wasF !== isF && !isF) window.scrollTo({ top: 0 });
   layoutBoard();
   if (typeof renderAreaMap === "function") renderAreaMap(list);
   if (typeof renderCurrent === "function") renderCurrent();
@@ -1917,6 +1930,8 @@ function resetFilters() {
 }
 $("#clearBtn").addEventListener("click", resetFilters);
 $("#menuResetBtn").addEventListener("click", () => { resetFilters(); renderTree(); });
+// ロゴはホーム: 絞り込みを外して表紙へ
+$("#hdr .hlogo").addEventListener("click", e => { e.preventDefault(); if (filtersActive()) resetFilters(); window.scrollTo({ top: 0, behavior: "smooth" }); });
 
 /* ---- MAP / CALENDAR ---- */
 let viewKind = null, mapAll = false;
