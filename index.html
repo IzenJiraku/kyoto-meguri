@@ -123,7 +123,7 @@ html, body { overflow-x: clip; }
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="vendor/leaflet.css">
 <script src="vendor/leaflet.js" defer></script>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Shippori+Mincho+B1:wght@500;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Antique&family=DM+Serif+Display:ital@0;1&family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
 /* Layout: 白地に黒文字だけ。写真タイルのグリッド、上に細い文字タブ、詳細は右側のシート。装飾は1pxの線と余白のみ。 */
 :root {
@@ -626,8 +626,9 @@ body.menu-open #hdr .current, body.menu-open.filtered #hdr .current { visibility
 .pin.done .ph .tt { color: #F2F2EF; }
 .pin.done .ph .tk { color: #8C8C88; }
 @media (min-width: 600px) { .pin .ph .tt { font-size: clamp(15px, 1.5vw, 21px); padding: 16px 14px 0; } .pin .ph .tk { left: 14px; bottom: 12px; } }
-.pin:not(.has) .nm:empty { display: none; }
-.pin:not(.has) .nm { background: none; padding-bottom: 22px; }
+/* 写真のないマスも、名前は写真ありと同じ左下に */
+.pin:not(.has) .nm { inset: auto 0 0 0 !important; display: block !important; padding: 26px 8px 7px !important; font-size: 10px; letter-spacing: .06em; line-height: 1.4; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: none; color: #6E6E6B; }
+.pin.done:not(.has) .nm { color: #EDEDEA; }
 /* ==== メニュー：FILTER / ARCHIVE / EDIT ==== */
 .trees { display: grid; gap: 30px; }
 .grp-h { margin: 0 0 14px; font-family: var(--f-mono); font-size: 10px; letter-spacing: .32em; color: var(--muted); }
@@ -654,6 +655,17 @@ body.menu-open #hdr .current, body.menu-open.filtered #hdr .current { visibility
 @keyframes agaruOut { 0%, 70% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-8px); } }
 .glogo.jump { animation: logoJump .6s cubic-bezier(.3, 1.5, .5, 1); }
 @keyframes logoJump { 0% { transform: translateY(0); } 35% { transform: translateY(-5px); } 100% { transform: translateY(0); } }
+
+/* ==== 書体 E：純喫茶・レトロ（Zen Antique ／ DM Serif Display ／ Space Mono） ==== */
+:root:root { --f-body: "Zen Antique", "Hiragino Mincho ProN", "Yu Mincho", serif; --f-mono: "Space Mono", ui-monospace, Menlo, monospace; --f-disp: "DM Serif Display", "Times New Roman", serif; }
+body, button, input, textarea, select { font-family: var(--f-body); }
+.branch { font-family: var(--f-disp) !important; font-size: 27px !important; letter-spacing: .06em !important; font-weight: 400 !important; }
+.branch[aria-expanded="true"] { font-style: italic; }
+.marks button .agaru .roll { font-family: var(--f-disp); font-size: 14px; letter-spacing: .06em; }
+/* 冒頭の碁盤の線は、ゆっくり伸ばす */
+.lines { transition-duration: 3.4s !important; transition-timing-function: cubic-bezier(.45, 0, .25, 1) !important; }
+/* Zen Antique は1ウェイトだけなので、太字の擬似加工をさせない */
+.pin .nm, #hdr .current, .sheet h2, .sheet h1 { font-weight: 400 !important; font-synthesis: none; }
 </style>
 
 </head>
@@ -1594,8 +1606,8 @@ function pin(s) {
   const mk = want ? `<span class="mk" aria-hidden="true"></span>` : again ? `<span class="mk again" aria-hidden="true"></span>` : "";
   const st = done ? "行った" : want ? "行きたい" : "まだ";
   return `<div class="pin${p ? " has" : ""}${done ? " done" : ""}" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.name)}（${st}）">
-    <div class="ph">${p ? `<img src="${esc(p.thumb || p.url)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">` : `<b class="tt">${esc(shortName(s))}</b><small class="tk">${KIND_EN[s.kind] || ""}</small>`}</div>
-    <span class="nm">${p ? esc(shortName(s)) : ""}${ui.near && ui.near.dist.has(s.id) ? `<em class="walk">徒歩${walkMin(ui.near.dist.get(s.id))}分</em>` : ui.sort === "near" && sortPos && posDist(s) < 5000 ? `<em class="walk">徒歩${walkMin(posDist(s))}分</em>` : ""}</span>${mk}
+    <div class="ph">${p ? `<img src="${esc(p.thumb || p.url)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">` : ""}</div>
+    <span class="nm">${esc(shortName(s))}${ui.near && ui.near.dist.has(s.id) ? `<em class="walk">徒歩${walkMin(ui.near.dist.get(s.id))}分</em>` : ui.sort === "near" && sortPos && posDist(s) < 5000 ? `<em class="walk">徒歩${walkMin(posDist(s))}分</em>` : ""}</span>${mk}
   </div>`;
 }
 let tipSpot = null;
