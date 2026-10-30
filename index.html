@@ -683,6 +683,8 @@ body, button, input, textarea, select { font-family: var(--f-body); }
 #cover.open .lines i { transform: none; transition: transform .42s cubic-bezier(.75, 0, .15, 1) var(--d, 0s); }
 #cover.instant .lines i { transition: none !important; }
 @media (prefers-reduced-motion: reduce) { #cover .lines i { transform: none !important; transition: none !important; } }
+
+#cover .cover-logo { cursor: pointer; }
 </style>
 
 </head>
@@ -1961,7 +1963,14 @@ function answerQuiz(i) {
   const cv = $("#cover");
   // 試作: ?mosaic を付けたときだけ、毎回モザイク付きの起動演出を見せる
   const trial = /[?&]mosaic\b/.test(location.search);
-  let seen = false; try { seen = sessionStorage.getItem("intro") === "1"; sessionStorage.setItem("intro", "1"); } catch (e) {}
+  // 起動演出は、前に開いてから30分以上たったときに出す（アプリ版は閉じても「同じ回」扱いになりやすいため）
+  let seen = false;
+  try {
+    seen = sessionStorage.getItem("intro") === "1" && Date.now() - Number(localStorage.getItem(LS_KEY + "-seenAt") || 0) < 30 * 60000;
+    sessionStorage.setItem("intro", "1");
+  } catch (e) {}
+  const stamp = () => { try { localStorage.setItem(LS_KEY + "-seenAt", String(Date.now())); } catch (e) {} };
+  stamp(); document.addEventListener("visibilitychange", () => { if (document.hidden) stamp(); else if (!seen) stamp(); });
   if (trial) seen = false;
   if (seen || matchMedia("(prefers-reduced-motion: reduce)").matches) {
     cv.classList.add("instant", "draw", "lit", "open");
@@ -1979,6 +1988,15 @@ function answerQuiz(i) {
   setTimeout(() => cv.classList.add("open"), 900);
   setTimeout(() => mosaicRun(pre, () => cv.classList.add("lit")), 1300);
 })();
+// 表紙の「上ル」を押すと、線の演出をもう一度
+function replayLines() {
+  const cv = $("#cover");
+  cv.classList.remove("open");
+  void cv.offsetWidth;
+  layoutBoard();
+  requestAnimationFrame(() => requestAnimationFrame(() => cv.classList.add("open")));
+}
+$("#cover .cover-logo").addEventListener("click", replayLines);
 
 // 起動のモザイク。通信量を抑えるため小さいサムネだけを、マスの数より少し多いくらい読む
 function mosaicPreload() {
