@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="GOBAN">
+<meta name="apple-mobile-web-app-title" content="AGARU">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon-192-v2.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon-v2.png">
+<link rel="icon" href="icons/icon-192-v3.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon-v3.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}
 /* ---- 起動演出・表紙・枝分かれメニュー ---- */
 :root { --f-logo: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif; }
@@ -118,7 +118,7 @@ html, body { overflow-x: clip; }
 :root[data-theme="dark"] { --board: rgba(255, 255, 255, .14); }
 @media (prefers-reduced-motion: reduce) { #splash { animation: none; } }
 </style>
-<title>GOBAN</title>
+<title>AGARU</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="vendor/leaflet.css">
@@ -609,6 +609,11 @@ body.menu-open #hdr .current, body.menu-open.filtered #hdr .current { visibility
 /* 矢印は日付の行末に置き、独立した行にしない */
 .cover-cap:has(.d)::after { content: none; }
 .cover-cap .d::after { content: " →"; }
+
+/* ==== AGARU（上ル）のロゴ：画数が少ないので線を太く、幅は小さめ ==== */
+.cover-logo .glogo { --sw: .55; }
+.hlogo .glogo { --sw: .75; }
+.cover-logo { width: min(64px, calc(var(--cellw, 120px) * .55)) !important; }
 </style>
 
 </head>
@@ -616,14 +621,14 @@ body.menu-open #hdr .current, body.menu-open.filtered #hdr .current { visibility
 <section id="cover" aria-label="表紙">
   <div class="slides" id="slides"></div>
   <div class="lines" id="lines" aria-hidden="true"></div>
-  <div class="cover-logo"><svg class="glogo" viewBox="-0.5 -0.5 24 13" role="img" aria-label="碁盤 GOBAN"><path d="M1 1H9 M3 0V5 M7 0V5 M3 2.5H7 M3 3.8H7 M0 5H10 M2.5 5.7V6.5 M7.5 5.7V6.5 M0 7.5H10 M3.5 7.5V12 M5 9H9 M5 9V12 M9 9V12 M5 12H9 M15.5 0V1 M14 1H17 M14 1V6 M17 1V6 M13 3.5H18 M15.5 2V2.8 M15.5 4.5V5.3 M19.5 0V2 M19.5 0H22 M22 0V2 M19 3H23 M21 3V6 M19 6H23 M14 8H22 M14 8V11.5 M16.7 8V11.5 M19.3 8V11.5 M22 8V11.5 M13 11.5H23" pathLength="1"/></svg></div>
+  <div class="cover-logo"><svg class="glogo" viewBox="-0.5 -0.5 24 13" role="img" aria-label="上ル AGARU"><path d="M5 0V11 M5 5H9 M0 11H10 M15.5 1.5V7.5L13.5 11.5 M19.5 1V11.5L22.5 8.5" pathLength="1"/></svg></div>
   <button type="button" class="cover-cap" id="coverCap"></button>
   <button type="button" class="near-btn" id="nearBtn" aria-label="現在地の近くにある所を見る"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 18.5C10 18.5 4.5 12.2 4.5 8.2a5.5 5.5 0 0 1 11 0c0 4-5.5 10.3-5.5 10.3Z"/><circle cx="10" cy="8.2" r="1.6"/></svg></button>
   <div class="near-msg" id="nearMsg" role="status" aria-live="polite"></div>
 </section>
 
 <header id="hdr">
-  <a class="hlogo" href="#cover" aria-label="表紙へ"><svg class="glogo" viewBox="-0.5 -0.5 24 13" role="img" aria-label="碁盤 GOBAN"><path d="M1 1H9 M3 0V5 M7 0V5 M3 2.5H7 M3 3.8H7 M0 5H10 M2.5 5.7V6.5 M7.5 5.7V6.5 M0 7.5H10 M3.5 7.5V12 M5 9H9 M5 9V12 M9 9V12 M5 12H9 M15.5 0V1 M14 1H17 M14 1V6 M17 1V6 M13 3.5H18 M15.5 2V2.8 M15.5 4.5V5.3 M19.5 0V2 M19.5 0H22 M22 0V2 M19 3H23 M21 3V6 M19 6H23 M14 8H22 M14 8V11.5 M16.7 8V11.5 M19.3 8V11.5 M22 8V11.5 M13 11.5H23"/></svg></a>
+  <a class="hlogo" href="#cover" aria-label="表紙へ"><svg class="glogo" viewBox="-0.5 -0.5 24 13" role="img" aria-label="上ル AGARU"><path d="M5 0V11 M5 5H9 M0 11H10 M15.5 1.5V7.5L13.5 11.5 M19.5 1V11.5L22.5 8.5"/></svg></a>
   <button type="button" class="current" id="current" aria-label="絞り込みを変える"></button>
   <button type="button" class="ic clear" id="clearBtn" aria-label="絞り込みをすべて戻す" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 6L14 14 M14 6L6 14"/></svg></button>
   <input class="search" type="search" id="q" placeholder="SEARCH" aria-label="名前・説明・豆知識で検索" autocomplete="off">
