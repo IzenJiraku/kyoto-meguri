@@ -437,6 +437,19 @@ body.menu-open #searchBtn { visibility: hidden; }
 .marks button[aria-pressed="true"] { color: #EDEDEA !important; }
 .marks button:hover { color: #EDEDEA !important; }
 .pin:not(.has) .nm { inset: auto 0 0 0; display: block; text-align: left; padding: 7px 8px; font-size: 10px; line-height: 1.4; }
+
+/* メニュー: 左から3分の1ほどの引き出し */
+#menu { inset: 0 auto 0 0 !important; width: min(100vw - 56px, max(33.34vw, 340px)); border-right: 1px solid var(--lc); }
+#menuScrim { position: fixed; inset: 0; z-index: 24; background: rgba(0, 0, 0, .55); }
+.menu-inner { max-width: none; margin: 0; padding-left: max(28px, env(safe-area-inset-left, 0px)) !important; padding-right: 24px !important; }
+body.menu-open #hdr { background: transparent !important; }
+body.menu-open #hdr .current, body.menu-open #hdr .search { visibility: hidden; }
+@media (prefers-reduced-motion: no-preference) {
+  #menu:not([hidden]) { animation: drawerIn .3s cubic-bezier(.2, .8, .2, 1); }
+  #menuScrim:not([hidden]) { animation: fadeIn .3s ease; }
+  @keyframes drawerIn { from { transform: translateX(-100%); } }
+  @keyframes fadeIn { from { opacity: 0; } }
+}
 </style>
 
 </head>
@@ -455,6 +468,7 @@ body.menu-open #searchBtn { visibility: hidden; }
   <button type="button" class="ic" id="searchBtn" aria-label="さがす" aria-expanded="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3H12V12H3Z M12 12L17 17"/></svg></button>
   <button type="button" class="ic" id="menuBtn" aria-label="メニュー" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="i-open" d="M7 2V18 M13 2V18 M2 7H18 M2 13H18"/><path class="i-close" d="M4 4L16 16 M16 4L4 16"/></svg></button>
 </header>
+<div id="menuScrim" hidden></div>
 <nav id="menu" hidden aria-label="メニュー">
   <div class="menu-inner">
     <ul class="tree" id="tree"></ul>
@@ -1623,12 +1637,13 @@ function renderTree() {
   </li>`).join("");
 }
 function setMenu(open) {
-  $("#menu").hidden = !open;
+  $("#menu").hidden = !open; $("#menuScrim").hidden = !open;
   document.body.classList.toggle("menu-open", open);
   $("#menuBtn").setAttribute("aria-expanded", open);
   if (open) { openBranch = null; renderTree(); }
 }
 $("#menuBtn").addEventListener("click", () => setMenu($("#menu").hidden));
+$("#menuScrim").addEventListener("click", () => setMenu(false));
 $("#current").addEventListener("click", () => { setMenu(true); });
 $("#tree").addEventListener("click", e => {
   const br = e.target.closest("[data-branch]");
