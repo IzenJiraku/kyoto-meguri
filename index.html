@@ -121,6 +121,8 @@ html, body { overflow-x: clip; }
 <title>GOBAN</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="vendor/leaflet.css">
+<script src="vendor/leaflet.js" defer></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Shippori+Mincho+B1:wght@500;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
 /* Layout: 白地に黒文字だけ。写真タイルのグリッド、上に細い文字タブ、詳細は右側のシート。装飾は1pxの線と余白のみ。 */
@@ -515,21 +517,16 @@ body.menu-open #hdr .current, body.menu-open #hdr .search { visibility: hidden; 
 
 /* エリアの地図 */
 .amap { position: relative; border-top: 1px solid var(--lc); }
-.amap .map .stone circle { fill: #0D0D0D; stroke: #EDEDEA; stroke-width: 1.2; }
-.amap .map .stone.done circle { fill: #EDEDEA; stroke: #0D0D0D; stroke-width: 1.5; }
-.amap .map .stone .hit { fill: transparent !important; stroke: none !important; }
-.amap .map .stone.sel circle:last-of-type { stroke: #fff; stroke-width: 2; }
-.amap .map .walk { fill: rgba(255, 255, 255, .06); stroke: rgba(255, 255, 255, .55); stroke-width: 1; stroke-dasharray: 3 4; }
-.amap .map .scale line { stroke: #EDEDEA; stroke-width: 1; }
-.amap .map .scale text { fill: rgba(255, 255, 255, .6); }
-.amap-key { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 10px 16px 0; font-size: 10px; color: var(--muted); letter-spacing: .06em; }
-.amap-key span { display: inline-flex; align-items: center; gap: 6px; }
-.amap-key i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid #EDEDEA; }
-.amap-key i.k-done { background: #EDEDEA; }
-.amap-key i.k-walk { border-style: dashed; width: 12px; height: 12px; }
-
-.amap .map .stone.near { opacity: .5; }
-.amap-key i.k-near { width: 7px; height: 7px; opacity: .5; }
+.amap-canvas { height: min(92vw, 520px); background: #0D0D0D; }
+.amap .leaflet-tile-pane { filter: invert(1) grayscale(1) brightness(.92) contrast(.9); }
+.amap .leaflet-container { font: inherit; background: #0D0D0D; }
+.amap .amap-name { background: transparent; border: 0; box-shadow: none; padding: 0; color: #FFFFFF; font-size: 11px; font-weight: 500; letter-spacing: .04em; text-shadow: 0 0 3px #000, 0 0 3px #000, 0 0 6px #000; }
+.amap .amap-name::before { display: none; }
+.amap.far .amap-name:not(.own) { display: none; }
+.amap .leaflet-control-zoom a { background: #0D0D0D; color: #EDEDEA; border-color: var(--lc); border-radius: 0 !important; }
+.amap .leaflet-bar { border: 1px solid var(--lc); border-radius: 0; box-shadow: none; }
+.amap-credit { padding: 6px 16px 0; font-size: 10px; color: var(--muted); }
+.amap-credit a { color: inherit; }
 </style>
 
 </head>
@@ -1953,62 +1950,41 @@ $("#viewNav").addEventListener("click", e => {
 });
 
 
-/* ---- エリアの地図: 一覧の下に、そのエリアのスポットの位置関係 ---- */
-const WALK_M = 1000;  // 徒歩15分ほど
-let amapSel = null;
+/* ---- エリアの地図: 一覧の下に、道や駅名の入った地図とスポット ---- */
+// 地図は国土地理院の淡色地図を白黒反転して黒地に。スポットは今の絞り込み（エリア以外）に合う所を全部出す
+let amap = null, amapLayer = null, amapArea = null;
 function renderAreaMap(list) {
   const box = $("#areaMap");
   const pins = (ui.area ? list : []).map(s => ({ s, c: coordOf(s) })).filter(x => x.c);
-  if (!pins.length) { box.hidden = true; box.innerHTML = ""; return; }
+  if (!pins.length || !window.L) { box.hidden = true; return; }
   box.hidden = false;
-  const kx = Math.cos(35 * Math.PI / 180), M = 111320;  // 緯度1度 ≒ 111.32km
-  let n = -90, so = 90, w = 180, e = -180;
-  pins.forEach(({ c }) => { n = Math.max(n, c[0]); so = Math.min(so, c[0]); w = Math.min(w, c[1]); e = Math.max(e, c[1]); });
-  // 最低でも1.4km四方は見せる
-  const minSpan = 1400 / M, cy = (n + so) / 2, cx = (w + e) / 2;
-  if (n - so < minSpan) { n = cy + minSpan / 2; so = cy - minSpan / 2; }
-  if ((e - w) * kx < minSpan) { w = cx - minSpan / kx / 2; e = cx + minSpan / kx / 2; }
-  const W = box.clientWidth || document.documentElement.clientWidth, H = Math.round(Math.min(W * .9, 560)), pad = 28;
-  const sc = Math.min((W - pad * 2) / ((e - w) * kx), (H - pad * 2) / (n - so));
-  const ox = (W - (e - w) * kx * sc) / 2, oy = (H - (n - so) * sc) / 2;
-  const X = lng => ox + (lng - w) * kx * sc, Y = lat => oy + (n - lat) * sc;
-  const mpx = sc / M;  // 1mあたりのpx
-  let g = "";
-  STREETS_EW.forEach(([nm, lat]) => { const y = Y(lat); if (y > -10 && y < H + 10) g += `<line x1="0" y1="${y.toFixed(1)}" x2="${W}" y2="${y.toFixed(1)}"/><text x="6" y="${(y - 4).toFixed(1)}">${nm}</text>`; });
-  STREETS_NS.forEach(([nm, lng]) => { const x = X(lng); if (x > -10 && x < W + 10) g += `<line x1="${x.toFixed(1)}" y1="0" x2="${x.toFixed(1)}" y2="${H}"/><text x="${(x + 4).toFixed(1)}" y="${H - 6}" transform="rotate(-90 ${(x + 4).toFixed(1)} ${H - 6})">${nm}</text>`; });
-  g += [KAMO, TAKANO].map(pts => `<polyline class="river" points="${pts.map(([la, lo]) => X(lo).toFixed(1) + "," + Y(la).toFixed(1)).join(" ")}"/>`).join("");
-  const sel = pins.find(p => p.s.id === amapSel);
-  if (sel) g += `<circle class="walk" cx="${X(sel.c[1]).toFixed(1)}" cy="${Y(sel.c[0]).toFixed(1)}" r="${(WALK_M * mpx).toFixed(1)}"/>`;
-  // ほかのエリアでも画面に入る所は小さく出す（エリアの境目をまたいで歩けるので）
-  const inIds = new Set(pins.map(p => p.s.id)), saveArea = ui.area;
-  ui.area = ""; const wider = filtered(); ui.area = saveArea;
-  const near = wider.filter(s => !inIds.has(s.id)).map(s => ({ s, c: coordOf(s), near: true })).filter(x => x.c && x.c[0] <= n && x.c[0] >= so && x.c[1] >= w && x.c[1] <= e);
-  const all = near.concat(pins);
-  const sel2 = all.find(p => p.s.id === amapSel);
-  if (sel2 && !sel) g += `<circle class="walk" cx="${X(sel2.c[1]).toFixed(1)}" cy="${Y(sel2.c[0]).toFixed(1)}" r="${(WALK_M * mpx).toFixed(1)}"/>`;
-  const stones = all.map(({ s, c, near }) => `<g class="stone${near ? " near" : ""}${isDone(s.id) ? " done" : ""}${s.id === amapSel ? " sel" : ""}" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(shortName(s))}"><circle cx="${X(c[1]).toFixed(1)}" cy="${Y(c[0]).toFixed(1)}" r="14" class="hit"/><circle cx="${X(c[1]).toFixed(1)}" cy="${Y(c[0]).toFixed(1)}" r="${near ? 3.5 : 5}"/></g>`).join("");
-  const bar = 500 * mpx;
-  box.innerHTML = `<svg class="map" overflow="hidden" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${g}${stones}
-    <g class="scale"><line x1="${(W - 16 - bar).toFixed(1)}" y1="${H - 14}" x2="${W - 16}" y2="${H - 14}"/><text x="${W - 16}" y="${H - 20}" text-anchor="end">500 m</text></g></svg>
-    <div class="amap-key"><span><i class="k-done"></i>行った</span><span><i></i>まだ</span><span><i class="k-near"></i>となりのエリア</span><span><i class="k-walk"></i>石を押すと徒歩15分（約1km）の円</span></div>
-    <div class="maplabel" id="amapLabel" hidden></div>`;
-  if (sel2) showAmapLabel(sel2.s.id);
+  if (!amap) {
+    box.innerHTML = `<div class="amap-canvas" id="amapCanvas"></div><div class="amap-credit">地図: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a></div>`;
+    amap = L.map("amapCanvas", { zoomControl: false, scrollWheelZoom: false, attributionControl: false, minZoom: 11, maxZoom: 18 });
+    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", { maxZoom: 18, maxNativeZoom: 18 }).addTo(amap);
+    L.control.zoom({ position: "bottomright" }).addTo(amap);
+    amapLayer = L.layerGroup().addTo(amap);
+    // そのエリアの名前はいつも、ほかの名前は寄ったときだけ
+    amap.on("zoomend", () => box.classList.toggle("far", amap.getZoom() < 16));
+  }
+  const saveArea = ui.area; ui.area = ""; const wider = filtered(); ui.area = saveArea;
+  amapLayer.clearLayers();
+  const inArea = new Set(pins.map(p => p.s.id));
+  wider.forEach(s => {
+    const c = coordOf(s); if (!c) return;
+    L.circleMarker(c, { radius: 6, weight: 1.5, color: "#0D0D0D", fillColor: "#FFFFFF", fillOpacity: 1 })
+      .bindTooltip(esc(shortName(s)), { permanent: true, direction: "right", offset: [6, 0], className: "amap-name" + (inArea.has(s.id) ? " own" : "") })
+      .on("click", () => openSheet(s.id))
+      .addTo(amapLayer);
+  });
+  amap.invalidateSize();
+  if (amapArea !== ui.area) {
+    amapArea = ui.area;
+    amap.fitBounds(L.latLngBounds(pins.map(p => p.c)).pad(.15), { maxZoom: 16 });
+    box.classList.toggle("far", amap.getZoom() < 16);
+  }
 }
-function showAmapLabel(id) {
-  const box = $("#areaMap"), lb = $("#amapLabel"), st = box.querySelector(`.stone[data-id="${CSS.escape(id)}"]`);
-  if (!st || !lb) return;
-  const s = findSpot(id), r = st.querySelector("circle:last-of-type").getBoundingClientRect(), br = box.getBoundingClientRect();
-  lb.hidden = false; lb.dataset.id = id; lb.textContent = shortName(s) + " →";
-  const half = lb.offsetWidth / 2 + 8;
-  lb.style.left = Math.min(br.width - half, Math.max(half, r.left - br.left + r.width / 2)) + "px"; lb.style.top = (r.top - br.top - 8) + "px";
-}
-$("#areaMap").addEventListener("click", e => {
-  const lb = e.target.closest(".maplabel"); if (lb) { openSheet(lb.dataset.id); return; }
-  const st = e.target.closest(".stone");
-  amapSel = st ? st.dataset.id : null;
-  renderAreaMap(filtered());
-});
-$("#areaMap").addEventListener("keydown", e => { const st = e.target.closest && e.target.closest(".stone"); if (st && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openSheet(st.dataset.id); } });
+window.addEventListener("load", () => { if (ui.area) render(); });
 
 /* ---- events ---- */
 $("#pills").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; ui.filter = b.dataset.f; saveUi(); render(); renderTip(); });
