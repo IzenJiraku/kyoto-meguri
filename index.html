@@ -450,6 +450,11 @@ body.menu-open #hdr .current, body.menu-open #hdr .search { visibility: hidden; 
   @keyframes drawerIn { from { transform: translateX(-100%); } }
   @keyframes fadeIn { from { opacity: 0; } }
 }
+
+/* 表紙のロゴはマスの中央に */
+.cover-logo { left: var(--lx, 50%) !important; top: var(--ly, 50%) !important; width: min(76px, calc(var(--cellw, 120px) * .6)); }
+.lines { clip-path: circle(0 at var(--lx, 50%) var(--ly, 50%)); }
+#cover.open .lines { clip-path: circle(150% at var(--lx, 50%) var(--ly, 50%)); }
 </style>
 
 </head>
@@ -1268,7 +1273,7 @@ function pin(s) {
   const mk = want ? `<span class="mk" aria-hidden="true"></span>` : again ? `<span class="mk again" aria-hidden="true"></span>` : "";
   const st = done ? "行った" : want ? "行きたい" : "まだ";
   return `<div class="pin${p ? " has" : ""}${done ? " done" : ""}" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.name)}（${st}）">
-    <div class="ph">${p ? `<img src="${esc(p.thumb || p.url)}" alt="" loading="lazy" decoding="async">` : ""}</div>
+    <div class="ph">${p ? `<img src="${esc(p.thumb || p.url)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">` : ""}</div>
     <span class="nm">${esc(shortName(s))}</span>${mk}
   </div>`;
 }
@@ -1573,6 +1578,11 @@ function layoutBoard() {
   const rows = Math.max(3, Math.floor(window.innerHeight / cell));
   const H = rows * cell;
   cv.style.setProperty("--cover-h", H + "px");
+  // ロゴは線の交点ではなく、真ん中あたりのマスの中央に置く
+  const c = Math.ceil(cols / 2) - 1, r = Math.ceil(rows / 2) - 1;
+  const lx = c === 0 ? cell / 2 - 0.5 : xs[c - 1] + 1 + (cell - 1) / 2;
+  cv.style.setProperty("--lx", lx + "px");
+  cv.style.setProperty("--ly", (r * cell + (cell - 1) / 2) + "px");
   let html = xs.map(x => `<i class="v" style="left:${x.toFixed(2)}px"></i>`).join("");
   for (let j = 1; j <= rows; j++) html += `<i class="h" style="top:${(j * cell - 1).toFixed(2)}px"></i>`;
   $("#lines").innerHTML = html;
