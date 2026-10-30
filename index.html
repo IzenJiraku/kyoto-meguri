@@ -672,6 +672,7 @@ body.menu-open #hdr .current, body.menu-open.filtered #hdr .current { visibility
         <option value="year">古い順</option>
         <option value="yeardesc">新しい順</option>
         <option value="name">名前順</option>
+        <option value="near">近い順</option>
         <option value="todo">まだを先に</option>
       </select>
     </div>
@@ -1500,6 +1501,25 @@ function facetHtml(k, text) {
   }).join("");
 }
 
+/* ---- 並び「近い順」：現在地を測って一覧を近い順に ---- */
+let sortPos = null, sortPosAt = 0;
+const posMemo = new Map();
+function posDist(s) {
+  if (!posMemo.has(s.id)) { const c = coordOf(s); posMemo.set(s.id, c ? distM(sortPos, c) : Infinity); }
+  return posMemo.get(s.id);
+}
+function locateForSort(force) {
+  if (ui.sort !== "near" || !navigator.geolocation) return;
+  if (!force && sortPos && Date.now() - sortPosAt < 120000) return;
+  navigator.geolocation.getCurrentPosition(pos => {
+    sortPos = [pos.coords.latitude, pos.coords.longitude]; sortPosAt = Date.now(); posMemo.clear();
+    if (ui.sort === "near") render();
+  }, err => {
+    if (force && err.code === 1 && typeof nearNotice === "function") nearNotice("位置情報が許可されていないので、エリア順で並べています");
+  }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) locateForSort(false); });
+
 function filtered() {
   const q = ui.q.trim().toLowerCase();
   const f = ui.filter;
@@ -1519,6 +1539,8 @@ function filtered() {
     yeardesc: (a, b) => (b.year === 9999 ? -1 : b.year) - (a.year === 9999 ? -1 : a.year) || a.kana.localeCompare(b.kana, "ja"),
     name: (a, b) => a.kana.localeCompare(b.kana, "ja"),
     todo: (a, b) => (isDone(a.id) - isDone(b.id)) || byArea(a, b),
+    // 現在地から近い順。位置が分からないうちはエリア順
+    near: sortPos ? (a, b) => posDist(a) - posDist(b) || byArea(a, b) : byArea,
   };
   if (ui.near) return list.sort((a, b) => ui.near.dist.get(a.id) - ui.near.dist.get(b.id));
   return list.sort(sorters[ui.sort]);
@@ -1535,7 +1557,7 @@ function pin(s) {
   const st = done ? "行った" : want ? "行きたい" : "まだ";
   return `<div class="pin${p ? " has" : ""}${done ? " done" : ""}" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.name)}（${st}）">
     <div class="ph">${p ? `<img src="${esc(p.thumb || p.url)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">` : ""}</div>
-    <span class="nm">${esc(shortName(s))}${ui.near && ui.near.dist.has(s.id) ? `<em class="walk">徒歩${walkMin(ui.near.dist.get(s.id))}分</em>` : ""}</span>${mk}
+    <span class="nm">${esc(shortName(s))}${ui.near && ui.near.dist.has(s.id) ? `<em class="walk">徒歩${walkMin(ui.near.dist.get(s.id))}分</em>` : ui.sort === "near" && sortPos && posDist(s) < 5000 ? `<em class="walk">徒歩${walkMin(posDist(s))}分</em>` : ""}</span>${mk}
   </div>`;
 }
 let tipSpot = null;
@@ -2011,7 +2033,7 @@ const TREE = [
   { key: "kind", ja: "見る", en: "CATEGORY", items: () => [["all", "すべて"], ["month", THIS_MONTH + "月の行事"], ["arch", "建築"], ["classic", "寺社・名所"], ["history", "史跡"], ["festival", "祭り・行事"], ["sweets", "和菓子"], ["food", "食・老舗"], ["cafe", "喫茶"], ["book", "本屋"], ["church", "教会"], ["fest", "建築祭2026"], ["mine", "自分で追加"]] },
   { key: "area", ja: "歩く", en: "AREA", items: () => [["", "全エリア"]].concat(AREAS.concat(["その他"]).map(a => [a, a])) },
   { key: "status", ja: "しるし", en: "STATUS", items: () => [["all", "すべて"], ["want", "行きたい"], ["done", "行った"], ["again", "また行きたい"], ["todo", "まだ"]] },
-  { key: "sort", ja: "並び", en: "SORT", items: () => [["area", "エリア順"], ["year", "古い順"], ["yeardesc", "新しい順"], ["name", "名前順"], ["todo", "まだを先に"]] },
+  { key: "sort", ja: "並び", en: "SORT", items: () => [["area", "エリア順"], ["year", "古い順"], ["yeardesc", "新しい順"], ["near", "近い順"], ["name", "名前順"], ["todo", "まだを先に"]] },
   { key: "map", en: "MAP", act: true },
   { key: "cal", en: "CALENDAR", act: true },
   { key: "write", ja: "書く", en: "EDIT", items: () => [["add", "スポットを追加"], ["export", "記録を書き出す"], ["import", "記録を読み込む"], ["sync", "PCとスマホの同期"]] },
@@ -2064,7 +2086,7 @@ $("#tree").addEventListener("click", e => {
     if (v === "add") openForm(null); else if (v === "export") $("#exportBtn").click(); else if (v === "sync") openSyncForm(); else $("#importFile").click();
     return;
   }
-  if (k === "kind") ui.filter = v; else if (k === "area") ui.area = v; else if (k === "sort") ui.sort = v; else ui.status = v;
+  if (k === "kind") ui.filter = v; else if (k === "area") ui.area = v; else if (k === "sort") { ui.sort = v; if (v === "near") locateForSort(true); } else ui.status = v;
   saveUi(); render(); renderTip();
   setMenu(false);
   window.scrollTo({ top: $("#cover").offsetHeight - 1 });
@@ -2074,7 +2096,7 @@ function renderCurrent() {
   const kindLabel = ui.filter === "all" ? "" : (TREE[0].items().find(([v]) => v === ui.filter) || [, ""])[1];
   const st = (TREE[2].items().find(([v]) => v === ui.status) || [, ""])[1];
   const parts = [ui.near ? "現在地の近く" : "", ui.facet ? (ui.facet.k === "by" ? "設計 " : "様式 ") + ui.facet.v : "", kindLabel, ui.area || "", ui.status !== "all" ? st : ""].filter(Boolean);
-  $("#current").textContent = parts.join(" · ") || "ALL";
+  $("#current").textContent = (parts.join(" · ") || "ALL") + (ui.sort === "near" && sortPos && !ui.near ? " · NEAR" : "");
   $("#clearBtn").hidden = !filtersActive();
 }
 
@@ -2602,6 +2624,7 @@ $("#importFile").addEventListener("change", async e => {
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
   render();
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  locateForSort(false);
   syncNow();
 })();
 </script>
