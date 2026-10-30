@@ -1,0 +1,1238 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="京都めぐり帖">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>京都めぐり帖</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: 白地に黒文字だけ。写真タイルのグリッド、上に細い文字タブ、詳細は右側のシート。装飾は1pxの線と余白のみ。 */
+:root {
+  --bg: #FFFFFF;
+  --ink: #111111;
+  --muted: #8A8A8A;
+  --line: #E6E6E6;
+  --tile: #F5F5F5;
+  --scrim: rgba(255, 255, 255, .86);
+  --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #111111; --ink: #EDEDED; --muted: #7A7A7A; --line: #262626; --tile: #1A1A1A; --scrim: rgba(17, 17, 17, .88); color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #111111; --ink: #EDEDED; --muted: #7A7A7A; --line: #262626; --tile: #1A1A1A; --scrim: rgba(17, 17, 17, .88); color-scheme: dark; }
+* { box-sizing: border-box; border-radius: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--f-body); font-size: 13px; line-height: 1.7; letter-spacing: .02em;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 64px;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 1200px; margin: 0 auto; }
+button, select, input, textarea { font: inherit; color: inherit; }
+button { background: none; border: 0; padding: 0; cursor: pointer; }
+a { color: inherit; }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible, .pin:focus-visible { outline: 1px solid var(--ink); outline-offset: 3px; }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 8px 14px; display: grid; gap: 14px; border-bottom: 1px solid var(--line); }
+.bar { display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; }
+h1 { font-size: 15px; font-weight: 500; letter-spacing: .12em; margin: 0; white-space: nowrap; }
+.search { flex: 1 1 140px; min-width: 0; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 4px 0; font-size: 13px; }
+.search:focus { outline: none; border-bottom-color: var(--ink); }
+.addbtn { font-size: 13px; white-space: nowrap; }
+.pills { display: flex; gap: 18px; overflow-x: auto; scrollbar-width: none; }
+.pills::-webkit-scrollbar { display: none; }
+.pill { flex: none; font-size: 13px; color: var(--muted); padding-bottom: 2px; border-bottom: 1px solid transparent; white-space: nowrap; }
+.pill[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.sub { display: flex; gap: 14px; align-items: center; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+.sub select { border: 0; background: transparent; font-size: 12px; color: var(--ink); padding: 0; }
+.sub .sp { flex: 1; }
+.tip { font-size: 12px; color: var(--muted); max-width: 70ch; cursor: pointer; }
+.tip b { color: var(--ink); font-weight: 500; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 32px 16px; margin-top: 24px; }
+.pin { display: grid; gap: 8px; cursor: pointer; min-width: 0; }
+.ph { background: var(--tile); overflow: hidden; }
+.ph img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ph .blank { display: grid; place-items: center; height: 100%; padding: 12px; text-align: center; color: var(--muted); font-size: 12px; letter-spacing: .1em; }
+.pin:hover .ph { opacity: .85; }
+.cap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 8px; align-items: start; }
+.cap .n { font-size: 13px; font-weight: 500; line-height: 1.5; }
+.cap .m { grid-column: 1; font-size: 11px; color: var(--muted); }
+.icons { grid-row: 1 / span 2; grid-column: 2; display: flex; gap: 2px; }
+.icons button { width: 26px; height: 26px; display: grid; place-items: center; color: var(--muted); }
+.icons svg { width: 14px; height: 14px; }
+.icons button[aria-pressed="true"] { color: var(--ink); --bk-fill: currentColor; }
+.empty { padding: 80px 0; text-align: center; color: var(--muted); grid-column: 1 / -1; }
+
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 20; display: flex; justify-content: flex-end; }
+.sheet { background: var(--bg); color: var(--ink); border-left: 1px solid var(--line); width: min(520px, 100%); height: 100%; overflow-y: auto; display: block; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.hero { background: var(--tile); aspect-ratio: 4 / 3; position: relative; }
+.hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero .blank { display: grid; place-items: center; height: 100%; color: var(--muted); font-size: 12px; letter-spacing: .1em; }
+.credit { position: absolute; left: 8px; bottom: 6px; right: 8px; font-size: 10px; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .7); }
+.body { padding: 24px max(24px, env(safe-area-inset-right, 0px)) 40px 24px; display: grid; gap: 18px; align-content: start; }
+.close { justify-self: end; font-size: 13px; color: var(--muted); }
+.body h2 { font-size: 20px; font-weight: 500; margin: 0; line-height: 1.4; letter-spacing: .06em; text-wrap: balance; }
+.kind { font-size: 11px; color: var(--muted); letter-spacing: .14em; margin-bottom: -10px; }
+.facts { display: grid; grid-template-columns: 4em minmax(0, 1fr); gap: 4px 12px; font-size: 12px; margin: 0; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
+.body p { margin: 0; font-size: 13px; }
+.note { font-size: 12px; color: var(--muted); }
+.mame { border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 8px; }
+.mame h3 { font-size: 11px; font-weight: 500; letter-spacing: .14em; color: var(--muted); margin: 0; }
+.mame ul { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; font-size: 13px; }
+.actions { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+.btn { font-size: 13px; color: var(--muted); text-decoration: none; padding-bottom: 2px; border-bottom: 1px solid transparent; cursor: pointer; }
+.btn:hover { color: var(--ink); }
+.btn[aria-pressed="true"], .btn.on { color: var(--ink); border-bottom-color: var(--ink); }
+.btn.primary { color: var(--ink); }
+.btn.danger { color: var(--ink); border-bottom-color: var(--ink); }
+.log { display: grid; gap: 14px; border-top: 1px solid var(--line); padding-top: 14px; }
+.log label { display: grid; gap: 4px; font-size: 11px; color: var(--muted); letter-spacing: .06em; }
+.log input:not([type="checkbox"]), .log textarea, .log select { font-size: 13px; color: var(--ink); background: transparent; border: 0; border-bottom: 1px solid var(--line); padding: 6px 0; }
+.log textarea { min-height: 60px; resize: vertical; }
+.log label.inline { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink); }
+.fine { font-size: 11px; color: var(--muted); }
+@media (max-width: 520px) {
+  .bar h1 { flex-basis: 100%; }
+  .grid { gap: 24px 12px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { animation: slide .2s ease-out; }
+  @keyframes slide { from { transform: translateX(24px); opacity: 0; } }
+}
+
+/* 建築図面のような罫線グリッド */
+:root { --f-mono: "DM Mono", ui-monospace, Menlo, monospace; }
+.top { gap: 0; padding-block: 0; border: 1px solid var(--ink); border-bottom: 0; margin-top: 4px; }
+.top > * { border-bottom: 1px solid var(--ink); }
+.bar { align-items: stretch; gap: 0; flex-wrap: nowrap; }
+.bar h1 { padding: 12px 16px; border-right: 1px solid var(--ink); font-weight: 700; letter-spacing: .2em; }
+.bar .search { border: 0; padding: 12px 16px; }
+.bar .search:focus { border: 0; outline: none; background: var(--tile); }
+.addbtn { padding: 12px 16px; border-left: 1px solid var(--ink); font-weight: 500; }
+.addbtn:hover { background: var(--ink); color: var(--bg); }
+.pills { gap: 0; }
+.pill { padding: 10px 14px; border-bottom: 0; border-right: 1px solid var(--line); color: var(--muted); }
+.pill[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-bottom: 0; }
+.sub { gap: 0; padding: 0; align-items: stretch; }
+.sub > * { padding: 8px 14px; display: flex; align-items: center; }
+.sub #progress { font-family: var(--f-mono); letter-spacing: .04em; color: var(--ink); }
+.sub select { border-left: 1px solid var(--line); padding: 8px 14px; font-size: 12px; }
+.tip { padding: 10px 16px; max-width: none; }
+.grid { gap: 0; margin-top: 24px; border-top: 1px solid var(--ink); border-left: 1px solid var(--ink); grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.pin { gap: 0; border-right: 1px solid var(--ink); border-bottom: 1px solid var(--ink); padding: 0; }
+.pin:hover { background: var(--tile); }
+.pin:hover .ph { opacity: 1; }
+.spec { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 10px; font-size: 10px; letter-spacing: .14em; color: var(--muted); border-bottom: 1px solid var(--line); }
+.spec { gap: 8px; white-space: nowrap; }
+.spec > span { flex: none; }
+.spec .yr { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-family: var(--f-mono); font-size: 12px; letter-spacing: .02em; color: var(--ink); }
+.ph { margin: 10px; }
+.cap { padding: 0 10px 10px; }
+.cap .n { font-weight: 700; }
+.cap .m { font-size: 11px; }
+.empty { border-right: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+.sheet { border-left: 1px solid var(--ink); }
+.hero { border-bottom: 1px solid var(--ink); }
+.facts { gap: 0; border-top: 1px solid var(--ink); grid-template-columns: 5em minmax(0, 1fr); }
+.facts dt, .facts dd { padding: 7px 0; border-bottom: 1px solid var(--line); }
+.facts dd { font-family: inherit; }
+.mame { border-top: 1px solid var(--ink); }
+.log { border-top: 1px solid var(--ink); }
+.kind { font-family: var(--f-mono); }
+@media (max-width: 520px) {
+  .bar { flex-wrap: wrap; }
+  .bar h1 { flex-basis: 100%; border-right: 0; border-bottom: 1px solid var(--ink); }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
+  .ph { margin: 8px; }
+  .sub .sp { display: none; }
+  .sub #progress { flex-basis: 100%; border-bottom: 1px solid var(--line); }
+  .sub select { flex: 1; min-width: 0; }
+  .sub select:first-of-type { border-left: 0; }
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="bar">
+      <h1>京都めぐり帖</h1>
+      <input class="search" type="search" id="q" placeholder="さがす" aria-label="名前・説明・豆知識で検索">
+      <button type="button" class="addbtn" id="addBtn">＋ 追加</button>
+    </div>
+    <div class="pills" id="pills" role="group" aria-label="種類"></div>
+    <div class="sub">
+      <span id="progress"></span>
+      <span class="sp"></span>
+      <select id="area" aria-label="エリア"></select>
+      <select id="status" aria-label="印">
+        <option value="all">すべて</option>
+        <option value="todo">まだ</option>
+        <option value="done">行った</option>
+        <option value="want">行きたい</option>
+        <option value="again">また行きたい</option>
+      </select>
+      <select id="sort" aria-label="並び順">
+        <option value="area">エリア順</option>
+        <option value="year">古い順</option>
+        <option value="yeardesc">新しい順</option>
+        <option value="name">名前順</option>
+        <option value="todo">まだを先に</option>
+      </select>
+    </div>
+    <div class="tip" id="tip" role="button" tabindex="0"></div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <p class="fine" style="margin-top:48px">年は竣工年・創業年・始まりの年です。営業時間や公開日は変わるので、出かける前に公式情報を確かめてください。印・メモ・写真はこのスマホの中に保存されます。機種変更の前などは、下の「記録を書き出す」でバックアップしてください。</p>
+  <div class="actions" style="margin-top:12px"><button type="button" class="btn" id="exportBtn">記録を書き出す</button><label class="btn" for="importFile">記録を読み込む</label><input type="file" id="importFile" accept="application/json,.json" hidden><span class="fine" id="bkmsg"></span></div>
+</div>
+<div id="sheetRoot"></div>
+
+<script>
+const blobUrls = {};
+const AREAS = ["四条界隈", "三条・御池", "御所・二条", "今出川・京大周辺", "岡崎・南禅寺", "祇園・東山", "西陣・衣笠", "洛北", "京都駅周辺", "嵐山・嵯峨", "伏見・醍醐", "宇治", "郊外"];
+
+const SPOTS = [
+  // ---- 建築 ----
+  { id: "fucho", tips: ["京都府庁の場所は、幕末に京都守護職の上屋敷があった所。"], fest: true, kind: "arch", name: "京都府庁旧本館", kana: "きょうとふちょうきゅうほんかん", area: "御所・二条", addr: "上京区下立売通新町西入薮ノ内町", year: 1904, style: "ネオ・ルネサンス", by: "松室重光",
+    desc: "煉瓦造2階建ての府庁舎。創建時の姿を残す現役の官公庁建物としては日本最古級とされ、国の重要文化財。中庭の桜と、正庁・旧知事室の内装が見どころ。",
+    note: "平日を中心に一般公開" },
+  { id: "bunpaku", kind: "arch", name: "京都文化博物館 別館（旧日本銀行京都支店）", kana: "きょうとぶんかはくぶつかんべっかん", area: "三条・御池", addr: "中京区三条通高倉西入菱屋町", year: 1906, style: "辰野式", by: "辰野金吾・長野宇平治",
+    desc: "赤煉瓦に白い石の帯を巻いた、東京駅と同じ辰野金吾の作風。銀行営業室だった吹き抜けのホールはイベント会場として使われている。国の重要文化財。",
+    note: "" },
+  { id: "chukyo-post", kind: "arch", name: "中京郵便局", kana: "なかぎょうゆうびんきょく", area: "三条・御池", addr: "中京区三条通東洞院東入菱屋町", year: 1902, style: "ネオ・ルネサンス", by: "逓信省（吉井茂則・三橋四郎）",
+    desc: "明治の郵便局舎。1978年に外壁だけを残して内部を建て替えた、日本の外壁保存の先駆けとして知られる。今も郵便局として使われている。",
+    note: "" },
+  { id: "shinpukan", fest: true, kind: "arch", name: "新風館（旧京都中央電話局）", kana: "しんぷうかん", area: "三条・御池", addr: "中京区烏丸通姉小路下ル場之町", year: 1926, style: "逓信建築・初期モダニズム", by: "吉田鉄郎（逓信省）",
+    desc: "大正末の電話局舎を活かした商業施設。2020年に隈研吾の設計で再生し、エースホテル京都が入る。アーチ窓が並ぶ烏丸通側の外観が当時のまま。",
+    note: "" },
+  { id: "1928", fest: true, kind: "arch", name: "1928ビル（旧大阪毎日新聞社京都支局）", kana: "せんきゅうひゃくにじゅうはちびる", area: "三条・御池", addr: "中京区三条通御幸町東入弁慶石町", year: 1928, style: "アール・デコ", by: "武田五一",
+    desc: "星形の窓とバルコニーが目印。星は毎日新聞の社章に由来する。現在はギャラリーやカフェ、劇場が入る複合ビル。",
+    note: "" },
+  { id: "meirin", kind: "arch", name: "京都芸術センター（旧明倫小学校）", kana: "きょうとげいじゅつせんたー", area: "四条界隈", addr: "中京区室町通蛸薬師下ル山伏山町", year: 1931, style: "スパニッシュ風", by: "京都市営繕課",
+    desc: "呉服商の町衆が支えた番組小学校の昭和初期の校舎。洋風の外観に瓦屋根を載せ、教室や講堂、和室が残る。国の登録有形文化財。館内に喫茶店がある。",
+    note: "" },
+  { id: "cityhall", fest: true, kind: "arch", name: "京都市役所 本庁舎", kana: "きょうとしやくしょほんちょうしゃ", area: "三条・御池", addr: "中京区寺町通御池上ル上本能寺前町", year: 1927, style: "ネオ・バロック＋東洋的意匠", by: "中野進一（武田五一 監修）",
+    desc: "1927年に東側、1931年に西側が完成。洋風の構成に、塔屋や細部の東洋風デザインを合わせている。2021年の改修で耐震化され、正面の姿は保存された。",
+    note: "" },
+  { id: "harisutosu", church: true, fest: true, kind: "arch", name: "京都ハリストス正教会 生神女福音聖堂", kana: "きょうとはりすとすせいきょうかい", area: "御所・二条", addr: "中京区柳馬場通二条上ル", year: 1903, style: "ビザンチン様式（木造）", by: "松室重光",
+    desc: "府庁旧本館と同じ松室重光による木造の正教会聖堂。白い外壁と玉ねぎ形の屋根飾りが、町家の並ぶ通りの中で目を引く。京都府指定文化財。",
+    note: "内部見学は要確認" },
+  { id: "heian-meiji", fest: true, kind: "arch", name: "平安女学院 明治館", kana: "へいあんじょがくいんめいじかん", area: "御所・二条", addr: "上京区下立売通烏丸西入", year: 1895, style: "ゴシック調の煉瓦造", by: "J.M.ガーディナー",
+    desc: "長楽館も手がけた米国人建築家ガーディナーによる赤煉瓦の校舎。隣の聖アグネス教会と並ぶ烏丸通の景色が美しい。",
+    note: "外観見学" },
+  { id: "doshisha", kind: "arch", name: "同志社大学 今出川キャンパスの煉瓦建築群", kana: "どうししゃだいがく", area: "今出川・京大周辺", addr: "上京区今出川通烏丸東入", year: 1884, style: "アメリカン・ゴシックほか", by: "D.C.グリーン、R.ゼール ほか",
+    desc: "彰栄館（1884）、礼拝堂（1886）、ハリス理化学館、クラーク記念館（1894）など明治の赤煉瓦建築が並ぶ。5棟が国の重要文化財。",
+    note: "" },
+  { id: "kyodai-clock", kind: "arch", name: "京都大学 百周年時計台記念館", kana: "きょうとだいがくとけいだい", area: "今出川・京大周辺", addr: "左京区吉田本町", year: 1925, style: "セセッション風", by: "武田五一",
+    desc: "京大の象徴の時計台。2003年に改修され、歴史展示室とレストラン、交流ラウンジが入る。正面の縦に伸びる柱型が特徴。",
+    note: "" },
+  { id: "komai", kind: "arch", name: "駒井家住宅（駒井卓・静江記念館）", kana: "こまいけじゅうたく", area: "今出川・京大周辺", addr: "左京区北白川伊織町64", year: 1927, style: "スパニッシュ様式", by: "W.M.ヴォーリズ",
+    desc: "遺伝学者・駒井卓の自邸。ヴォーリズが手がけた住宅で、サンルームや造り付けの家具が当時のまま残る。日本ナショナルトラストが管理。",
+    note: "公開は時期限定の金・土曜、事前予約制" },
+  { id: "kyocera", tips: ["1933年に昭和天皇の即位を記念して「大礼記念京都美術館」として開館した。"], fest: true, kind: "arch", name: "京都市京セラ美術館", kana: "きょうとしきょうせらびじゅつかん", area: "岡崎・南禅寺", addr: "左京区岡崎円勝寺町124", year: 1933, style: "帝冠様式", by: "前田健二郎（設計競技案）",
+    desc: "洋風の建物に和風の屋根を載せた昭和初期の美術館。現存する日本最古の公立美術館建築とされる。2020年に青木淳・西澤徹夫の改修で、正面にガラスの入口ができた。",
+    note: "" },
+  { id: "fu-library", fest: true, kind: "arch", name: "京都府立図書館", kana: "きょうとふりつとしょかん", area: "岡崎・南禅寺", addr: "左京区岡崎成勝寺町9", year: 1909, style: "明治の洋風建築", by: "武田五一",
+    desc: "明治の図書館の正面外壁を残して2001年に建て替えた。岡崎公園に面した煉瓦と石の正面が当時の姿。",
+    note: "" },
+  { id: "rohm", fest: true, kind: "arch", name: "ロームシアター京都（旧京都会館）", kana: "ろーむしあたーきょうと", area: "岡崎・南禅寺", addr: "左京区岡崎最勝寺町13", year: 1960, style: "戦後モダニズム", by: "前川國男",
+    desc: "大きく張り出した庇と打ち放しコンクリートの劇場。2016年に香山壽夫の改修で再開。中庭に面したカフェや書店もある。",
+    note: "" },
+  { id: "chorakukan", tips: ["村井吉兵衛は「サンライス」「ヒーロー」などの紙巻たばこで財を成した「たばこ王」。"], fest: true, kind: "arch", name: "長楽館", kana: "ちょうらくかん", area: "祇園・東山", addr: "東山区円山町604", year: 1909, style: "外観ルネサンス、内装は各国様式", by: "J.M.ガーディナー",
+    desc: "煙草王・村井吉兵衛の別邸として円山公園に建った迎賓館。部屋ごとにロココ、新古典、中国風、イスラム風、和風と内装が変わる。2024年に国の重要文化財に指定。カフェで中に入れる。",
+    note: "" },
+  { id: "kyohaku", fest: true, kind: "arch", name: "京都国立博物館 明治古都館", kana: "きょうとこくりつはくぶつかんめいじこと", area: "祇園・東山", addr: "東山区茶屋町527", year: 1895, style: "フレンチ・ルネサンス（バロック）", by: "片山東熊",
+    desc: "赤坂離宮と同じ宮廷建築家・片山東熊の作。正面の破風には伎芸天と毘首羯磨の彫刻。国の重要文化財。",
+    note: "展示は休止中で、特別公開時のみ内部に入れる。外観は見学可" },
+  { id: "tokasaikan", tips: ["四条大橋の対岸の南座は、歌舞伎発祥の地とされる「出雲の阿国」ゆかりの劇場。"], fest: true, kind: "arch", name: "東華菜館 本店", kana: "とうかさいかん", area: "四条界隈", addr: "下京区四条大橋西詰", year: 1926, style: "スパニッシュ・バロック", by: "W.M.ヴォーリズ",
+    desc: "もとは西洋料理店「矢尾政」として建てられ、戦後に北京料理店となった。入口の装飾や、今も動く日本最古級のエレベーターが見もの。",
+    note: "北京料理店として営業" },
+  { id: "dendoin", kind: "arch", name: "本願寺伝道院", kana: "ほんがんじでんどういん", area: "京都駅周辺", addr: "下京区油小路通正面下ル", year: 1912, style: "インド・サラセン風", by: "伊東忠太",
+    desc: "旧真宗信徒生命保険の社屋。築地本願寺の伊東忠太らしく、ドーム屋根と周りの石造りの怪獣像が不思議な雰囲気をつくる。",
+    note: "外観見学" },
+  { id: "tower", tips: ["京都タワーは高さ131m。当時の京都市の人口131万人にちなむとされる。"], kind: "arch", name: "京都タワー", kana: "きょうとたわー", area: "京都駅周辺", addr: "下京区烏丸通七条下ル東塩小路町721-1", year: 1964, style: "モノコック構造のモダニズム", by: "山田守",
+    desc: "鉄骨を使わず、鋼板の円筒を溶接でつないだモノコック構造。京都の町を照らす灯台をイメージしたとされる。",
+    note: "" },
+  { id: "icc", kind: "arch", name: "国立京都国際会館", kana: "こくりつきょうとこくさいかいかん", area: "郊外", addr: "左京区岩倉大鷺町422", year: 1966, style: "戦後モダニズム", by: "大谷幸夫",
+    desc: "台形と逆台形を組み合わせた断面が、合掌造りや社寺の屋根を思わせる。宝ヶ池の水辺に建ち、日本の戦後建築の代表作のひとつ。",
+    note: "見学は公式サイトで要確認" },
+  { id: "chochikukyo", kind: "arch", name: "聴竹居", kana: "ちょうちくきょ", area: "郊外", addr: "乙訓郡大山崎町大山崎谷田31", year: 1928, style: "和洋折衷・環境共生住宅", by: "藤井厚二",
+    desc: "京大教授の藤井厚二が、日本の気候に合う住まいを実験した自邸。通風や採光の工夫と、和と洋を溶け合わせた意匠で知られる。国の重要文化財。",
+    note: "見学は予約制" },
+
+
+
+  // ---- 教会 ----
+  { id: "kawaramachi-church", church: true, kind: "arch", name: "カトリック河原町教会（聖フランシスコ・ザビエル大聖堂）", kana: "かとりっくかわらまちきょうかい", area: "三条・御池", addr: "中京区河原町通三条上ル", year: 1967, style: "戦後モダニズムの聖堂", by: "フロイラー修道士",
+    desc: "カトリック京都教区の大聖堂。社寺の屋根を思わせる反った屋根の現代的な聖堂で、スイスの作家によるステンドグラスが並ぶ。前の木造聖堂（1890年）は明治村に移築されている。",
+    note: "" },
+  { id: "fukkatsu", fest: true, church: true, kind: "arch", name: "京都復活教会", kana: "きょうとふっかつきょうかい", area: "洛北", addr: "北区紫野西御所田町63", year: 1935, style: "ゴシック", by: "W.M.ヴォーリズ",
+    desc: "堀川北大路の目印になっている白い教会。高い鐘楼、尖頭アーチとトレーサリーの窓、礼拝堂の木の小屋組みが見どころ。",
+    note: "" },
+  { id: "kamogawa-lutheran", fest: true, church: true, kind: "arch", name: "日本福音ルーテル賀茂川教会", kana: "にほんふくいんるーてるかもがわきょうかい", area: "洛北", addr: "北区小山下内河原町14", year: 1954, style: "中世イタリアの教会風", by: "W.M.ヴォーリズ",
+    desc: "ヴォーリズが戦後に手がけた教会。赤い瓦屋根とクリーム色の壁、角の塔と小さなバラ窓が、賀茂川近くの住宅街にとけこむ。",
+    note: "" },
+  { id: "nishijin-church", fest: true, church: true, kind: "arch", name: "カトリック西陣教会", kana: "かとりっくにしじんきょうかい", area: "西陣・衣笠", addr: "上京区一条通（一条殿町502-1）", year: 1950, era: "戦後の占領期に建設", style: "ロマネスク風の木造聖堂", by: "ウィリアム・ニーリー修道士",
+    desc: "戦後の占領期に、米国のメリノール宣教会の支援で建てられた木造の聖堂。重厚なロマネスク風のつくりで、幕末の志士の屋敷跡に建つ。",
+    note: "" },
+  { id: "marutamachi-church", fest: true, church: true, kind: "arch", name: "京都丸太町教会", kana: "きょうとまるたまちきょうかい", area: "岡崎・南禅寺", addr: "左京区丸太町通川端東入東丸太町24-2", year: 1995, style: "現代の教会建築", by: "岩井要",
+    desc: "木の質感と自然光をいかした簡素な礼拝堂。パイプオルガンと、三浦啓子によるステンドグラスの光が空間を彩る。",
+    note: "" },
+
+  // ---- 寺社・名所 ----
+  { id: "kiyomizu", tips: ["「清水の舞台から飛び降りる」は、江戸時代に願掛けで実際に飛び降りる人がいたことに由来する。", "舞台は釘を使わない懸造。寺の名は境内の「音羽の滝」の清らかな水から。"], kind: "classic", name: "清水寺", kana: "きよみずでら", area: "祇園・東山", addr: "東山区清水1-294", year: 778, era: "778年 開創（寺伝）", style: "懸造（舞台造）", by: "",
+    desc: "崖に139本のケヤキの柱を組んで張り出した「清水の舞台」で知られる。今の本堂は1633年に徳川家光の寄進で再建されたもので国宝。世界遺産。",
+    note: "" },
+  { id: "kinkaku", tips: ["1層は寝殿造、2層は武家造、3層は禅宗様の仏殿造。", "三島由紀夫の小説「金閣寺」は1950年の放火事件を題材にしている。"], kind: "classic", name: "鹿苑寺（金閣寺）", kana: "ろくおんじきんかくじ", area: "西陣・衣笠", addr: "北区金閣寺町1", year: 1397, era: "1397年（足利義満の北山殿）", style: "寝殿造・武家造・禅宗様の三層", by: "",
+    desc: "足利義満の山荘を寺にした。舎利殿（金閣）は1層ごとに様式が違う。1950年に放火で焼失し、1955年に再建された。世界遺産。",
+    note: "" },
+  { id: "ginkaku", tips: ["銀箔は貼られていない。名前は江戸時代に金閣に対して付いた通称。", "義政は東山文化の中心人物。わび・さびの美意識はここから広がった。"], kind: "classic", name: "慈照寺（銀閣寺）", kana: "じしょうじぎんかくじ", area: "岡崎・南禅寺", addr: "左京区銀閣寺町2", year: 1482, era: "1482年（足利義政の東山殿）", style: "書院造の源流", by: "",
+    desc: "足利義政の山荘を寺にした。観音殿（銀閣）と、書院造の始まりとされる東求堂の同仁斎がともに国宝。砂を盛った銀沙灘と向月台も見どころ。世界遺産。",
+    note: "" },
+  { id: "ryoanji", tips: ["石庭の作者や意味ははっきりわかっておらず、「虎の子渡し」などの解釈がある。", "境内のつくばいの「吾唯足知（われ、ただ足るを知る）」も有名。"], kind: "classic", name: "龍安寺", kana: "りょうあんじ", area: "西陣・衣笠", addr: "右京区龍安寺御陵下町13", year: 1450, era: "1450年 創建", style: "枯山水の石庭", by: "",
+    desc: "白砂に15の石を置いた方丈の石庭で世界に知られる禅寺。どこから見ても15個すべては一度に見えないといわれる。世界遺産。",
+    note: "" },
+  { id: "ninnaji", tips: ["代々皇族が住職を務めた門跡寺院で、「御室御所」とも呼ばれた。", "御室桜は背が低い遅咲きの桜で、京都の桜の見納めといわれる。"], kind: "classic", name: "仁和寺", kana: "にんなじ", area: "西陣・衣笠", addr: "右京区御室大内33", year: 888, era: "888年 創建", style: "", by: "",
+    desc: "宇多天皇が開いた門跡寺院。金堂は江戸初期に御所の紫宸殿を移したもので国宝。遅咲きの御室桜と五重塔の眺めが有名。世界遺産。",
+    note: "" },
+  { id: "kitano", tips: ["学問の神様・菅原道真をまつる。境内の牛の像は道真の使い。", "2月25日の梅花祭では、上七軒の芸妓・舞妓が野点でもてなす。"], kind: "classic", name: "北野天満宮", kana: "きたのてんまんぐう", area: "西陣・衣笠", addr: "上京区馬喰町", year: 947, era: "947年 創建", style: "権現造（八棟造）", by: "",
+    desc: "菅原道真をまつる天満宮の総本社。本殿は1607年に豊臣秀頼が建てたもので、権現造の古い例として国宝。梅と紅葉の名所。",
+    note: "" },
+  { id: "myoshinji", kind: "classic", name: "妙心寺", kana: "みょうしんじ", area: "西陣・衣笠", addr: "右京区花園妙心寺町1", year: 1337, era: "1337年 創建", style: "禅宗伽藍", by: "",
+    desc: "40を超える塔頭が並ぶ臨済宗最大の禅寺。法堂の天井には狩野探幽の雲龍図がある。塔頭の退蔵院の庭も人気。",
+    note: "" },
+  { id: "daitokuji", tips: ["千利休が三門の上に自分の木像を置いたことが秀吉の怒りを買い、切腹の一因になったといわれる。", "一休さんで知られる一休宗純も住持を務めた。"], kind: "classic", name: "大徳寺", kana: "だいとくじ", area: "洛北", addr: "北区紫野大徳寺町53", year: 1325, era: "1325年頃 創建", style: "禅宗伽藍", by: "",
+    desc: "茶の湯とゆかりの深い禅寺。千利休が上層を寄進した三門「金毛閣」が有名。大仙院や高桐院など、庭の美しい塔頭が集まる。",
+    note: "塔頭ごとに公開日が違う" },
+  { id: "kamigamo", tips: ["京都の葵祭は、上賀茂神社と下鴨神社の祭り。", "立砂は神が降り立った神山をかたどったもの。"], kind: "classic", name: "上賀茂神社（賀茂別雷神社）", kana: "かみがもじんじゃ", area: "洛北", addr: "北区上賀茂本山339", year: 678, era: "古代（678年社殿造営と伝わる）", style: "流造", by: "",
+    desc: "京都最古の神社のひとつ。細殿の前の円錐形の立砂が印象的。本殿・権殿（1863年）は流造の代表として国宝。世界遺産。",
+    note: "" },
+  { id: "shugakuin", tips: ["後水尾上皇は、徳川家と対立しながら寛永文化を育てた天皇。"], kind: "classic", name: "修学院離宮", kana: "しゅがくいんりきゅう", area: "洛北", addr: "左京区修学院藪添", year: 1659, era: "1659年頃 造営", style: "数寄屋の離宮と山荘庭園", by: "後水尾上皇",
+    desc: "後水尾上皇がつくった山荘。上・中・下の3つの離宮を田畑の中の道がつなぎ、上の茶屋からは借景の大きな眺めが広がる。",
+    note: "宮内庁への参観申込が必要" },
+  { id: "shisendo", tips: ["名は、中国の詩人36人の肖像を掲げた「詩仙の間」から。"], kind: "classic", name: "詩仙堂", kana: "しせんどう", area: "洛北", addr: "左京区一乗寺門口町27", year: 1641, era: "1641年 造営", style: "", by: "石川丈山",
+    desc: "文人・石川丈山の山荘。座敷から眺めるサツキの刈り込みの庭と、ししおどしの音で知られる。",
+    note: "" },
+  { id: "shimogamo", tips: ["糺の森は鴨川と高野川にはさまれた原生林で、国の史跡。", "境内の御手洗池の泡をかたどったのが「みたらし団子」の始まりといわれる。"], kind: "classic", name: "下鴨神社（賀茂御祖神社）", kana: "しもがもじんじゃ", area: "今出川・京大周辺", addr: "左京区下鴨泉川町59", year: 0, era: "古代から（紀元前の創祀と伝わる）", style: "流造", by: "",
+    desc: "鴨川と高野川の合流点にある古社。参道の糺の森は原生林の名残。東西の本殿（1863年）は国宝。世界遺産。",
+    note: "" },
+  { id: "gosho", tips: ["紫宸殿の前には「左近の桜・右近の橘」が植えられている。", "明治天皇の東京行きは、正式な遷都の宣言がないまま行われた。"], kind: "classic", name: "京都御所", kana: "きょうとごしょ", area: "御所・二条", addr: "上京区京都御苑3", year: 1855, era: "1855年 再建（今の建物）", style: "寝殿造を伝える宮殿", by: "",
+    desc: "明治の東京遷都まで天皇が住んだ御所。紫宸殿や清涼殿は平安の様式を再現して1855年に建て直された。事前申込なしで通年公開。",
+    note: "月曜休み（祝日の場合は翌日）" },
+  { id: "nijojo", tips: ["1867年、15代将軍・徳川慶喜が二の丸御殿で大政奉還を表明した。", "家康の将軍宣下の祝賀も二条城で行われ、江戸幕府の始まりと終わりの舞台になった。"], kind: "classic", name: "元離宮二条城", kana: "にじょうじょう", area: "御所・二条", addr: "中京区二条通堀川西入二条城町541", year: 1603, era: "1603年 築城", style: "書院造（武家風）", by: "",
+    desc: "徳川家康が築いた城。二の丸御殿は武家風書院造の代表で国宝。廊下の鶯張りや狩野派の障壁画が見どころ。大政奉還の舞台。世界遺産。",
+    note: "" },
+  { id: "nanzenji", tips: ["三門は歌舞伎で石川五右衛門が「絶景かな」と言う場面の舞台。", "湯豆腐の店が多いのは、精進料理の文化と良い水があったから。"], kind: "classic", name: "南禅寺", kana: "なんぜんじ", area: "岡崎・南禅寺", addr: "左京区南禅寺福地町86", year: 1291, era: "1291年 創建", style: "禅宗伽藍", by: "",
+    desc: "禅宗寺院の最高位とされた名刹。「絶景かな」の台詞で知られる三門（1628年）と、境内を通る煉瓦造の水路閣が有名。",
+    note: "" },
+  { id: "suirokaku", tips: ["琵琶湖疏水の分線の一部で、南禅寺の景観に配慮して煉瓦のアーチ橋にした。"], kind: "arch", name: "南禅寺 水路閣", kana: "なんぜんじすいろかく", area: "岡崎・南禅寺", addr: "左京区南禅寺福地町（南禅寺境内）", year: 1890, style: "煉瓦造のアーチ水路橋", by: "田辺朔郎",
+    desc: "琵琶湖疏水の分線を通すため、南禅寺の境内に架けられた煉瓦と花崗岩の水路橋。古代ローマの水道橋のようなアーチが並び、今も水が流れる。国の史跡（琵琶湖疏水）。",
+    note: "いつでも見られる" },
+  { id: "eikando", tips: ["振り返る阿弥陀は、遅れた僧の永観に「永観遅し」と声をかけた姿と伝わる。"], kind: "classic", name: "永観堂（禅林寺）", kana: "えいかんどう", area: "岡崎・南禅寺", addr: "左京区永観堂町48", year: 853, era: "853年 創建", style: "", by: "",
+    desc: "「もみじの永観堂」と呼ばれる紅葉の名所。後ろを振り返る姿の阿弥陀如来像「みかえり阿弥陀」で知られる。",
+    note: "" },
+  { id: "heianjingu", tips: ["祭神は平安京をつくった桓武天皇と、最後に京都にいた孝明天皇。", "神苑は明治の名庭師・7代目小川治兵衛（植治）の作。"], kind: "classic", name: "平安神宮", kana: "へいあんじんぐう", area: "岡崎・南禅寺", addr: "左京区岡崎西天王町97", year: 1895, era: "1895年 創建（明治28）", style: "平安宮朝堂院の縮小復元", by: "伊東忠太・木子清敬",
+    desc: "平安遷都1100年を記念して、平安京の朝堂院を約8分の5の大きさで再現した。朱塗りの社殿と、1929年完成の鉄筋コンクリートの大鳥居が岡崎の目印。",
+    note: "" },
+  { id: "chionin", tips: ["除夜の鐘で、17人の僧が大きな鐘をつく姿が有名。", "境内の「七不思議」には、どこから見てもこちらを向く「三方正面真向の猫」がある。"], kind: "classic", name: "知恩院", kana: "ちおんいん", area: "祇園・東山", addr: "東山区林下町400", year: 1175, era: "1175年 開創", style: "", by: "",
+    desc: "法然ゆかりの浄土宗総本山。1621年建立の三門は現存する木造の門で最大級、国宝。御影堂も国宝。",
+    note: "" },
+  { id: "yasaka", tips: ["祇園祭は八坂神社の祭り。明治までは「祇園社」「祇園感神院」と呼ばれた。", "大晦日のをけら詣りもこの神社。"], kind: "classic", name: "八坂神社", kana: "やさかじんじゃ", area: "祇園・東山", addr: "東山区祇園町北側625", year: 656, era: "656年 創祀（社伝）", style: "祇園造", by: "",
+    desc: "祇園祭の神社。本殿（1654年）は本殿と拝殿をひとつの屋根で覆う独特の祇園造で、2020年に国宝になった。四条通の突き当たりの西楼門が目印。",
+    note: "" },
+  { id: "kodaiji", tips: ["ねねの道は、北政所（ねね）が晩年を過ごしたことから名付けられた。"], kind: "classic", name: "高台寺", kana: "こうだいじ", area: "祇園・東山", addr: "東山区高台寺下河原町526", year: 1606, era: "1606年 創建", style: "", by: "",
+    desc: "豊臣秀吉の妻・北政所（ねね）が秀吉を弔うために開いた寺。霊屋の「高台寺蒔絵」と、夜のライトアップで知られる。",
+    note: "" },
+  { id: "hokanji", tips: ["聖徳太子の創建と伝わる古い寺。"], kind: "classic", name: "法観寺（八坂の塔）", kana: "ほうかんじやさかのとう", area: "祇園・東山", addr: "東山区八坂上町388", year: 1440, era: "1440年 再建（五重塔）", style: "和様の五重塔", by: "",
+    desc: "石畳の坂の先に立つ高さ約46mの五重塔。東山の町並みを象徴する景色。1440年に足利義教が再建した。",
+    note: "塔の内部公開は日が限られる" },
+  { id: "kenninji", tips: ["栄西は中国から茶の種を持ち帰り、日本に喫茶の習慣を広めた。境内に「茶碑」がある。"], kind: "classic", name: "建仁寺", kana: "けんにんじ", area: "祇園・東山", addr: "東山区大和大路通四条下ル小松町584", year: 1202, era: "1202年 創建", style: "禅宗伽藍", by: "",
+    desc: "栄西が開いた京都最古の禅寺。法堂の天井いっぱいの双龍図（2002年）と、俵屋宗達の風神雷神図屏風（複製を展示）が見られる。",
+    note: "" },
+  { id: "sanjusangendo", tips: ["本堂の柱の間が33あることが名前の由来。", "江戸時代には軒下で矢を射通す「通し矢」が行われ、今は1月に新成人の大的大会がある。"], kind: "classic", name: "三十三間堂（蓮華王院）", kana: "さんじゅうさんげんどう", area: "京都駅周辺", addr: "東山区三十三間堂廻町657", year: 1266, era: "1266年 再建（本堂）", style: "和様", by: "",
+    desc: "長さ約120mの本堂に、1001体の千手観音立像がずらりと並ぶ。本堂も観音像もすべて国宝。",
+    note: "" },
+  { id: "toji", tips: ["東寺の五重塔は、新幹線から見える京都の象徴。", "毎月21日の弘法市は空海の命日にちなむ。"], kind: "classic", name: "東寺（教王護国寺）", kana: "とうじ", area: "京都駅周辺", addr: "南区九条町1", year: 796, era: "796年 創建", style: "", by: "",
+    desc: "平安京の入口に建てられ、空海に託された寺。1644年に再建された五重塔は高さ約55mで、木造の塔として日本一の高さ。世界遺産。",
+    note: "" },
+  { id: "nishihonganji", tips: ["西本願寺と東本願寺が分かれたのは、徳川家康が1602年に寺地を寄進したことから。", "飛雲閣は金閣・銀閣と並ぶ京都三名閣のひとつ。"], kind: "classic", name: "西本願寺", kana: "にしほんがんじ", area: "京都駅周辺", addr: "下京区堀川通花屋町下ル本願寺門前町", year: 1591, era: "1591年 現在地へ", style: "", by: "",
+    desc: "浄土真宗本願寺派の本山。御影堂・阿弥陀堂、豪華な彫刻の唐門、書院など国宝が多い。北には伊東忠太の本願寺伝道院がある。世界遺産。",
+    note: "" },
+  { id: "higashihonganji", tips: ["御影堂の再建では、女性の髪で編んだ「毛綱」で木材を引き上げた。その実物が展示されている。"], kind: "classic", name: "東本願寺", kana: "ひがしほんがんじ", area: "京都駅周辺", addr: "下京区烏丸通七条上ル常葉町754", year: 1602, era: "1602年 創立", style: "", by: "",
+    desc: "真宗大谷派の本山。1895年に再建された御影堂は世界最大級の木造建築。飛地境内の庭園・渉成園も見られる。",
+    note: "" },
+  { id: "kyotostation", tips: ["京都駅の大階段の上からは、京都の町並みと京都タワーが一望できる。"], kind: "arch", name: "京都駅ビル", kana: "きょうとえきびる", area: "京都駅周辺", addr: "下京区烏丸通塩小路下ル東塩小路町", year: 1997, style: "現代建築（大空間のアトリウム）", by: "原広司",
+    desc: "平安遷都1200年事業の設計競技で選ばれた駅ビル。ガラス屋根の大きな吹き抜けと、171段の大階段がつくる「谷」のような空間。",
+    note: "いつでも見られる" },
+  { id: "tofukuji", tips: ["名は奈良の東大寺と興福寺から1字ずつ取った。", "通天橋は紅葉の名所で、秋は大混雑する。"], kind: "classic", name: "東福寺", kana: "とうふくじ", area: "京都駅周辺", addr: "東山区本町15-778", year: 1236, era: "1236年 創建", style: "禅宗伽藍", by: "",
+    desc: "通天橋の紅葉で知られる禅寺。三門（1425年）は現存最古の禅寺の三門で国宝。方丈には重森三玲が1939年に作った市松模様のモダンな庭がある。",
+    note: "" },
+  { id: "fushimiinari", tips: ["稲荷のお使いは狐。いなり寿司の油揚げは狐の好物にちなむ。", "千本鳥居は「願いが通る（通った）」お礼に奉納されたもの。"], kind: "classic", name: "伏見稲荷大社", kana: "ふしみいなりたいしゃ", area: "伏見・醍醐", addr: "伏見区深草藪之内町68", year: 711, era: "711年 創祀（社伝）", style: "稲荷造", by: "",
+    desc: "全国の稲荷神社の総本宮。奉納された朱の鳥居が山へ続く千本鳥居が有名。本殿は1499年の再建で重要文化財。",
+    note: "24時間参拝できる" },
+  { id: "daigoji", tips: ["1598年、豊臣秀吉が約1300人を招いて「醍醐の花見」を催した。今も4月第2日曜に「豊太閤花見行列」がある。"], kind: "classic", name: "醍醐寺", kana: "だいごじ", area: "伏見・醍醐", addr: "伏見区醍醐東大路町22", year: 874, era: "874年 開創", style: "", by: "",
+    desc: "豊臣秀吉の「醍醐の花見」の寺。951年完成の五重塔は京都府に残る最古の建物で国宝。世界遺産。",
+    note: "" },
+  { id: "tenryuji", tips: ["後醍醐天皇の霊を慰めるために建てられた。", "近くの竹林の小径は嵐山を代表する景色。"], kind: "classic", name: "天龍寺", kana: "てんりゅうじ", area: "嵐山・嵯峨", addr: "右京区嵯峨天龍寺芸場町68", year: 1339, era: "1339年 創建", style: "禅宗伽藍", by: "",
+    desc: "足利尊氏が夢窓疎石を開山に建てた禅寺。嵐山を借景にした曹源池庭園は日本初の史跡・特別名勝。世界遺産。",
+    note: "" },
+  { id: "togetsukyo", tips: ["亀山上皇が「くまなき月の渡るに似る」と言ったことが名の由来とされる。", "数え13歳の子が法輪寺に参る「十三参り」の帰りは、渡り終えるまで振り返ってはいけない。"], kind: "classic", name: "渡月橋", kana: "とげつきょう", area: "嵐山・嵯峨", addr: "右京区嵯峨（桂川）", year: 1934, era: "1934年 架橋（今の橋）", style: "木造風の鉄筋コンクリート橋", by: "",
+    desc: "嵐山の象徴の橋。今の橋は1934年の鉄筋コンクリート造だが、欄干を木造にして景観になじませている。",
+    note: "いつでも見られる" },
+  { id: "daikakuji", tips: ["嵯峨天皇が大沢池の菊を挿したことから、いけばな嵯峨御流の発祥の地。"], kind: "classic", name: "大覚寺", kana: "だいかくじ", area: "嵐山・嵯峨", addr: "右京区嵯峨大沢町4", year: 876, era: "876年 開創", style: "", by: "",
+    desc: "嵯峨天皇の離宮を寺にした門跡寺院。宸殿や回廊が残り、日本最古の人工の林泉とされる大沢池がある。",
+    note: "" },
+  { id: "byodoin", tips: ["末法思想の広がる中で、極楽浄土をこの世に表そうとしてつくられた。", "鳳凰堂は10円玉の表に、屋根の鳳凰は旧1万円札の裏に描かれた。"], kind: "classic", name: "平等院", kana: "びょうどういん", area: "宇治", addr: "宇治市宇治蓮華116", year: 1052, era: "1052年 開創", style: "", by: "",
+    desc: "藤原頼通が開いた寺。1053年建立の鳳凰堂は、池に映る姿が極楽浄土を表すとされ、10円玉の絵柄。国宝。世界遺産。",
+    note: "" },
+  { id: "ujigami", tips: ["宇治は「源氏物語」の宇治十帖の舞台。近くに源氏物語ミュージアムがある。"], kind: "classic", name: "宇治上神社", kana: "うじがみじんじゃ", area: "宇治", addr: "宇治市宇治山田59", year: 1060, era: "平安後期（本殿）", style: "流造", by: "",
+    desc: "平等院の対岸に建つ。本殿は平安後期の建物で、現存する最古の神社建築とされる国宝。世界遺産。",
+    note: "" },
+  { id: "sanzenin", tips: ["大原は「しば漬」発祥の地。", "大原女（おはらめ）は、薪を頭にのせて京の町へ売り歩いた女性たち。"], kind: "classic", name: "三千院", kana: "さんぜんいん", area: "郊外", addr: "左京区大原来迎院町540", year: 1871, era: "1871年 現在地へ（起源は平安時代）", style: "", by: "",
+    desc: "大原の里の門跡寺院。苔むした庭の中に往生極楽院の阿弥陀三尊が座る。紅葉と、苔の中のわらべ地蔵も人気。",
+    note: "" },
+  { id: "kozanji", tips: ["明恵上人が栄西からもらった茶の種を植えた、日本最古の茶園と伝わる場所がある。"], kind: "classic", name: "高山寺", kana: "こうさんじ", area: "郊外", addr: "右京区梅ケ畑栂尾町8", year: 1206, era: "1206年 中興", style: "", by: "",
+    desc: "明恵上人が再興した山寺。鎌倉時代の住宅風の建物・石水院は国宝。鳥獣人物戯画で知られ、境内では複製が見られる。世界遺産。",
+    note: "" },
+  { id: "saihoji", tips: ["もとは枯山水と池泉の二段構えの庭で、苔は江戸時代以降に自然に広がった。"], kind: "classic", name: "西芳寺（苔寺）", kana: "さいほうじ", area: "郊外", addr: "西京区松尾神ケ谷町56", year: 1339, era: "1339年 中興", style: "苔の庭園", by: "夢窓疎石",
+    desc: "百種以上の苔に覆われた庭で知られる。夢窓疎石が再興した庭は、金閣や銀閣の庭の手本になったとされる。世界遺産。",
+    note: "拝観は事前申込制" },
+  { id: "katsura", tips: ["ドイツの建築家ブルーノ・タウトが「泣きたくなるほど美しい」と称えたと伝わる。", "書院が雁が飛ぶように斜めにずれて並ぶ配置を「雁行」という。"], kind: "classic", name: "桂離宮", kana: "かつらりきゅう", area: "郊外", addr: "西京区桂御園", year: 1615, era: "17世紀前半 造営", style: "数寄屋風書院・回遊式庭園", by: "八条宮家",
+    desc: "八条宮家の別荘。書院と茶屋が池を巡る庭に配され、日本建築の美の頂点ともいわれる。ブルーノ・タウトが絶賛し、モダニズムの建築家にも影響を与えた。",
+    note: "宮内庁への参観申込が必要" },
+
+  // ---- 祭り・行事 ----
+  { id: "aoi", kind: "festival", months: [5], name: "葵祭", kana: "あおいまつり", area: "今出川・京大周辺", addr: "京都御所 → 下鴨神社 → 上賀茂神社", year: 567, era: "5月15日（起源は6世紀）", style: "", by: "",
+    desc: "京都三大祭のひとつで、もっとも古い。平安装束の約500人の行列が、御所から下鴨神社、上賀茂神社へ進む。",
+    tips: ["正式名は賀茂祭。平安時代に「祭」といえばこの祭りのことだった。", "牛車や装束、社殿まで葵の葉で飾ることから葵祭と呼ばれる。", "行列の主役のひとり「斎王代」は、毎年京都ゆかりの女性から選ばれる。"] },
+  { id: "gion-matsuri", kind: "festival", months: [7], name: "祇園祭", kana: "ぎおんまつり", area: "四条界隈", addr: "八坂神社・四条烏丸周辺", year: 869, era: "7月の1か月（起源は869年）", style: "", by: "",
+    desc: "八坂神社の祭礼で、7月1日から31日まで続く。前祭（17日）と後祭（24日）の山鉾巡行がハイライト。",
+    tips: ["869年、疫病退散を願って国の数にちなむ66本の矛を立てた祇園御霊会が始まり。", "「京都祇園祭の山鉾行事」はユネスコ無形文化遺産に登録されている。", "山鉾が交差点で向きを変える豪快な方向転換を「辻回し」という。"] },
+  { id: "jidai", kind: "festival", months: [10], name: "時代祭", kana: "じだいまつり", area: "岡崎・南禅寺", addr: "京都御所 → 平安神宮", year: 1895, era: "10月22日（1895年に始まる）", style: "", by: "",
+    desc: "平安神宮の祭り。明治維新から延暦時代へと時代をさかのぼる風俗行列が、御所から平安神宮まで練り歩く。",
+    tips: ["10月22日は、桓武天皇が平安京に入った日にちなむ。", "平安神宮の創建と同じ1895年に始まった、京都三大祭でいちばん新しい祭り。"] },
+  { id: "okuribi", kind: "festival", months: [8], name: "五山送り火", kana: "ござんのおくりび", area: "郊外", addr: "東山如意ヶ嶽ほか5つの山", year: 1600, era: "8月16日 夜", style: "", by: "",
+    desc: "お盆に迎えた精霊を送る行事。20時の大文字から順に、妙法、船形、左大文字、鳥居形が灯る。",
+    tips: ["「大文字焼き」と呼ぶのは誤り。京都では「送り火」と呼ぶ。", "鴨川の河原や出町柳あたりから大文字がよく見える。"] },
+  { id: "kurama-hi", kind: "festival", months: [10], name: "鞍馬の火祭", kana: "くらまのひまつり", area: "郊外", addr: "左京区鞍馬 由岐神社", year: 940, era: "10月22日 夜", style: "", by: "",
+    desc: "由岐神社の例祭。大小の松明を担いだ人々が「サイレイ、サイリョウ」と掛け声をあげて鞍馬の里を練り歩く。",
+    tips: ["今宮神社のやすらい祭、広隆寺の牛祭と並ぶ「京都三大奇祭」のひとつ。", "時代祭と同じ10月22日に行われる。"] },
+  { id: "yasurai", kind: "festival", months: [4], name: "やすらい祭", kana: "やすらいまつり", area: "洛北", addr: "北区紫野 今宮神社ほか", year: 1150, era: "4月第2日曜", style: "", by: "",
+    desc: "花が散るころに広がる疫病を鎮める祭り。赤毛・黒毛の鬼が鉦や太鼓に合わせて踊り、花傘の下に入ると1年無病息災といわれる。",
+    tips: ["京都三大奇祭のひとつで、国の重要無形民俗文化財。", "今宮神社の門前では、厄除けの「あぶり餅」が名物。"] },
+  { id: "miyako-odori", kind: "festival", months: [4], name: "都をどり", kana: "みやこおどり", area: "祇園・東山", addr: "祇園甲部歌舞練場", year: 1872, era: "4月（1872年に始まる）", style: "", by: "",
+    desc: "祇園甲部の芸妓・舞妓による春の舞踊公演。「都をどりはヨーイヤサー」の掛け声で幕が開く。",
+    tips: ["京都の五花街は、祇園甲部・宮川町・先斗町・上七軒・祇園東。", "花街の春の踊りは、都をどり・京おどり（宮川町）・鴨川をどり（先斗町、5月）・北野をどり（上七軒）がある。"] },
+  { id: "setsubun-yoshida", kind: "festival", months: [2], name: "吉田神社の節分祭", kana: "よしだじんじゃのせつぶんさい", area: "今出川・京大周辺", addr: "左京区吉田神楽岡町 吉田神社", year: 1500, era: "節分（2月2〜4日ごろ）", style: "", by: "",
+    desc: "3日間で数十万人が訪れる京都最大級の節分祭。前日夜の追儺式（鬼やらい）と、古いお札を焼く火炉祭が有名。",
+    tips: ["京都には、節分に方角の違う複数の社寺を巡る「四方参り」の習わしがある。", "壬生寺の節分では、無言劇の壬生狂言「節分」が演じられる。"] },
+  { id: "kobo-ichi", kind: "festival", months: [1,2,3,4,5,6,7,8,9,10,11,12], name: "弘法市・天神市", kana: "こうぼういちてんじんいち", area: "京都駅周辺", addr: "東寺（毎月21日）・北野天満宮（毎月25日）", year: 1239, era: "毎月21日・25日", style: "", by: "",
+    desc: "東寺の弘法市は空海の命日の21日、北野天満宮の天神市は菅原道真の誕生日と命日にちなむ25日。骨董、古着、食べ物の露店が境内を埋める。",
+    tips: ["12月21日を「終い弘法」、25日を「終い天神」と呼び、正月用品を買う人でにぎわう。"] },
+  { id: "okera", kind: "festival", months: [12, 1], name: "をけら詣り", kana: "をけらまいり", area: "祇園・東山", addr: "八坂神社", year: 1700, era: "12月31日〜1月1日", style: "", by: "",
+    desc: "大晦日の夜、八坂神社の「をけら火」を吉兆縄に移し、火を消さないようにくるくる回しながら持ち帰る。",
+    tips: ["持ち帰った火で雑煮を炊き、1年の無病息災を願う。", "をけら（朮）は薬草の名前。"] },
+  { id: "daikon-daki", kind: "festival", months: [12], name: "千本釈迦堂の大根焚き", kana: "せんぼんしゃかどうのだいこだき", area: "西陣・衣笠", addr: "上京区 大報恩寺（千本釈迦堂）", year: 1250, era: "12月7・8日", style: "", by: "",
+    desc: "梵字を書いた大根を炊いて参拝者にふるまう冬の行事。食べると中風除けになるといわれる。",
+    tips: ["大報恩寺の本堂は1227年の建立で、応仁の乱の戦火を免れた洛中最古の建物（国宝）。"] },
+  { id: "kyokusui", kind: "festival", months: [4, 11], name: "城南宮の曲水の宴", kana: "じょうなんぐうのきょくすいのうたげ", area: "伏見・醍醐", addr: "伏見区中島鳥羽離宮町 城南宮", year: 1970, era: "4月29日・11月3日", style: "", by: "",
+    desc: "平安装束の歌人が庭の小川のほとりに座り、流れてくる盃が前を過ぎるまでに和歌を詠む、平安貴族の遊びを再現した行事。",
+    tips: ["城南宮は方除けの神社で、引っ越しや旅行の前にお参りする人が多い。"] },
+
+  // ---- 史跡 ----
+  { id: "honnoji", kind: "history", name: "本能寺跡", kana: "ほんのうじあと", area: "四条界隈", addr: "中京区油小路通蛸薬師下ル（石碑）", year: 1582, era: "1582年 本能寺の変", style: "", by: "",
+    desc: "明智光秀が織田信長を討った本能寺の変の舞台。今は石碑が立つだけで、本能寺そのものは寺町御池に移っている。",
+    tips: ["今の本能寺は、豊臣秀吉の都市改造で寺町通に移された。境内に信長の供養塔がある。", "本能寺の「能」の字は、火事を嫌って「ヒ」を「去」にした旧字で書かれることがある。"] },
+  { id: "ikedaya", kind: "history", name: "池田屋騒動之址", kana: "いけだやそうどうのあと", area: "三条・御池", addr: "中京区三条通河原町東入", year: 1864, era: "1864年 池田屋事件", style: "", by: "",
+    desc: "新選組が尊王攘夷派の志士を襲った池田屋事件の跡。今は同じ名前の居酒屋の前に石碑がある。",
+    tips: ["近くの三条大橋の擬宝珠には、池田屋事件のときの刀傷といわれる跡が残る。"] },
+  { id: "sanjo-ohashi", kind: "history", name: "三条大橋", kana: "さんじょうおおはし", area: "三条・御池", addr: "鴨川・三条通", year: 1590, era: "1590年 豊臣秀吉の改修", style: "", by: "",
+    desc: "東海道五十三次の終点。秀吉の命で石柱の橋に改められ、今も一部に当時の擬宝珠が使われている。",
+    tips: ["西のたもとには、東海道を歩いた弥次さん喜多さんの像がある。"] },
+  { id: "omiya-ryoma", kind: "history", name: "坂本龍馬・中岡慎太郎遭難之地", kana: "さかもとりょうまそうなんのち", area: "四条界隈", addr: "中京区河原町通蛸薬師下ル（石碑）", year: 1867, era: "1867年 近江屋事件", style: "", by: "",
+    desc: "大政奉還の翌月、坂本龍馬と中岡慎太郎が醤油商・近江屋で襲われた場所。石碑が立つ。",
+    tips: ["龍馬と慎太郎の墓は、東山の京都霊山護国神社にあり、京都の町を見下ろしている。", "11月15日は龍馬の誕生日で、命日でもある。"] },
+  { id: "teradaya", kind: "history", name: "寺田屋", kana: "てらだや", area: "伏見・醍醐", addr: "伏見区南浜町263", year: 1866, era: "1866年 寺田屋事件", style: "", by: "",
+    desc: "伏見の船宿。坂本龍馬が伏見奉行所の捕り方に襲われ、のちの妻・お龍の機転で逃れた寺田屋事件の舞台。",
+    tips: ["1862年にも薩摩藩士どうしが斬り合う別の寺田屋事件が起きている。", "伏見は酒どころで、近くに月桂冠大倉記念館など酒蔵が並ぶ。"] },
+  { id: "hamaguri", kind: "history", name: "蛤御門", kana: "はまぐりごもん", area: "御所・二条", addr: "上京区 京都御苑の西側", year: 1864, era: "1864年 禁門の変", style: "", by: "",
+    desc: "長州藩と会津・薩摩藩が戦った禁門の変（蛤御門の変）の舞台。門の柱には当時の弾痕が残る。",
+    tips: ["ふだん閉じていた門が大火のときに開いたので「焼けて口開く蛤」と呼ばれたのが名の由来とされる。", "この戦いの火事で京都の町の大半が焼け、「どんどん焼け」と呼ばれた。"] },
+  { id: "mibu", kind: "history", name: "壬生寺と八木家（新選組屯所跡）", kana: "みぶでらとやぎけ", area: "四条界隈", addr: "中京区坊城通仏光寺上ル", year: 1863, era: "1863年 壬生浪士組の屯所", style: "", by: "",
+    desc: "新選組の前身・壬生浪士組が屯所にした八木家と、隊士が兵法の訓練をした壬生寺。八木家では隊士の刀傷が残る部屋を見学できる。",
+    tips: ["壬生寺では、セリフのない無言劇「壬生狂言」が春・節分・秋に演じられる（国の重要無形民俗文化財）。"] },
+  { id: "rashomon", kind: "history", name: "羅城門跡", kana: "らじょうもんあと", area: "京都駅周辺", addr: "南区唐橋羅城門町（石碑）", year: 794, era: "794年 平安京の正門", style: "", by: "",
+    desc: "平安京の南の正門があった場所。朱雀大路の南端に建っていたが、平安中期に倒れて再建されず、今は小さな公園に石碑が立つ。",
+    tips: ["芥川龍之介の小説「羅生門」はこの門が舞台。", "羅城門の東に東寺、西に西寺が置かれ、今残るのは東寺だけ。"] },
+  { id: "daigokuden", kind: "history", name: "平安宮大極殿跡", kana: "へいあんきゅうだいごくでんあと", area: "西陣・衣笠", addr: "上京区千本丸太町上ル（内野児童公園）", year: 794, era: "794年 平安宮の正殿", style: "", by: "",
+    desc: "天皇の即位などが行われた平安宮の正殿の跡。今は児童公園の中に石碑が立つ。平安神宮の大極殿はこれを縮小して再現したもの。",
+    tips: ["今の京都御所は、平安宮が荒れたあとに里内裏を使い続けたもので、場所は平安宮より東にある。"] },
+  { id: "odoi", kind: "history", name: "御土居", kana: "おどい", area: "西陣・衣笠", addr: "北野天満宮の西側ほか", year: 1591, era: "1591年 豊臣秀吉が築く", style: "", by: "",
+    desc: "秀吉が京の町を囲んで築いた土塁と堀。全長約22.5kmのうち、北野天満宮などに一部が残り、国の史跡。",
+    tips: ["御土居の内側を「洛中」、外側を「洛外」と呼ぶようになった。", "北野天満宮の御土居は青もみじと紅葉の名所。"] },
+  { id: "sumiya", kind: "history", name: "角屋もてなしの文化美術館", kana: "すみやもてなしのぶんかびじゅつかん", area: "京都駅周辺", addr: "下京区西新屋敷揚屋町32（島原）", year: 1641, era: "1641年 島原に移る", style: "揚屋建築", by: "",
+    desc: "花街・島原で宴会の場だった揚屋の建物で、揚屋建築として唯一現存し国の重要文化財。新選組の芹沢鴨が最後に宴を開いた場所でもある。",
+    tips: ["島原の芸妓の最高位を「太夫」と呼ぶ。", "島原の入口の大門も江戸時代のものが残る。"] },
+  { id: "seimei", kind: "history", name: "晴明神社", kana: "せいめいじんじゃ", area: "御所・二条", addr: "上京区堀川通一条上ル", year: 1007, era: "1007年 創建", style: "", by: "",
+    desc: "平安時代の陰陽師・安倍晴明の屋敷跡にまつられた神社。五芒星の社紋（晴明桔梗）が目印。",
+    tips: ["近くの一条戻橋は、晴明が式神を橋の下に隠したという伝説の橋。"] },
+  { id: "incline", kind: "history", name: "琵琶湖疏水と蹴上インクライン", kana: "びわこそすいとけあげいんくらいん", area: "岡崎・南禅寺", addr: "左京区南禅寺草川町", year: 1890, era: "1890年 完成", style: "", by: "田辺朔郎",
+    desc: "明治の京都復興のために琵琶湖の水を引いた疏水。高低差のある区間で船を台車に載せて運んだ傾斜鉄道インクラインの線路が残り、春は桜並木になる。",
+    tips: ["設計の田辺朔郎は工部大学校を出たばかりの20代だった。", "疏水の水で発電した電気で、1895年に日本初の営業用路面電車が京都で走った。"] },
+
+  // ---- 和菓子 ----
+  { id: "ichiwa", kind: "sweets", name: "一文字屋和輔（一和）", kana: "いちもんじやわすけ", area: "洛北", addr: "北区紫野今宮町69（今宮神社門前）", year: 1000, era: "1000年 創業", style: "", by: "",
+    desc: "今宮神社の門前で、きなこをまぶした餅を炭火であぶり白味噌のたれをかけた「あぶり餅」を出す。向かいの「かざりや」と並んで店を構える。",
+    tips: ["長保2年（1000年）創業とされ、日本最古の和菓子屋ともいわれる。", "あぶり餅は疫病除けの縁起物。やすらい祭とも縁が深い。"] },
+  { id: "futaba", kind: "sweets", name: "出町ふたば", kana: "でまちふたば", area: "今出川・京大周辺", addr: "上京区出町通今出川上ル青龍町236", year: 1899, era: "1899年 創業", style: "", by: "",
+    desc: "名代豆餅の店。塩気のある赤えんどう豆を混ぜた餅で、こしあんを包む。いつも行列ができる。",
+    tips: ["京都では、季節ごとの和菓子を「おまん」「お菓子」と分け、毎日の餅菓子を扱う店を「おまんやさん」と呼ぶ。"] },
+  { id: "sawaya", kind: "sweets", name: "粟餅所 澤屋", kana: "あわもちどころさわや", area: "西陣・衣笠", addr: "上京区今小路通御前西入紙屋川町838-7（北野天満宮前）", year: 1682, era: "1682年 創業", style: "", by: "",
+    desc: "北野天満宮の門前の粟餅屋。注文を受けてから、つきたての粟餅をこしあんときなこで仕上げる。",
+    tips: ["北野天満宮には長五郎餅もあり、豊臣秀吉の北野大茶湯で名を与えられたと伝わる。"] },
+  { id: "jinbado", kind: "sweets", name: "神馬堂", kana: "じんばどう", area: "洛北", addr: "北区上賀茂御園口町4（上賀茂神社前）", year: 1872, era: "1872年 創業", style: "", by: "",
+    desc: "上賀茂神社前の「やきもち」の店。焼き目の香ばしい餅につぶあんが入る。午前中に売り切れることが多い。",
+    tips: ["上賀茂神社の葵にちなみ「葵餅」とも呼ばれる。"] },
+  { id: "nakamuraken", kind: "sweets", name: "中村軒", kana: "なかむらけん", area: "郊外", addr: "西京区桂浅原町61（桂離宮近く）", year: 1883, era: "1883年 創業", style: "", by: "",
+    desc: "桂離宮の近くの茶店。名物の「麦代餅」は、農家が田植えの手伝いにお菓子を届け、麦で代金を払ったことから名付けられた。",
+    tips: ["6月30日の夏越の祓には、三角のういろうに小豆をのせた「水無月」を食べて半年の厄を払う。中村軒でも人気。"] },
+  { id: "mangetsu", kind: "sweets", name: "満月（阿闍梨餅本舗）", kana: "まんげつあじゃりもち", area: "今出川・京大周辺", addr: "左京区鞠小路通今出川上ル", year: 1856, era: "1856年 創業", style: "", by: "",
+    desc: "京土産の定番「阿闍梨餅」の本店。もちもちの生地で粒あんを包んだ半生菓子。",
+    tips: ["形は、比叡山で千日回峰行をする阿闍梨がかぶる網代笠をかたどっている。"] },
+  { id: "shogoin-yatsuhashi", kind: "sweets", name: "聖護院八ッ橋総本店", kana: "しょうごいんやつはしそうほんてん", area: "岡崎・南禅寺", addr: "左京区聖護院山王町6", year: 1689, era: "1689年 創業", style: "", by: "",
+    desc: "京都を代表する銘菓・八ッ橋の老舗。焼いた堅い八ッ橋と、生地で餡を包んだ生八ッ橋「聖」がある。",
+    tips: ["八ッ橋の名は、箏曲の祖・八橋検校にちなむとされ、形は箏をかたどっている。", "八橋検校の墓は近くの金戒光明寺にある。"] },
+  { id: "tsuruya", kind: "sweets", name: "鶴屋吉信 本店", kana: "つるやよしのぶ", area: "西陣・衣笠", addr: "上京区今出川通堀川西入", year: 1803, era: "1803年 創業", style: "", by: "",
+    desc: "西陣の老舗。2階の菓遊茶屋では、職人が目の前で生菓子をつくって出してくれる。銘菓は「柚餅」。",
+    tips: ["京都の上生菓子は、季節の花や行事を写した意匠に「銘（名前）」が付く。", "西陣は西陣織の産地で、応仁の乱の西軍の陣地跡にちなむ地名。"] },
+  { id: "kagizen", kind: "sweets", name: "鍵善良房 四条本店", kana: "かぎぜんよしふさ", area: "祇園・東山", addr: "東山区祇園町北側264", year: 1720, era: "江戸中期（享保年間）創業", style: "", by: "",
+    desc: "祇園の老舗。吉野葛でつくる「くずきり」を、黒蜜につけて食べる。螺鈿の器も見どころ。",
+    tips: ["店内の家具は、人間国宝の木工芸家・黒田辰秋の作。進々堂の長テーブルと同じ作家。"] },
+  { id: "ryokujuan", kind: "sweets", name: "緑寿庵清水", kana: "りょくじゅあんしみず", area: "今出川・京大周辺", addr: "左京区吉田泉殿町38-2", year: 1847, era: "1847年 創業", style: "", by: "",
+    desc: "日本でただ一軒の金平糖専門店。ひと粒に2週間以上かけ、職人が手作業で角を出す。",
+    tips: ["金平糖はポルトガルから伝わった南蛮菓子で、織田信長にも献上されたと伝わる。"] },
+  { id: "oimatsu", kind: "sweets", name: "老松 北野店", kana: "おいまつ", area: "西陣・衣笠", addr: "上京区今出川通御前西入紙屋川町（上七軒）", year: 1908, era: "1908年 創業", style: "", by: "",
+    desc: "花街・上七軒の菓子屋。夏蜜柑の果汁を寒天で固めて皮に戻した「夏柑糖」が初夏の名物。",
+    tips: ["上七軒は京都で最も古い花街とされ、北野天満宮の再建で余った資材で7軒の茶店を建てたのが名の由来。"] },
+
+  // ---- 食・老舗 ----
+  { id: "nishiki", kind: "food", name: "錦市場", kana: "にしきいちば", area: "四条界隈", addr: "中京区錦小路通（寺町〜高倉）", year: 1615, era: "江戸時代から", style: "", by: "",
+    desc: "「京の台所」と呼ばれる約390mの商店街。京野菜、漬物、湯葉、だし巻きなどの店が並ぶ。",
+    tips: ["井戸水が冷たく、魚や野菜を冷やせたことから市場が発達したといわれる。", "東の突き当たりに錦天満宮、西の端近くに伊藤若冲の生家跡がある。"] },
+  { id: "daito", kind: "food", name: "千枚漬本家 大藤", kana: "せんまいづけほんけだいとう", area: "四条界隈", addr: "中京区麩屋町通錦小路下ル", year: 1865, era: "1865年 創業", style: "", by: "",
+    desc: "聖護院かぶらを薄く切って昆布と漬けた「千枚漬」を考えた店。冬が旬。",
+    tips: ["京都の三大漬物は、千枚漬・すぐき（上賀茂）・しば漬（大原）。", "京野菜の聖護院かぶらは、千枚漬に欠かせない大きなかぶ。"] },
+  { id: "murakamiju", kind: "food", name: "村上重本店", kana: "むらかみじゅうほんてん", area: "四条界隈", addr: "下京区西木屋町通四条下ル", year: 1832, era: "1832年 創業", style: "", by: "",
+    desc: "高瀬川沿いの京漬物の老舗。昔ながらの樽で漬けた浅漬けや千枚漬が並ぶ。",
+    tips: ["京都の食卓の「おばんざい」は、旬の野菜や乾物を使ったふだんのおかずのこと。"] },
+  { id: "izuu", kind: "food", name: "いづう", kana: "いづう", area: "祇園・東山", addr: "東山区八坂新地清本町367", year: 1781, era: "1781年 創業", style: "", by: "",
+    desc: "祇園の鯖姿寿司の老舗。昆布で巻いた鯖寿司は、祭りや祝いの日のごちそう。",
+    tips: ["若狭の鯖を塩でしめて京へ運んだ道が「鯖街道」と呼ばれ、京都に着くころにちょうど良い味になったという。"] },
+  { id: "owariya", kind: "food", name: "本家尾張屋 本店", kana: "ほんけおわりや", area: "三条・御池", addr: "中京区車屋町通二条下ル", year: 1465, era: "1465年 菓子屋として創業", style: "", by: "",
+    desc: "町家の蕎麦屋。5段重ねの割子に薬味をのせて食べる「宝来そば」が名物。",
+    tips: ["もとは菓子屋で、江戸時代に蕎麦も扱うようになった。蕎麦ぼうろも名物。"] },
+  { id: "matsuba", kind: "food", name: "総本家にしんそば 松葉", kana: "まつばにしんそば", area: "祇園・東山", addr: "東山区四条大橋東入川端町192（南座西隣）", year: 1861, era: "1861年 創業", style: "", by: "",
+    desc: "身欠きにしんを甘辛く炊いて温かいそばにのせた「にしんそば」発祥の店。",
+    tips: ["北海道の身欠きにしんは北前船で運ばれ、海から遠い京都で保存のきく魚として重宝された。"] },
+  { id: "okutan", kind: "food", name: "奥丹 清水", kana: "おくたんきよみず", area: "祇園・東山", addr: "東山区清水3-340", year: 1635, era: "1635年 創業", style: "", by: "",
+    desc: "江戸初期から続く湯豆腐の店。庭を眺めながら湯豆腐と精進料理のコースを味わう。",
+    tips: ["京都の豆腐や湯葉がおいしいのは、良い地下水と、精進料理の文化が根付いていたから。南禅寺界隈は湯豆腐の名所。"] },
+  { id: "ippodo", kind: "food", name: "一保堂茶舗 京都本店", kana: "いっぽどうちゃほ", area: "三条・御池", addr: "中京区寺町通二条上ル", year: 1717, era: "1717年 創業", style: "", by: "",
+    desc: "寺町通の日本茶の老舗。併設の喫茶室では、抹茶や玉露を自分で淹れ方を教わりながら楽しめる。",
+    tips: ["宇治茶は京都・奈良・滋賀・三重の茶葉を京都府内で仕上げたもの。", "茶道の三千家（表千家・裏千家・武者小路千家）はいずれも京都に家元がある。"] },
+  { id: "aritsugu", kind: "food", name: "有次", kana: "ありつぐ", area: "四条界隈", addr: "中京区錦小路通御幸町西入（錦市場）", year: 1560, era: "1560年 創業", style: "", by: "",
+    desc: "錦市場にある料理道具の老舗。包丁を買うと、その場で名前を刻んでくれる。",
+    tips: ["もとは刀鍛冶。御所の御用鍛冶も務めた。"] },
+  { id: "gekkeikan", kind: "food", name: "月桂冠大倉記念館", kana: "げっけいかんおおくらきねんかん", area: "伏見・醍醐", addr: "伏見区南浜町247", year: 1637, era: "1637年 創業（酒蔵）", style: "", by: "",
+    desc: "伏見の酒蔵を使った記念館。酒造りの道具や歴史を見て、きき酒もできる。周りに白壁の酒蔵と柳の濠川が続く。",
+    tips: ["伏見は質の良い伏流水に恵まれ、昔は「伏水」とも書いた。灘と並ぶ日本有数の酒どころ。"] },
+  { id: "hyotei", kind: "food", name: "瓢亭", kana: "ひょうてい", area: "岡崎・南禅寺", addr: "左京区南禅寺草川町35", year: 1630, era: "江戸時代 茶店として始まる", style: "", by: "",
+    desc: "南禅寺の参道の茶店から始まった料亭。半熟の「瓢亭玉子」と朝がゆが有名。",
+    tips: ["京料理は、宮中の有職料理・寺の精進料理・茶の湯の懐石料理・庶民のおばんざいが合わさったものといわれる。"] },
+
+  // ---- 喫茶 ----
+  { id: "francois", tips: ["創業者の立野正一は、戦時中に反戦の雑誌に関わった文化人で、店は芸術家や学生が集うサロンだった。"], fest: true, kind: "cafe", name: "フランソア喫茶室", kana: "ふらんそわきっさしつ", area: "四条界隈", addr: "下京区西木屋町通四条下ル船頭町184", year: 1934, style: "イタリアン・バロック風の内装",
+    desc: "豪華客船の客室を思わせるドーム天井と赤いビロードの椅子。名曲喫茶として始まり、2003年に喫茶店として初めて国の登録有形文化財になった。",
+    note: "建物も見どころ" },
+  { id: "soiree", fest: true, kind: "cafe", name: "喫茶ソワレ", kana: "きっさそわれ", area: "四条界隈", addr: "下京区西木屋町通四条上ル真町95", year: 1948, style: "",
+    desc: "高瀬川沿い。青い照明に東郷青児の絵が浮かぶ店内で、色とりどりのゼリーが入ったゼリーポンチが名物。",
+    note: "" },
+  { id: "tsukiji", kind: "cafe", name: "築地", kana: "つきじ", area: "四条界隈", addr: "中京区米屋町384-2（河原町四条上ル一筋目東入）", year: 1934, style: "",
+    desc: "クラシック音楽が流れる、洋館の応接間のような店内。京都で最初にウィンナーコーヒーを出した店として知られる。",
+    note: "" },
+  { id: "smart", kind: "cafe", name: "スマート珈琲店", kana: "すまーとこーひーてん", area: "三条・御池", addr: "中京区寺町通三条上ル天性寺前町537", year: 1932, style: "",
+    desc: "寺町商店街の自家焙煎の老舗。分厚いホットケーキとフレンチトーストが有名で、2階では昼食も出す。",
+    note: "" },
+  { id: "inoda", tips: ["京都はパンとコーヒーの消費量が全国でも多い町として知られる。"], kind: "cafe", name: "イノダコーヒ 本店", kana: "いのだこーひほんてん", area: "三条・御池", addr: "中京区堺町通三条下ル道祐町140", year: 1940, style: "",
+    desc: "1940年にコーヒー卸として創業し、戦後から喫茶店に。ミルクと砂糖を入れて出す「アラビアの真珠」と、京の朝食が定番。",
+    note: "" },
+  { id: "rokuyosha", kind: "cafe", name: "六曜社珈琲店", kana: "ろくようしゃこーひーてん", area: "三条・御池", addr: "中京区河原町通三条下ル大黒町36", year: 1950, style: "",
+    desc: "河原町三条の地下に続く階段の先。1階店と地下店があり、地下店では自家焙煎のコーヒーとドーナツが楽しめる。",
+    note: "" },
+  { id: "maeda-meirin", kind: "cafe", name: "前田珈琲 明倫店", kana: "まえだこーひーめいりんてん", area: "四条界隈", addr: "中京区室町通蛸薬師下ル山伏山町546-2（京都芸術センター内）", year: 2000, style: "",
+    desc: "旧明倫小学校の教室を使った喫茶店。黒板や木の床が残る教室で、前田珈琲のコーヒーやナポリタンを味わえる。年は芸術センター開設年。",
+    note: "建物も見どころ" },
+  { id: "tirol", kind: "cafe", name: "喫茶チロル", kana: "きっさちろる", area: "御所・二条", addr: "中京区 御池通沿い（神泉苑の西）", year: 1968, style: "",
+    desc: "赤と紺のストライプのひさしが目印。山小屋風の店内で、ゆで卵をのせたカレーと分厚い玉子サンドが人気。朝8時から開く。",
+    note: "" },
+  { id: "shinshindo", kind: "cafe", name: "進々堂 京大北門前", kana: "しんしんどうきょうだいきたもんまえ", area: "今出川・京大周辺", addr: "左京区北白川追分町88", year: 1930, style: "",
+    desc: "パリのカフェを手本にした店。人間国宝の木工芸家・黒田辰秋による長テーブルが並び、京大生の勉強部屋として親しまれてきた。",
+    note: "家具も見どころ" },
+  { id: "ryugetsudo", kind: "cafe", name: "名曲喫茶 柳月堂", kana: "めいきょくきっさりゅうげつどう", area: "今出川・京大周辺", addr: "左京区田中下柳町5-1 柳月堂ビル2階", year: 1954, style: "",
+    desc: "出町柳駅前、ベーカリーの2階。リスニングルームは私語禁止で、大きなスピーカーから流れるクラシックのレコードに浸れる。",
+    note: "リスニングルームは私語禁止" },
+  { id: "shizuka", kind: "cafe", name: "静香", kana: "しずか", area: "西陣・衣笠", addr: "上京区今出川通千本西入南上善寺町164", year: 1937, style: "",
+    desc: "上七軒にほど近い西陣の喫茶店。芸妓さんが始めた店を引き継いだのが始まり。曲面ガラスのショーケースや中庭が昔のまま残る。",
+    note: "" },
+  { id: "hisui", kind: "cafe", name: "喫茶 翡翠", kana: "きっさひすい", area: "洛北", addr: "北区紫野西御所田町41-2", year: 1966, style: "",
+    desc: "北大路通沿い。創業当時の外観と内装をできるだけ残した広い店内で、ナポリタンやオムライスなど喫茶の軽食がそろう。",
+    note: "" },
+
+  // ---- 京都モダン建築祭 2026 の公開建物から ----
+  { id: "jingenkan", fest: true, kind: "arch", name: "大谷大学 尋源館", kana: "おおたにだいがくじんげんかん", area: "洛北", addr: "北区小山上総町", year: 1913, style: "和洋折衷（煉瓦造に瓦屋根）", by: "松任外次郎ほか",
+    desc: "大谷大学の旧本館。煉瓦の壁に瓦屋根を載せた和洋折衷の外観が、北大路通からよく見える。国の登録有形文化財。",
+    note: "" },
+  { id: "dwc", fest: true, kind: "arch", name: "同志社女子大学 ジェームズ館・栄光館", kana: "どうししゃじょしだいがく", area: "今出川・京大周辺", addr: "上京区今出川通寺町西入玄武町602-1", year: 1914, style: "", by: "武田五一",
+    desc: "宣教師の住まいを思わせるジェームズ館（1914）と、講堂と礼拝堂を備えた栄光館（1932）。どちらも武田五一の設計で、国の登録有形文化財。",
+    note: "" },
+  { id: "pontocho", fest: true, kind: "arch", name: "先斗町歌舞練場", kana: "ぽんとちょうかぶれんじょう", area: "四条界隈", addr: "中京区先斗町通三条下ル橋下町130", year: 1927, style: "ライトの影響を受けた近代建築", by: "木村得三郎（顧問 武田五一）",
+    desc: "鴨川をどりの劇場。水平線を強調した壁面やスクラッチタイル、レリーフタイルにF.L.ライトの影響が見える。当時は「東洋趣味を加味した近代建築」と評された。",
+    note: "" },
+  { id: "rissei", fest: true, kind: "arch", name: "THE GATE HOTEL 京都高瀬川（元立誠小学校）", kana: "げーとほてるきょうとたかせがわ", area: "四条界隈", addr: "中京区蛸薬師通河原町東入備前島町310-2", year: 1928, style: "ロマネスク風", by: "京都市営繕課",
+    desc: "高瀬川沿いの元立誠小学校。半円アーチの縦長窓が並ぶ校舎を残して、ホテルと店舗、ホールに生まれ変わった。軒の水平線にライトの影響がうかがえる。",
+    note: "" },
+  { id: "kaichi", fest: true, kind: "arch", name: "京都市学校歴史博物館（元開智小学校）", kana: "きょうとしがっこうれきしはくぶつかん", area: "四条界隈", addr: "下京区御幸町通仏光寺下ル橘町437", year: 1936, style: "昭和初期のモダンな学校建築", by: "京都市営繕課",
+    desc: "元開智小学校の校舎を使った博物館。モザイクタイルの装飾が残り、明治の正門や、元成徳小から移した車寄せも見られる。",
+    note: "" },
+  { id: "seitoku", fest: true, kind: "arch", name: "元成徳中学校", kana: "もとせいとくちゅうがっこう", area: "四条界隈", addr: "下京区繁昌町290", year: 1931, style: "ライトの影響を受けた学校建築", by: "京都市営繕課",
+    desc: "黄土色の石を貼った壁とアーチ窓の旧校舎。ライト風の階段手すり、タイル張りの玄関ホール、折上格天井の作法室が見どころ。",
+    note: "普段の公開状況は要確認" },
+  { id: "kyuseigun", church: true, fest: true, kind: "arch", name: "救世軍京都小隊会館", kana: "きゅうせいぐんきょうとしょうたいかいかん", area: "四条界隈", addr: "下京区富小路通四条下ル徳正寺町37", year: 1936, style: "モダン・イングリッシュ様式", by: "W.M.ヴォーリズ",
+    desc: "ヴォーリズ設計の教会。木造2階建てを石造り風に見せた、ゴシック調の正面が四条の裏通りに静かに建つ。",
+    note: "" },
+  { id: "funatsuru", fest: true, kind: "arch", name: "鮒鶴京都鴨川リゾート", kana: "ふなつるきょうとかもがわりぞーと", area: "四条界隈", addr: "下京区木屋町通松原上ル美濃屋町180", year: 1927, style: "近代の料理旅館建築", by: "新館 柴田四郎",
+    desc: "鴨川沿いの元料理旅館。木造の本館（1927年頃）と鉄骨の新館（1932）からなり、今はレストランと結婚式場。国の登録有形文化財。",
+    note: "レストランとして営業" },
+  { id: "tsugu", fest: true, kind: "arch", name: "TSUGU 京都三条（旧日本生命京都三条ビル）", kana: "つぐきょうとさんじょう", area: "三条・御池", addr: "中京区三条通柳馬場西入桝屋町75", year: 1914, style: "辰野式の流れをくむ洋風建築", by: "辰野・片岡建築事務所",
+    desc: "角に青銅の尖塔を立てた大正の保険会社ビル。三条通の景色をつくる角の塔が見どころで、今はホテルとして使われている。国の登録有形文化財。",
+    note: "ホテル（外観見学）" },
+  { id: "sacra", fest: true, kind: "arch", name: "SACRAビル（旧不動貯金銀行京都支店）", kana: "さくらびる", area: "三条・御池", addr: "中京区三条通富小路東入中之町20", year: 1916, style: "セセッション", by: "",
+    desc: "円や四角の幾何学的な装飾が特徴の大正の銀行建築。近代建築を店舗として再生した早い例で、国の登録有形文化財。",
+    note: "" },
+  { id: "hachikuan", fest: true, kind: "arch", name: "八竹庵（旧川崎家住宅）", kana: "はちくあん", area: "三条・御池", addr: "中京区三条町340", year: 1926, style: "和洋折衷（町家に洋館）", by: "上坂浅次郎・高島屋装飾部（武田五一 参与）",
+    desc: "大正末の大きな町家に洋館を組み込んだ住宅。和室と洋間、庭が一度に見られる。京都市指定有形文化財。",
+    note: "開館日は公式サイトで確認" },
+  { id: "gokomachi", church: true, fest: true, kind: "arch", name: "京都御幸町教会", kana: "きょうとごこまちきょうかい", area: "三条・御池", addr: "中京区御幸町通二条下ル山本町434", year: 1913, style: "ゴシック", by: "W.M.ヴォーリズ",
+    desc: "尖頭アーチと控え壁をもつ煉瓦の教会。中は白い漆喰と木の窓枠で、簡素であたたかい空間。京都市指定有形文化財。",
+    note: "" },
+  { id: "shimadzu", fest: true, kind: "arch", name: "島津製作所 創業記念資料館", kana: "しまづせいさくしょそうぎょうきねんしりょうかん", area: "三条・御池", addr: "中京区木屋町通二条下ル西生洲町478-1", year: 1888, style: "町家形式（ステンドグラス入り）", by: "",
+    desc: "高瀬川沿い、島津製作所の創業の地に建つ本店兼住居。町家の造りに、北棟ではステンドグラスを取り入れている。国の登録有形文化財。",
+    note: "土日は休館" },
+  { id: "agnes", church: true, fest: true, kind: "arch", name: "聖アグネス教会", kana: "せいあぐねすきょうかい", area: "御所・二条", addr: "上京区烏丸通下立売角", year: 1898, style: "煉瓦造のバシリカ", by: "J.M.ガーディナー",
+    desc: "平安女学院明治館の隣に建つ明治の聖堂。むき出しの木の小屋組と、バラ窓をはじめ30以上のステンドグラスが美しい。京都市指定有形文化財。",
+    note: "" },
+  { id: "horikawa", fest: true, kind: "arch", name: "堀川団地", kana: "ほりかわだんち", area: "御所・二条", addr: "上京区長尾町（堀川通沿い）", year: 1951, style: "戦後の店舗付き集合住宅", by: "京都府住宅協会",
+    desc: "1階が商店、上が住宅の鉄筋コンクリート団地で、この形の日本初の例とされる。リノベーションが進み、若い作り手が集まる場所になっている。",
+    note: "" },
+  { id: "mainichi", fest: true, kind: "arch", name: "毎日新聞京都ビル", kana: "まいにちしんぶんきょうとびる", area: "御所・二条", addr: "上京区河原町通丸太町上ル桝屋町354-2", year: 1999, style: "ポストモダン", by: "若林広幸",
+    desc: "打ち放しの外壁に大きな楕円の窓。先代の京都支局ビル（今の1928ビル）の意匠を受け継いでいて、見比べると面白い。",
+    note: "外観見学" },
+  { id: "toho", fest: true, kind: "arch", name: "京都大学人文科学研究所 分館（旧東方文化学院京都研究所）", kana: "じんぶんかがくけんきゅうしょぶんかん", area: "今出川・京大周辺", addr: "左京区北白川東小倉町47", year: 1930, style: "修道院風（スパニッシュ）", by: "東畑謙三",
+    desc: "中庭を囲む白い修道院のような研究所。スペイン瓦、丸窓、アーチの廊下に東洋的な装飾が混ざる。国の登録有形文化財。",
+    note: "普段は外観のみ" },
+  { id: "sonjodo", fest: true, kind: "arch", name: "京都大学 尊攘堂", kana: "そんじょうどう", area: "今出川・京大周辺", addr: "左京区吉田本町", year: 1903, style: "和洋折衷（煉瓦造）", by: "",
+    desc: "蔵のような小さな煉瓦造の平屋に、縦長窓と玄関ポーチを付けた和洋折衷の建物。今は資料室。国の登録有形文化財。",
+    note: "普段は非公開（外観のみ）" },
+  { id: "mitsui", fest: true, kind: "arch", name: "旧三井家下鴨別邸", kana: "きゅうみついけしもがもべってい", area: "今出川・京大周辺", addr: "左京区下鴨宮河町58-2", year: 1925, style: "近代和風（望楼付き）", by: "",
+    desc: "下鴨神社の南にある三井家の別邸。木造3階の主屋に望楼を載せた近代の和風邸宅で、国の重要文化財。一般公開されている。",
+    note: "水曜休館" },
+  { id: "westin", fest: true, kind: "arch", name: "ウェスティン都ホテル京都（佳水園）", kana: "うぇすてぃんみやこほてる", area: "岡崎・南禅寺", addr: "東山区粟田口華頂町1（蹴上）", year: 1960, style: "モダニズム＋数寄屋", by: "村野藤吾",
+    desc: "村野藤吾が手がけた蹴上のホテル。曲線の階段や、数寄屋風の別館・佳水園（1959）に、和とモダンを溶け合わせる村野の手腕が見える。",
+    note: "ホテル" },
+  { id: "goryukaku", fest: true, kind: "arch", name: "五龍閣（旧松風嘉定邸）", kana: "ごりゅうかく", area: "祇園・東山", addr: "東山区清水2丁目239", year: 1920, style: "和洋折衷", by: "武田五一",
+    desc: "清水坂にある製陶業・松風嘉定の邸宅。屋根に並ぶ鴟尾が目を引き、中は大正ロマンの空間。今は飲食店として入れる。国の登録有形文化財。",
+    note: "飲食店として営業" },
+  { id: "kokogaku", fest: true, kind: "arch", name: "京都市考古資料館（旧西陣織物館）", kana: "きょうとしこうこしりょうかん", area: "西陣・衣笠", addr: "上京区今出川通大宮東入元伊佐町265-1", year: 1914, style: "初期モダニズム", by: "本野精吾",
+    desc: "モダニズムの先駆者・本野精吾の作。鉄筋コンクリートと煉瓦の混構造で、旧貴賓室には円や四角の幾何学模様と西陣織のクロスが残る。",
+    note: "旧貴賓室は通常非公開" },
+  { id: "funaoka", fest: true, kind: "arch", name: "船岡温泉", kana: "ふなおかおんせん", area: "西陣・衣笠", addr: "北区紫野南舟岡町82-1", year: 1923, style: "唐破風の銭湯建築", by: "",
+    desc: "唐破風の入口、マジョリカタイルの浴場、格天井の脱衣場。欄間の彫刻まで見どころが詰まった、今も営業する銭湯。国の登録有形文化財。",
+    note: "銭湯として営業" },
+  { id: "domoto", fest: true, kind: "arch", name: "京都府立堂本印象美術館", kana: "どうもといんしょうびじゅつかん", area: "西陣・衣笠", addr: "北区平野上柳町26-3", year: 1966, style: "装飾的モダン", by: "堂本印象（デザイン）",
+    desc: "日本画家・堂本印象が自らデザインした美術館。外壁の曲線からドアノブまで、建物全体が印象の作品になっている。国の登録有形文化財。",
+    note: "" },
+  { id: "kit", fest: true, kind: "arch", name: "京都工芸繊維大学 3号館", kana: "きょうとこうげいせんいだいがく", area: "洛北", addr: "左京区松ヶ崎橋上町", year: 1930, style: "モダニズム", by: "本野精吾",
+    desc: "本野精吾による鉄筋コンクリートの校舎。キャンパスには南禅寺界隈から移した洋館・和楽庵（1916）もある。国の登録有形文化財。",
+    note: "普段の公開状況は要確認" },
+  { id: "concerthall", fest: true, kind: "arch", name: "京都コンサートホール", kana: "きょうとこんさーとほーる", area: "洛北", addr: "左京区下鴨半木町1-26", year: 1995, style: "ポストモダン", by: "磯崎新",
+    desc: "磯崎新の設計。京都の古い都市軸を建物の構成に取り込み、エントランスから大ホールへ螺旋のスロープで上がっていく。",
+    note: "" },
+  { id: "umekoji", fest: true, kind: "arch", name: "京都鉄道博物館 扇形車庫", kana: "きょうとてつどうはくぶつかん", area: "京都駅周辺", addr: "下京区観喜寺町", year: 1914, style: "鉄筋コンクリート造の機関車庫", by: "渡辺節（鉄道院）",
+    desc: "転車台を中心に放射状に並ぶ機関車庫。現存する国内最大級・最古の鉄筋コンクリート造の機関車庫とされ、国の重要文化財。",
+    note: "" },
+  { id: "marufukuro", fest: true, kind: "arch", name: "丸福樓（任天堂旧本社）", kana: "まるふくろう", area: "京都駅周辺", addr: "下京区正面通加茂川西入鍵屋町342", year: 1930, style: "アール・デコ", by: "増岡建築事務所（改修 安藤忠雄 監修）",
+    desc: "任天堂の旧本社の倉庫棟・住居棟・事務所棟（1930〜33）を、安藤忠雄の新棟と合わせて4室だけのホテルにした。",
+    note: "ホテル（外観見学）" },
+  { id: "shichijo", fest: true, kind: "arch", name: "七条大橋", kana: "しちじょうおおはし", area: "京都駅周辺", addr: "鴨川・七条通", year: 1913, style: "セセッション", by: "柴田畦作（意匠 森山松之助）",
+    desc: "鴨川に架かる現存最古の橋とされる鉄筋コンクリートの五連アーチ橋。河原に降りるとアーチのリズムがよく見える。国の登録有形文化財。",
+    note: "いつでも見られる" },
+  { id: "moan", fest: true, kind: "cafe", name: "茂庵", kana: "もあん", area: "今出川・京大周辺", addr: "左京区吉田神楽岡町8（吉田山山頂）", year: 1926, style: "大正の茶室群",
+    desc: "吉田山の上、数寄者・谷川茂次郎がつくった茶の施設の食堂棟がカフェになっている。大きな梁と、大文字山を望む窓辺の席が気持ちいい。国の登録有形文化財。",
+    note: "建物も見どころ。見学のみの入店は不可" },
+];
+
+// 掲載写真（Wikimedia Commons）。id は artifact の assets。
+const PHOTOS = {};
+
+const KIND = { arch: "建築", classic: "寺社・名所", history: "史跡", festival: "祭り・行事", sweets: "和菓子", food: "食・老舗", cafe: "喫茶", other: "その他" };
+const THIS_MONTH = new Date().getMonth() + 1;
+const RATIOS = [1.25, 1.5, 1.0, 1.33, 1.15, 1.45];
+
+function wareki(y) {
+  if (y < 1868) return "";
+  if (y <= 1912) return "明治" + (y - 1867);
+  if (y <= 1926) return "大正" + (y - 1911);
+  if (y <= 1989) return "昭和" + (y - 1925);
+  return "平成" + (y - 1988);
+}
+
+/* ---- state ---- */
+const LS_KEY = "kyoto-modern-visits-v1";
+let visits = {}, custom = {};
+try { visits = JSON.parse(localStorage.getItem(LS_KEY) || "{}") || {}; } catch (e) { visits = {}; }
+try { custom = JSON.parse(localStorage.getItem(LS_KEY + "-custom") || "{}") || {}; } catch (e) { custom = {}; }
+const ui = { filter: "all", status: "all", sort: "area", q: "", area: "" };
+try { const s = JSON.parse(localStorage.getItem(LS_KEY + "-ui2") || "null"); if (s) Object.assign(ui, { filter: s.filter || "all", status: s.status || "all", sort: s.sort || "area" }); } catch (e) {}
+if (ui.filter.startsWith("area:")) ui.filter = "all";
+let openId = null, confirmDelete = false;
+let remote = null, assets = null;
+let writeChain = Promise.resolve(), pendingTimer = null;
+
+function saveLocal() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(visits)); localStorage.setItem(LS_KEY + "-custom", JSON.stringify(custom)); localStorage.setItem(LS_KEY + "-quiz", JSON.stringify(quizStats)); } catch (e) {}
+}
+function saveUi() { try { localStorage.setItem(LS_KEY + "-ui2", JSON.stringify({ filter: ui.filter, status: ui.status, sort: ui.sort })); } catch (e) {} }
+function persist(immediate) {
+  saveLocal();
+  if (!remote) return;
+  clearTimeout(pendingTimer);
+  const run = () => {
+    const body = { visits: JSON.parse(JSON.stringify(visits)), custom: JSON.parse(JSON.stringify(custom)), quiz: JSON.parse(JSON.stringify(quizStats)), updatedAt: new Date().toISOString() };
+    writeChain = writeChain.then(() => remote.set(body)).catch(err => console.error(err));
+  };
+  if (immediate) run(); else pendingTimer = setTimeout(run, 700);
+}
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const flag = (id, k) => !!(visits[id] && visits[id][k]);
+const isDone = id => flag(id, "done");
+const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+
+function customSpots() {
+  return Object.values(custom).map(c => ({
+    id: c.id, mine: true, kind: c.kind || "other", name: c.name || "名前なし", kana: c.name || "",
+    area: c.area || "その他", addr: c.addr || "", year: Number(c.year) || 9999, style: "", by: "", desc: c.desc || "", note: "", link: c.link || "",
+  }));
+}
+function allSpots() { return SPOTS.concat(customSpots()); }
+function findSpot(id) { return allSpots().find(x => x.id === id); }
+const ratioIndex = id => { let h = 0; for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; };
+
+function photoOf(s) {
+  const mine = visits[s.id] && visits[s.id].photo;
+  if (mine) return { url: blobUrls[mine] || "", mine: true, ratio: visits[s.id].photoRatio };
+  const p = PHOTOS[s.id];
+  if (p) return { url: "/_blob/" + p.id, ratio: p.ratio, credit: p.credit, src: p.src };
+  return null;
+}
+const CHECK_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const BOOK_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h8v11l-4-3-4 3z" fill="var(--bk-fill, none)" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+const yearText = s => s.mine ? (s.year !== 9999 ? s.year : "") : (s.era ? s.era.split("（")[0] : s.year);
+
+/* ---- filters ---- */
+function pills() {
+  const list = [["all", "すべて"], ["month", THIS_MONTH + "月の行事"], ["arch", "建築"], ["classic", "寺社・名所"], ["history", "史跡"], ["festival", "祭り・行事"], ["sweets", "和菓子"], ["food", "食・老舗"], ["cafe", "喫茶"], ["church", "教会"], ["fest", "建築祭2026"], ["mine", "自分で追加"]];
+  const ar = $("#area");
+  if (!ar.options.length) ar.innerHTML = `<option value="">全エリア</option>` + AREAS.concat(["その他"]).map(a => `<option>${esc(a)}</option>`).join("");
+  ar.value = ui.area;
+  $("#pills").innerHTML = list.map(([k, l]) => `<button type="button" class="pill" data-f="${esc(k)}" aria-pressed="${ui.filter === k}">${esc(l)}</button>`).join("");
+}
+function statusOk(id) {
+  switch (ui.status) {
+    case "todo": return !isDone(id);
+    case "done": return isDone(id);
+    case "want": return flag(id, "want");
+    case "again": return flag(id, "again");
+    default: return true;
+  }
+}
+function filtered() {
+  const q = ui.q.trim().toLowerCase();
+  const f = ui.filter;
+  const list = allSpots().filter(s =>
+    (f === "all" || s.kind === f || (f === "fest" && s.fest) || (f === "church" && s.church) || (f === "mine" && s.mine) || (f === "month" && s.months && s.months.includes(THIS_MONTH))) &&
+    (!ui.area || s.area === ui.area) &&
+    statusOk(s.id) &&
+    (!q || [s.name, s.kana, s.area, s.addr, s.style, s.by || "", s.desc, (s.tips || []).join(" "), (visits[s.id] && visits[s.id].memo) || ""].join(" ").toLowerCase().includes(q))
+  );
+  const ai = a => { const i = AREAS.indexOf(a.area); return i < 0 ? 99 : i; };
+  const byArea = (a, b) => ai(a) - ai(b) || a.year - b.year;
+  const sorters = {
+    area: byArea,
+    year: (a, b) => a.year - b.year || a.kana.localeCompare(b.kana, "ja"),
+    yeardesc: (a, b) => (b.year === 9999 ? -1 : b.year) - (a.year === 9999 ? -1 : a.year) || a.kana.localeCompare(b.kana, "ja"),
+    name: (a, b) => a.kana.localeCompare(b.kana, "ja"),
+    todo: (a, b) => (isDone(a.id) - isDone(b.id)) || byArea(a, b),
+  };
+  return list.sort(sorters[ui.sort]);
+}
+
+/* ---- grid ---- */
+function colCount() { const w = $(".wrap").clientWidth; return w >= 1100 ? 5 : w >= 860 ? 4 : w >= 560 ? 3 : 2; }
+function shortName(s) { return s.name.replace(/（.*?）/g, ""); }
+function ratioFor() { return 1.25; }
+function pin(s) {
+  const p = photoOf(s);
+  const done = isDone(s.id), want = flag(s.id, "want"), again = flag(s.id, "again");
+  const img = p ? `<img src="${esc(p.url)}" alt="${esc(shortName(s))}" loading="lazy">` : `<div class="blank">${esc(shortName(s))}</div>`;
+  const meta = [s.area].concat(again ? ["また行きたい"] : []).filter(Boolean).map(esc).join(" · ");
+  return `<div class="pin" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.name)}の詳細">
+    <div class="spec"><span>${esc(KIND[s.kind] || "")}</span><span class="yr">${esc(yearText(s))}</span></div>
+    <div class="ph" style="aspect-ratio: 1 / ${ratioFor(s)}">${img}</div>
+    <div class="cap">
+      <div class="n">${esc(shortName(s))}</div>
+      <div class="icons">
+        <button type="button" data-act="want" aria-pressed="${want}" aria-label="${want ? "行きたいを外す" : "行きたい"}">${BOOK_SVG}</button>
+        <button type="button" data-act="toggle" aria-pressed="${done}" aria-label="${done ? "行ったを外す" : "行った"}">${CHECK_SVG}</button>
+      </div>
+      <div class="m">${meta}</div>
+    </div>
+  </div>`;
+}
+let tipSpot = null;
+function renderTip() {
+  const pool = SPOTS.filter(s => s.tips && s.tips.length && (ui.filter === "all" || filtered().includes(s)));
+  if (!pool.length) { $("#tip").textContent = ""; tipSpot = null; return; }
+  const s = pool[Math.floor(Math.random() * pool.length)];
+  tipSpot = s.id;
+  $("#tip").innerHTML = `<b>${esc(shortName(s))}</b>　${esc(s.tips[Math.floor(Math.random() * s.tips.length)])}`;
+}
+function render() {
+  pills();
+  $("#status").value = ui.status; $("#sort").value = ui.sort;
+  const spots = allSpots();
+  const done = spots.filter(s => isDone(s.id));
+  $("#progress").textContent = `${String(done.length).padStart(3, "0")} / ${String(spots.length).padStart(3, "0")} 行った`;
+  const list = filtered();
+  const grid = $("#grid");
+  grid.innerHTML = list.length ? list.map(pin).join("") : `<div class="empty">ここにはまだ何もありません</div>`;
+}
+
+/* ---- sheet ---- */
+function openSheet(id) {
+  openId = id;
+  const s = findSpot(id); if (!s) { closeSheet(); return; }
+  const v = visits[id] || {};
+  const p = photoOf(s);
+  const done = !!v.done, want = !!v.want, again = !!v.again;
+  const map = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(shortName(s) + " " + (s.addr || "京都"));
+  const yl = s.mine ? (s.year !== 9999 ? `${s.year}年` : "") : s.era ? s.era : s.id === "maeda-meirin" ? `${s.year}年 開設（芸術センター）` : `${s.year}年（${wareki(s.year)}）`;
+  $("#sheetRoot").innerHTML = `<div class="scrim" data-act="close">
+    <div class="sheet ${s.kind}" role="dialog" aria-modal="true" aria-labelledby="sh-title">
+      <div class="hero">${p ? `<img src="${esc(p.url)}" alt="${esc(shortName(s))}">` : `<div class="blank">写真はまだありません</div>`}
+        ${p && p.credit ? `<div class="credit">写真: ${esc(p.credit)} · <a href="${esc(p.src)}" target="_blank" rel="noopener">Wikimedia Commons</a></div>` : ""}
+      </div>
+      <div class="body">
+        <button type="button" class="close" data-act="close" aria-label="閉じる">×</button>
+        <div class="kind">${esc(KIND[s.kind] || "")}</div>
+        <h2 id="sh-title">${esc(s.name)}</h2>
+        <dl class="facts">
+          <dt>エリア</dt><dd>${esc(s.area)}</dd>
+          ${s.addr ? `<dt>住所</dt><dd>${esc(s.addr)}</dd>` : ""}
+          ${yl ? `<dt>${s.kind === "festival" ? "時期" : (s.kind === "cafe" || s.kind === "sweets" || s.kind === "food") ? "創業" : s.kind === "arch" ? "竣工" : "年代"}</dt><dd>${esc(yl)}</dd>` : ""}
+          ${s.style ? `<dt>様式</dt><dd>${esc(s.style)}</dd>` : ""}
+          ${s.by ? `<dt>設計</dt><dd>${esc(s.by)}</dd>` : ""}
+        </dl>
+        ${s.desc ? `<p>${esc(s.desc)}</p>` : ""}
+        ${s.link ? `<a class="fine" href="${esc(s.link)}" target="_blank" rel="noopener">${esc(s.link)}</a>` : ""}
+        ${s.tips && s.tips.length ? `<div class="mame"><h3>豆知識</h3><ul>${s.tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>` : ""}
+        ${s.note ? `<div class="note">${esc(s.note)}</div>` : ""}
+        ${s.fest ? `<div class="fine">京都モダン建築祭2026（10/31〜11/8）の公開・特典の対象です。普段は入れない所が公開されることも。<a href="https://kyoto.kenchikusai.jp/program/" target="_blank" rel="noopener">プログラムを見る ↗</a></div>` : ""}
+        <div class="actions">
+          <button type="button" class="btn primary" data-act="toggle" aria-pressed="${done}">${s.kind === "festival" ? (done ? "見た ✓" : "見た") : (done ? "行った ✓" : "行った")}</button>
+          <button type="button" class="btn${want ? " on" : ""}" data-act="want" aria-pressed="${want}">${want ? "行きたい ✓" : "行きたい"}</button>
+          <button type="button" class="btn${again ? " on" : ""}" data-act="again" aria-pressed="${again}">${again ? "また行きたい ✓" : "また行きたい"}</button>
+        </div>
+        <div class="actions">
+          <a class="btn" href="${map}" target="_blank" rel="noopener">地図 ↗</a>
+          ${assets ? `<label class="btn" for="up-${esc(s.id)}">${v.photo ? "写真を差し替え" : "自分の写真を追加"}</label><input type="file" id="up-${esc(s.id)}" accept="image/*" data-act="upload" hidden>` : ""}
+          ${assets && v.photo ? `<button type="button" class="btn" data-act="rmphoto">自分の写真を外す</button>` : ""}
+          ${s.mine ? `<button type="button" class="btn" data-act="edit">編集</button><button type="button" class="btn${confirmDelete ? " danger" : ""}" data-act="del">${confirmDelete ? "もう一度押すと削除" : "削除"}</button>` : ""}
+        </div>
+        <div class="fine" id="upmsg"></div>
+        <div class="log">
+          <label for="d-${esc(s.id)}">訪問日<input type="date" id="d-${esc(s.id)}" data-act="date" value="${esc(v.date || "")}"></label>
+          <label for="m-${esc(s.id)}">メモ<textarea id="m-${esc(s.id)}" data-act="memo" placeholder="頼んだもの、印象に残ったところなど">${esc(v.memo || "")}</textarea></label>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+function closeSheet() { openId = null; confirmDelete = false; $("#sheetRoot").innerHTML = ""; }
+
+/* ---- add / edit form ---- */
+function openForm(id) {
+  openId = null; confirmDelete = false;
+  const c = id ? custom[id] : {};
+  const areaOpts = AREAS.concat(["その他"]).map(a => `<option${(c.area || "その他") === a ? " selected" : ""}>${esc(a)}</option>`).join("");
+  const kindOpts = [["arch", "モダン建築"], ["classic", "寺社・名所"], ["cafe", "喫茶"], ["other", "その他"]].map(([k, l]) => `<option value="${k}"${(c.kind || "arch") === k ? " selected" : ""}>${l}</option>`).join("");
+  $("#sheetRoot").innerHTML = `<div class="scrim" data-act="close">
+    <form class="sheet form" id="spotForm" role="dialog" aria-modal="true" aria-labelledby="fm-title" data-id="${esc(id || "")}">
+      <div class="body">
+        <button type="button" class="close" data-act="close" aria-label="閉じる">×</button>
+        <h2 id="fm-title">${id ? "スポットを編集" : "行きたいところを追加"}</h2>
+        <div class="log">
+          <label for="f-name">名前（必須）<input id="f-name" name="name" required value="${esc(c.name || "")}" placeholder="例：喫茶〇〇"></label>
+          <label for="f-kind">種類<select id="f-kind" name="kind">${kindOpts}</select></label>
+          <label for="f-area">エリア<select id="f-area" name="area">${areaOpts}</select></label>
+          <label for="f-addr">住所<input id="f-addr" name="addr" value="${esc(c.addr || "")}" placeholder="例：中京区〇〇町"></label>
+          <label for="f-year">年（竣工・創業など、任意）<input id="f-year" name="year" type="number" inputmode="numeric" value="${esc(c.year || "")}"></label>
+          <label for="f-link">参考URL（任意）<input id="f-link" name="link" type="url" value="${esc(c.link || "")}" placeholder="https://"></label>
+          <label for="f-desc">説明・メモ<textarea id="f-desc" name="desc">${esc(c.desc || "")}</textarea></label>
+          <label class="inline"><input type="checkbox" name="want" ${id ? (flag(id, "want") ? "checked" : "") : "checked"}> 行きたいに入れる</label>
+        </div>
+        <div class="actions"><button type="submit" class="btn primary">${id ? "保存" : "追加"}</button><button type="button" class="btn" data-act="close">やめる</button></div>
+      </div>
+    </form>
+  </div>`;
+  $("#f-name").focus();
+}
+function saveForm(form) {
+  const fd = new FormData(form);
+  const name = String(fd.get("name") || "").trim();
+  if (!name) return;
+  const id = form.dataset.id || ("u-" + Date.now().toString(36));
+  let link = String(fd.get("link") || "").trim();
+  if (link && !/^https?:\/\//.test(link)) link = "";
+  custom[id] = { id, name, kind: fd.get("kind"), area: fd.get("area"), addr: String(fd.get("addr") || "").trim(), year: String(fd.get("year") || "").trim(), link, desc: String(fd.get("desc") || "").trim(), created: (custom[id] && custom[id].created) || new Date().toISOString() };
+  visits[id] = Object.assign({}, visits[id] || {}, { want: !!fd.get("want") });
+  persist(true); render(); openSheet(id);
+}
+
+function setFlag(id, k) {
+  const v = Object.assign({}, visits[id] || {});
+  v[k] = !v[k];
+  if (k === "done" && v.done && !v.date) v.date = today();
+  visits[id] = v;
+  persist(true); render();
+  if (openId === id) openSheet(id);
+}
+
+/* ---- image upload ---- */
+function resize(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 1600, k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(b => b ? resolve({ blob: b, ratio: +(c.height / c.width).toFixed(3) }) : reject(new Error("encode")), "image/jpeg", 0.85);
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = () => reject(new Error("decode"));
+    img.src = URL.createObjectURL(file);
+  });
+}
+async function upload(id, file) {
+  const msg = $("#upmsg");
+  try {
+    msg.textContent = "アップロードしています…";
+    const { blob, ratio } = await resize(file);
+    const res = await assets.upload(blob, { type: "image/jpeg" });
+    const old = visits[id] && visits[id].photo;
+    visits[id] = Object.assign({}, visits[id] || {}, { photo: res.id, photoRatio: ratio });
+    persist(true); render(); openSheet(id);
+    if (old) assets.delete(old).catch(() => {});
+  } catch (err) {
+    console.error(err);
+    msg.textContent = "写真を保存できませんでした。JPEGかPNGの画像でもう一度試してください。";
+  }
+}
+
+/* ---- 京都検定クイズ ---- */
+let quizStats = {};
+try { quizStats = JSON.parse(localStorage.getItem(LS_KEY + "-quiz") || "{}") || {}; } catch (e) { quizStats = {}; }
+let quiz = null;
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const yearLabel = s => s.era ? s.era.replace(/（.*?）/g, "") : `${s.year}年`;
+function maskName(s, text) {
+  let t = text;
+  const parts = [s.name, shortName(s)].concat((s.name.match(/（(.*?)）/g) || []).map(x => x.slice(1, -1)));
+  parts.sort((a, b) => b.length - a.length).forEach(p => { if (p && p.length > 1) t = t.split(p).join("〇〇"); });
+  return t;
+}
+function wrongCount(id) { const q = quizStats[id]; return q ? q.w - q.r : 0; }
+function quizPool() {
+  let pool = (ui.filter === "all" ? SPOTS : filtered().filter(s => !s.mine));
+  if (quiz && quiz.mode === "wrong") pool = pool.filter(s => wrongCount(s.id) > 0);
+  return pool;
+}
+function choicesFrom(answer, values) {
+  const others = shuffle([...new Set(values.filter(v => v && v !== answer))]).slice(0, 3);
+  return others.length < 3 ? null : shuffle(others.concat(answer));
+}
+function makeQuestion() {
+  const pool = quizPool();
+  if (!pool.length) return null;
+  for (let tries = 0; tries < 40; tries++) {
+    const s = pick(pool);
+    const types = ["desc", "desc", "area"];
+    if (/\d/.test(yearLabel(s))) types.push("year");
+    if (s.by) types.push("by");
+    if (s.style) types.push("style");
+    const t = pick(types);
+    let q, answer, values;
+    if (t === "desc") {
+      q = `次の説明にあてはまるのは？\n「${maskName(s, s.desc)}」`;
+      answer = shortName(s);
+      values = SPOTS.filter(x => x.kind === s.kind).map(shortName);
+    } else if (t === "area") {
+      q = `「${shortName(s)}」があるエリアは？`;
+      answer = s.area; values = AREAS;
+    } else if (t === "year") {
+      q = s.kind === "cafe" ? `「${shortName(s)}」の創業は？` : s.kind === "classic" ? `「${shortName(s)}」の創建・歴史は？` : `「${shortName(s)}」が建てられたのは？`;
+      answer = yearLabel(s);
+      values = SPOTS.filter(x => x.kind === s.kind && Math.abs((x.year || 0) - s.year) > 3).map(yearLabel);
+    } else if (t === "by") {
+      q = `「${shortName(s)}」の設計者（つくった人）は？`;
+      answer = s.by; values = SPOTS.filter(x => x.by && !x.by.includes(s.by) && !s.by.includes(x.by)).map(x => x.by);
+    } else {
+      q = `「${shortName(s)}」の様式・特徴は？`;
+      answer = s.style; values = SPOTS.filter(x => x.style).map(x => x.style);
+    }
+    const choices = choicesFrom(answer, values);
+    if (choices) return { s, q, answer, choices, picked: null };
+  }
+  return null;
+}
+function openQuiz(mode) {
+  openId = null;
+  if (!quiz || mode) quiz = { mode: mode || "all", right: 0, total: 0, cur: null };
+  quiz.cur = makeQuestion();
+  renderQuiz();
+}
+function renderQuiz() {
+  const c = quiz.cur;
+  const wrongN = Object.keys(quizStats).filter(id => wrongCount(id) > 0).length;
+  const scope = ui.filter === "all" ? "すべてのスポット" : `「${$("#pills [aria-pressed=true]") ? $("#pills [aria-pressed=true]").textContent : ""}」のスポット`;
+  let body;
+  if (!c) {
+    body = quiz.mode === "wrong"
+      ? `<p>復習する問題はありません。間違えた問題がここにたまります。</p>`
+      : `<p>この絞り込みでは問題を作れません。上の絞り込みを「すべて」にしてください。</p>`;
+  } else {
+    const done = c.picked !== null;
+    body = `<p class="qtext">${esc(c.q).replace(/\n/g, "<br>")}</p>
+      <div class="qchoices">${c.choices.map((ch, i) => {
+        const cls = !done ? "" : ch === c.answer ? " ok" : i === c.picked ? " ng" : "";
+        return `<button type="button" class="qc${cls}" data-act="qans" data-i="${i}" ${done ? "disabled" : ""}>${esc(ch)}</button>`;
+      }).join("")}</div>
+      ${done ? `<div class="qresult">
+        <strong>${c.choices[c.picked] === c.answer ? "正解" : "不正解"}</strong>　答え：${esc(c.answer)}
+        <p><b>${esc(c.s.name)}</b>（${esc(c.s.area)}・${esc(yearLabel(c.s))}${c.s.by ? "・" + esc(c.s.by) : ""}）<br>${esc(c.s.desc)}</p>
+        <div class="actions"><button type="button" class="btn primary" data-act="qnext">次の問題</button><button type="button" class="btn" data-act="qopen">このスポットを開く</button></div>
+      </div>` : ""}`;
+  }
+  $("#sheetRoot").innerHTML = `<div class="scrim" data-act="close">
+    <div class="sheet form quiz" role="dialog" aria-modal="true" aria-labelledby="qz-title">
+      <div class="body">
+        <button type="button" class="close" data-act="close" aria-label="閉じる">×</button>
+        <h2 id="qz-title">京都検定クイズ</h2>
+        <div class="qbar">
+          <button type="button" class="pill" data-act="qmode" data-mode="all" aria-pressed="${quiz.mode === "all"}">全問</button>
+          <button type="button" class="pill" data-act="qmode" data-mode="wrong" aria-pressed="${quiz.mode === "wrong"}">間違えた問題（${wrongN}）</button>
+          <span class="fine">${quiz.right} / ${quiz.total} 正解 · ${esc(scope)}から出題</span>
+        </div>
+        ${body}
+      </div>
+    </div>
+  </div>`;
+}
+function answerQuiz(i) {
+  const c = quiz.cur; if (!c || c.picked !== null) return;
+  c.picked = i;
+  const ok = c.choices[i] === c.answer;
+  quiz.total++; if (ok) quiz.right++;
+  const st = Object.assign({ r: 0, w: 0 }, quizStats[c.s.id]);
+  if (ok) st.r++; else st.w++;
+  quizStats[c.s.id] = st;
+  persist(true);
+  renderQuiz();
+}
+
+/* ---- events ---- */
+$("#pills").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; ui.filter = b.dataset.f; saveUi(); render(); renderTip(); });
+$("#status").addEventListener("change", e => { ui.status = e.target.value; saveUi(); render(); });
+$("#sort").addEventListener("change", e => { ui.sort = e.target.value; saveUi(); render(); });
+$("#q").addEventListener("input", e => { ui.q = e.target.value; render(); });
+$("#addBtn").addEventListener("click", () => openForm(null));
+$("#area").addEventListener("change", e => { ui.area = e.target.value; render(); });
+$("#tip").addEventListener("click", () => { if (tipSpot) openSheet(tipSpot); });
+$("#grid").addEventListener("click", e => {
+  const card = e.target.closest(".pin"); if (!card) return;
+  const b = e.target.closest("[data-act]");
+  if (b && b.dataset.act === "toggle") { e.stopPropagation(); setFlag(card.dataset.id, "done"); return; }
+  if (b && b.dataset.act === "want") { e.stopPropagation(); setFlag(card.dataset.id, "want"); return; }
+  openSheet(card.dataset.id);
+});
+$("#grid").addEventListener("keydown", e => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("pin")) { e.preventDefault(); openSheet(e.target.dataset.id); }
+});
+$("#sheetRoot").addEventListener("submit", e => { e.preventDefault(); saveForm(e.target); });
+$("#sheetRoot").addEventListener("click", e => {
+  const act = e.target.closest("[data-act]");
+  if (!act) return;
+  const a = act.dataset.act;
+  if (a === "close") { if (e.target === act || act.tagName === "BUTTON") closeSheet(); return; }
+  if (a === "qans") { answerQuiz(Number(act.dataset.i)); return; }
+  if (a === "qnext") { openQuiz(); return; }
+  if (a === "qmode") { openQuiz(act.dataset.mode); return; }
+  if (a === "qopen") { const id = quiz.cur.s.id; openSheet(id); return; }
+  if (a === "toggle") setFlag(openId, "done");
+  else if (a === "want") setFlag(openId, "want");
+  else if (a === "again") setFlag(openId, "again");
+  else if (a === "edit") openForm(openId);
+  else if (a === "del") {
+    if (!confirmDelete) { confirmDelete = true; openSheet(openId); return; }
+    const id = openId, old = visits[id] && visits[id].photo;
+    delete custom[id]; delete visits[id];
+    persist(true); closeSheet(); render();
+    if (assets && old) assets.delete(old).catch(() => {});
+  }
+  else if (a === "rmphoto") {
+    const old = visits[openId].photo;
+    const v = Object.assign({}, visits[openId]); delete v.photo; delete v.photoRatio; visits[openId] = v;
+    persist(true); render(); openSheet(openId);
+    if (assets && old) assets.delete(old).catch(() => {});
+  }
+});
+$("#sheetRoot").addEventListener("change", e => {
+  const a = e.target.dataset.act;
+  if (a === "date") { visits[openId] = Object.assign({}, visits[openId] || {}, { date: e.target.value }); persist(true); }
+  if (a === "upload" && e.target.files[0]) upload(openId, e.target.files[0]);
+});
+$("#sheetRoot").addEventListener("input", e => {
+  if (e.target.dataset.act !== "memo") return;
+  visits[openId] = Object.assign({}, visits[openId] || {}, { memo: e.target.value });
+  persist(false);
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#sheetRoot").innerHTML) closeSheet(); });
+render();
+renderTip();
+
+/* ---- 端末内の写真保存（IndexedDB） ---- */
+function idb() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open("kyoto-meguri", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("photos");
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+async function idbDo(mode, fn) {
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const tx = db.transaction("photos", mode); const st = tx.objectStore("photos");
+    const out = fn(st);
+    tx.oncomplete = () => res(out && out.result); tx.onerror = () => rej(tx.error);
+  });
+}
+const localAssets = {
+  async upload(blob) {
+    const id = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    await idbDo("readwrite", st => st.put(blob, id));
+    blobUrls[id] = URL.createObjectURL(blob);
+    return { id, url: blobUrls[id] };
+  },
+  async delete(id) { await idbDo("readwrite", st => st.delete(id)); if (blobUrls[id]) URL.revokeObjectURL(blobUrls[id]); delete blobUrls[id]; return { deleted: true }; },
+};
+async function loadPhotos() {
+  const db = await idb();
+  await new Promise(res => {
+    const tx = db.transaction("photos", "readonly");
+    const req = tx.objectStore("photos").openCursor();
+    req.onsuccess = () => { const c = req.result; if (c) { blobUrls[c.key] = URL.createObjectURL(c.value); c.continue(); } };
+    tx.oncomplete = res; tx.onerror = res;
+  });
+}
+
+/* ---- バックアップ ---- */
+const blobToDataUrl = b => new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); });
+$("#exportBtn").addEventListener("click", async () => {
+  const photos = {};
+  const db = await idb();
+  await new Promise(res => {
+    const tx = db.transaction("photos", "readonly");
+    const req = tx.objectStore("photos").openCursor();
+    const pending = [];
+    req.onsuccess = () => { const c = req.result; if (c) { const k = c.key; pending.push(blobToDataUrl(c.value).then(d => { photos[k] = d; })); c.continue(); } };
+    tx.oncomplete = () => Promise.all(pending).then(res);
+  });
+  const data = { app: "kyoto-meguri", version: 1, exportedAt: new Date().toISOString(), visits, custom, photos };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: "application/json" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = `kyoto-meguri-${today()}.json`; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  $("#bkmsg").textContent = "書き出しました";
+});
+$("#importFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    if (!data || typeof data.visits !== "object") throw new Error("format");
+    visits = Object.assign({}, visits, data.visits);
+    custom = Object.assign({}, custom, data.custom || {});
+    for (const [k, d] of Object.entries(data.photos || {})) {
+      const blob = await (await fetch(d)).blob();
+      await idbDo("readwrite", st => st.put(blob, k));
+      blobUrls[k] = URL.createObjectURL(blob);
+    }
+    saveLocal(); render();
+    $("#bkmsg").textContent = "読み込みました";
+  } catch (err) {
+    console.error(err);
+    $("#bkmsg").textContent = "読み込めませんでした。書き出したファイルを選んでください。";
+  }
+  e.target.value = "";
+});
+
+(async () => {
+  assets = localAssets;
+  try { await loadPhotos(); } catch (e) { console.error(e); }
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+  render();
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+})();
+</script>
+</body>
+</html>
