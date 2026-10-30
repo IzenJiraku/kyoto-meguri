@@ -1257,6 +1257,7 @@ let remote = null, assets = null;
 let writeChain = Promise.resolve(), pendingTimer = null;
 
 function saveLocal() {
+  if (typeof stampChanges === "function") stampChanges();
   try { localStorage.setItem(LS_KEY, JSON.stringify(visits)); localStorage.setItem(LS_KEY + "-custom", JSON.stringify(custom)); localStorage.setItem(LS_KEY + "-quiz", JSON.stringify(quizStats)); } catch (e) {}
 }
 function saveUi() { try { localStorage.setItem(LS_KEY + "-ui2", JSON.stringify({ filter: ui.filter, status: ui.status, sort: ui.sort })); } catch (e) {} }
@@ -1771,7 +1772,7 @@ const TREE = [
   { key: "reset", en: "RESET", act: true, show: () => filtersActive() },
   { key: "map", en: "MAP", act: true },
   { key: "cal", en: "CALENDAR", act: true },
-  { key: "write", ja: "書く", en: "EDIT", items: () => [["add", "スポットを追加"], ["export", "記録を書き出す"], ["import", "記録を読み込む"]] },
+  { key: "write", ja: "書く", en: "EDIT", items: () => [["add", "スポットを追加"], ["export", "記録を書き出す"], ["import", "記録を読み込む"], ["sync", "PCとスマホの同期"]] },
 ];
 let openBranch = null;
 function currentOf(key) { return key === "kind" ? ui.filter : key === "area" ? ui.area : key === "status" ? ui.status : key === "sort" ? ui.sort : null; }
@@ -1804,7 +1805,7 @@ $("#tree").addEventListener("click", e => {
   const k = t.dataset.key, v = t.dataset.v;
   if (k === "write") {
     setMenu(false);
-    if (v === "add") openForm(null); else if (v === "export") $("#exportBtn").click(); else $("#importFile").click();
+    if (v === "add") openForm(null); else if (v === "export") $("#exportBtn").click(); else if (v === "sync") openSyncForm(); else $("#importFile").click();
     return;
   }
   if (k === "kind") ui.filter = v; else if (k === "area") ui.area = v; else if (k === "sort") ui.sort = v; else ui.status = v;
@@ -1986,6 +1987,152 @@ function renderAreaMap(list) {
 }
 window.addEventListener("load", () => { if (ui.area) render(); });
 
+
+/* ---- PCとスマホの同期: GitHub の非公開リポジトリに data.json と photos/ を置く ---- */
+// 変更のたびに項目ごとの時刻（stamps）を残し、同期では新しいほうを採る。消した項目も時刻つきで覚えておく
+const SYNC_KEY = LS_KEY + "-sync", STAMP_KEY = LS_KEY + "-stamps";
+var syncCfg = null; try { syncCfg = JSON.parse(localStorage.getItem(SYNC_KEY) || "null"); } catch (e) {}
+var stamps = {}; try { stamps = JSON.parse(localStorage.getItem(STAMP_KEY) || "{}") || {}; } catch (e) {}
+let syncState = { busy: false, again: false, last: null, error: "" };
+function snapshot() {
+  const m = {};
+  for (const [id, v] of Object.entries(visits)) m["v:" + id] = JSON.stringify(v);
+  for (const [id, c] of Object.entries(custom)) m["c:" + id] = JSON.stringify(c);
+  return m;
+}
+var snap = snapshot();
+function stampChanges() {
+  const cur = snapshot(), now = Date.now();
+  if (!snap) { snap = cur; return; }
+  let changed = false;
+  for (const k of new Set(Object.keys(cur).concat(Object.keys(snap)))) {
+    if (cur[k] !== snap[k]) { stamps[k] = { t: now, del: !(k in cur) }; changed = true; }
+  }
+  snap = cur;
+  if (changed) { try { localStorage.setItem(STAMP_KEY, JSON.stringify(stamps)); } catch (e) {} syncSoon(); }
+}
+let syncTimer = null;
+function syncSoon() { if (!syncCfg) return; clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, 3000); }
+function gh(path, opt = {}) {
+  return fetch(`https://api.github.com/repos/${syncCfg.repo}/contents/${path}`, Object.assign({}, opt, {
+    headers: Object.assign({ Authorization: "Bearer " + syncCfg.token, "X-GitHub-Api-Version": "2022-11-28" }, opt.headers || {}),
+    cache: "no-store",
+  }));
+}
+const b64enc = str => { const b = new TextEncoder().encode(str); let s = ""; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); };
+const b64dec = b64 => new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\n/g, "")), c => c.charCodeAt(0)));
+async function pullData() {
+  const r = await gh("data.json");
+  if (r.status === 404) return { data: { visits: {}, custom: {}, stamps: {} }, sha: null };
+  if (!r.ok) throw new Error("pull " + r.status);
+  const j = await r.json();
+  return { data: JSON.parse(b64dec(j.content)), sha: j.sha };
+}
+function mergeRemote(rd) {
+  const rs = rd.stamps || {}, rv = rd.visits || {}, rc = rd.custom || {};
+  const keys = new Set(Object.keys(stamps).concat(Object.keys(rs), Object.keys(rv).map(k => "v:" + k), Object.keys(rc).map(k => "c:" + k), Object.keys(visits).map(k => "v:" + k), Object.keys(custom).map(k => "c:" + k)));
+  let changed = false;
+  for (const k of keys) {
+    const [kind, id] = [k.slice(0, 1), k.slice(2)];
+    const map = kind === "v" ? visits : custom, rmap = kind === "v" ? rv : rc;
+    const lt = (stamps[k] && stamps[k].t) || 0, rt = (rs[k] && rs[k].t) || 0;
+    if (rt > lt || (rt === lt && !(id in map) && (id in rmap))) {
+      if (id in rmap) { if (JSON.stringify(map[id]) !== JSON.stringify(rmap[id])) { map[id] = rmap[id]; changed = true; } }
+      else if (id in map) { delete map[id]; changed = true; }
+      if (rs[k]) stamps[k] = rs[k];
+    }
+  }
+  snap = snapshot();
+  try { localStorage.setItem(LS_KEY, JSON.stringify(visits)); localStorage.setItem(LS_KEY + "-custom", JSON.stringify(custom)); localStorage.setItem(STAMP_KEY, JSON.stringify(stamps)); } catch (e) {}
+  return changed;
+}
+function referencedPhotos() { return new Set(Object.keys(visits).flatMap(id => myPhotos(id))); }
+async function syncPhotos() {
+  const r = await gh("photos");
+  const remoteNames = r.ok ? new Set((await r.json()).map(f => f.name)) : new Set();
+  for (const k of referencedPhotos()) {
+    const name = k + ".jpg";
+    if (blobUrls[k] && !remoteNames.has(name)) {
+      const blob = await idbDo("readonly", st => st.get(k));
+      if (!blob) continue;
+      const data = (await blobToDataUrl(blob)).split(",")[1];
+      await gh("photos/" + name, { method: "PUT", body: JSON.stringify({ message: "photo " + k, content: data }) });
+    } else if (!blobUrls[k] && remoteNames.has(name)) {
+      const pr = await gh("photos/" + name, { headers: { Accept: "application/vnd.github.raw" } });
+      if (!pr.ok) continue;
+      const blob = new Blob([await pr.arrayBuffer()], { type: "image/jpeg" });
+      await idbDo("readwrite", st => st.put(blob, k));
+      blobUrls[k] = URL.createObjectURL(blob);
+    }
+  }
+}
+async function syncNow() {
+  if (!syncCfg || !navigator.onLine) return;
+  if (syncState.busy) { syncState.again = true; return; }
+  syncState.busy = true; syncState.error = ""; syncStatus();
+  try {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { data, sha } = await pullData();
+      const changed = mergeRemote(data);
+      const body = { app: "goban", visits, custom, stamps, updatedAt: new Date().toISOString() };
+      const same = JSON.stringify({ v: data.visits, c: data.custom, s: data.stamps }) === JSON.stringify({ v: visits, c: custom, s: stamps });
+      if (changed) { render(); renderCover(); if (openId && !document.activeElement.closest(".log")) openSheet(openId); refreshView(); }
+      if (same) break;
+      const put = await gh("data.json", { method: "PUT", body: JSON.stringify(Object.assign({ message: "sync " + body.updatedAt, content: b64enc(JSON.stringify(body)) }, sha ? { sha } : {})) });
+      if (put.ok) break;
+      if (put.status !== 409 && put.status !== 422) throw new Error("push " + put.status);
+    }
+    await syncPhotos();
+    render(); renderCover();
+    syncState.last = new Date();
+  } catch (err) {
+    console.error(err);
+    syncState.error = /40[13]/.test(err.message) ? "鍵（トークン）かリポジトリ名が違うか、権限が足りません" : /404/.test(err.message) ? "リポジトリが見つかりません" : "同期できませんでした。電波のある所でもう一度開いてください";
+  }
+  syncState.busy = false; syncStatus();
+  if (syncState.again) { syncState.again = false; syncSoon(); }
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") syncNow(); });
+window.addEventListener("online", () => syncNow());
+function syncStatus() {
+  const el = $("#syncMsg"); if (!el) return;
+  el.textContent = syncState.busy ? "同期しています…" : syncState.error ? syncState.error : syncState.last ? `${syncState.last.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })} に同期しました` : syncCfg ? "" : "まだ設定されていません";
+}
+function openSyncForm() {
+  openId = null;
+  const c = syncCfg || {};
+  $("#sheetRoot").innerHTML = `<div class="scrim" data-act="close">
+    <form class="sheet form" id="syncForm" role="dialog" aria-modal="true" aria-labelledby="sy-title">
+      <div class="body">
+        <button type="button" class="close" data-act="close" aria-label="閉じる">×</button>
+        <h2 id="sy-title">PCとスマホの同期</h2>
+        <p class="fine">印・メモ・自分で追加した所・写真を、GitHub の非公開リポジトリに保存して、同じ設定をした端末どうしでそろえます。PCとスマホの両方で、同じリポジトリ名と鍵を入れてください。</p>
+        <div class="log">
+          <label for="sy-repo">リポジトリ（持ち主/名前）<input id="sy-repo" name="repo" required value="${esc(c.repo || "IzenJiraku/goban-data")}" autocomplete="off" spellcheck="false"></label>
+          <label for="sy-token">鍵（トークン）<input id="sy-token" name="token" type="password" required value="${esc(c.token || "")}" autocomplete="off" spellcheck="false" placeholder="github_pat_…"></label>
+        </div>
+        <div class="actions"><button type="submit" class="btn primary">保存して同期</button>${syncCfg ? `<button type="button" class="btn" data-act="syncoff">同期をやめる</button>` : ""}</div>
+        <div class="fine" id="syncMsg"></div>
+      </div>
+    </form>
+  </div>`;
+  syncStatus();
+}
+$("#sheetRoot").addEventListener("submit", e => {
+  if (e.target.id !== "syncForm") return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const fd = new FormData(e.target);
+  syncCfg = { repo: String(fd.get("repo")).trim().replace(/^https:\/\/github\.com\//, "").replace(/\/$/, ""), token: String(fd.get("token")).trim() };
+  try { localStorage.setItem(SYNC_KEY, JSON.stringify(syncCfg)); } catch (err) {}
+  syncNow();
+}, true);
+$("#sheetRoot").addEventListener("click", e => {
+  if (!e.target.closest('[data-act="syncoff"]')) return;
+  syncCfg = null; try { localStorage.removeItem(SYNC_KEY); } catch (err) {}
+  syncState = { busy: false, again: false, last: null, error: "" }; syncStatus();
+  closeSheet();
+});
+
 /* ---- events ---- */
 $("#pills").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; ui.filter = b.dataset.f; saveUi(); render(); renderTip(); });
 $("#status").addEventListener("change", e => { ui.status = e.target.value; saveUi(); render(); });
@@ -2137,6 +2284,7 @@ $("#importFile").addEventListener("change", async e => {
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
   render();
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  syncNow();
 })();
 </script>
 </body>
