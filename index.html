@@ -569,6 +569,17 @@ body.menu-open #menuBtn .l4 { transform: translateY(-3px); }
 body:not(.menu-open) #menuBtn .mi line { transition-delay: .14s; }
 @media (prefers-reduced-motion: reduce) { #menuBtn .mi, #menuBtn .mi line { transition: none !important; } }
 body.menu-open #hdr .clear { visibility: hidden !important; }
+
+/* 表紙の真ん中、ロゴの下の小さなピン */
+.near-btn { position: absolute; z-index: 2; left: var(--lx, 50%); top: calc(var(--ly, 50%) + 34px); transform: translateX(-50%); display: grid; justify-items: center; gap: 6px; color: #fff; padding: 8px; opacity: 0; transition: opacity .8s 1.8s; }
+#cover.open .near-btn { opacity: .85; }
+.near-btn:hover { opacity: 1 !important; }
+.near-btn svg { width: 16px; height: 16px; overflow: visible; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5)); }
+.near-btn path, .near-btn circle { fill: none; stroke: currentColor; stroke-width: 1.1; }
+.near-btn span { font-size: 10px; letter-spacing: .08em; white-space: nowrap; text-shadow: 0 1px 3px rgba(0, 0, 0, .7); }
+.near-btn span:empty { display: none; }
+.pin .nm .walk { font-style: normal; display: block; text-align: left; justify-self: start; font-family: var(--f-mono); font-size: 9px; letter-spacing: .1em; opacity: .75; }
+.amap .here-name { font-family: var(--f-mono); font-size: 10px !important; letter-spacing: .14em; }
 </style>
 
 </head>
@@ -578,6 +589,7 @@ body.menu-open #hdr .clear { visibility: hidden !important; }
   <div class="lines" id="lines" aria-hidden="true"></div>
   <div class="cover-logo"><svg class="glogo" viewBox="-0.5 -0.5 24 13" role="img" aria-label="碁盤 GOBAN"><path d="M1 1H9 M3 0V5 M7 0V5 M3 2.5H7 M3 3.8H7 M0 5H10 M2.5 5.7V6.5 M7.5 5.7V6.5 M0 7.5H10 M3.5 7.5V12 M5 9H9 M5 9V12 M9 9V12 M5 12H9 M15.5 0V1 M14 1H17 M14 1V6 M17 1V6 M13 3.5H18 M15.5 2V2.8 M15.5 4.5V5.3 M19.5 0V2 M19.5 0H22 M22 0V2 M19 3H23 M21 3V6 M19 6H23 M14 8H22 M14 8V11.5 M16.7 8V11.5 M19.3 8V11.5 M22 8V11.5 M13 11.5H23" pathLength="1"/></svg></div>
   <button type="button" class="cover-cap" id="coverCap"></button>
+  <button type="button" class="near-btn" id="nearBtn" aria-label="現在地の近くにある所を見る"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 18.5C10 18.5 4.5 12.2 4.5 8.2a5.5 5.5 0 0 1 11 0c0 4-5.5 10.3-5.5 10.3Z"/><circle cx="10" cy="8.2" r="1.6"/></svg><span id="nearMsg"></span></button>
 </section>
 
 <header id="hdr">
@@ -1340,7 +1352,7 @@ const LS_KEY = "kyoto-modern-visits-v1";
 let visits = {}, custom = {};
 try { visits = JSON.parse(localStorage.getItem(LS_KEY) || "{}") || {}; } catch (e) { visits = {}; }
 try { custom = JSON.parse(localStorage.getItem(LS_KEY + "-custom") || "{}") || {}; } catch (e) { custom = {}; }
-const ui = { filter: "all", status: "all", sort: "area", q: "", area: "" };
+const ui = { filter: "all", status: "all", sort: "area", q: "", area: "", near: null };
 try { const s = JSON.parse(localStorage.getItem(LS_KEY + "-ui2") || "null"); if (s) Object.assign(ui, { filter: s.filter || "all", status: s.status || "all", sort: s.sort || "area" }); } catch (e) {}
 if (ui.filter.startsWith("area:")) ui.filter = "all";
 let openId = null, confirmDelete = false;
@@ -1433,6 +1445,7 @@ function filtered() {
   const list = allSpots().filter(s =>
     (f === "all" || s.kind === f || (f === "fest" && s.fest) || (f === "church" && s.church) || (f === "mine" && s.mine) || (f === "month" && s.months && s.months.includes(THIS_MONTH))) &&
     (!ui.area || s.area === ui.area) &&
+    (!ui.near || ui.near.dist.has(s.id)) &&
     statusOk(s.id) &&
     (!q || [s.name, s.kana, s.area, s.addr, s.style, s.by || "", s.desc, (s.tips || []).join(" "), (visits[s.id] && visits[s.id].memo) || ""].join(" ").toLowerCase().includes(q))
   );
@@ -1445,6 +1458,7 @@ function filtered() {
     name: (a, b) => a.kana.localeCompare(b.kana, "ja"),
     todo: (a, b) => (isDone(a.id) - isDone(b.id)) || byArea(a, b),
   };
+  if (ui.near) return list.sort((a, b) => ui.near.dist.get(a.id) - ui.near.dist.get(b.id));
   return list.sort(sorters[ui.sort]);
 }
 
@@ -1459,7 +1473,7 @@ function pin(s) {
   const st = done ? "行った" : want ? "行きたい" : "まだ";
   return `<div class="pin${p ? " has" : ""}${done ? " done" : ""}" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.name)}（${st}）">
     <div class="ph">${p ? `<img src="${esc(p.thumb || p.url)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">` : ""}</div>
-    <span class="nm">${esc(shortName(s))}</span>${mk}
+    <span class="nm">${esc(shortName(s))}${ui.near && ui.near.dist.has(s.id) ? `<em class="walk">徒歩${walkMin(ui.near.dist.get(s.id))}分</em>` : ""}</span>${mk}
   </div>`;
 }
 let tipSpot = null;
@@ -1929,16 +1943,16 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#menu"
 function renderCurrent() {
   const kindLabel = ui.filter === "all" ? "" : (TREE[0].items().find(([v]) => v === ui.filter) || [, ""])[1];
   const st = (TREE[2].items().find(([v]) => v === ui.status) || [, ""])[1];
-  const parts = [kindLabel, ui.area || "", ui.status !== "all" ? st : ""].filter(Boolean);
+  const parts = [ui.near ? "現在地の近く" : "", kindLabel, ui.area || "", ui.status !== "all" ? st : ""].filter(Boolean);
   $("#current").textContent = parts.join(" · ") || "ALL";
   $("#clearBtn").hidden = !filtersActive();
 }
 
 
 /* ---- 絞り込みを一括で戻す ---- */
-function filtersActive() { return ui.filter !== "all" || !!ui.area || ui.status !== "all" || !!ui.q; }
+function filtersActive() { return ui.filter !== "all" || !!ui.area || ui.status !== "all" || !!ui.q || !!ui.near; }
 function resetFilters() {
-  ui.filter = "all"; ui.area = ""; ui.status = "all"; ui.q = "";
+  ui.filter = "all"; ui.area = ""; ui.status = "all"; ui.q = ""; ui.near = null;
   $("#q").value = ""; $("#hdr").classList.remove("searching"); $("#searchBtn").setAttribute("aria-expanded", false);
   saveUi(); render();
 }
@@ -2071,7 +2085,7 @@ $("#viewNav").addEventListener("click", e => {
 let amap = null, amapLayer = null, amapArea = null;
 function renderAreaMap(list) {
   const box = $("#areaMap");
-  const pins = (ui.area ? list : []).map(s => ({ s, c: coordOf(s) })).filter(x => x.c);
+  const pins = (ui.area || ui.near ? list : []).map(s => ({ s, c: coordOf(s) })).filter(x => x.c);
   if (!pins.length || !window.L) { box.hidden = true; return; }
   box.hidden = false;
   if (!amap) {
@@ -2083,9 +2097,10 @@ function renderAreaMap(list) {
     // そのエリアの名前はいつも、ほかの名前は寄ったときだけ
     amap.on("zoomend", () => box.classList.toggle("far", amap.getZoom() < 16));
   }
-  const saveArea = ui.area; ui.area = ""; const wider = filtered(); ui.area = saveArea;
+  const saveArea = ui.area, saveNear = ui.near; ui.area = ""; ui.near = null; const wider = filtered(); ui.area = saveArea; ui.near = saveNear;
   amapLayer.clearLayers();
-  const inArea = new Set(pins.map(p => p.s.id));
+  // 現在地モードでは近い8件だけ名前を出す
+  const inArea = new Set((ui.near ? pins.slice(0, 8) : pins).map(p => p.s.id));
   wider.forEach(s => {
     const c = coordOf(s); if (!c) return;
     L.circleMarker(c, { radius: 7, weight: 2, color: "#0D0D0D", fillColor: "#FFFFFF", fillOpacity: 1 })
@@ -2093,10 +2108,12 @@ function renderAreaMap(list) {
       .on("click", () => openSheet(s.id))
       .addTo(amapLayer);
   });
+  if (ui.near) L.circleMarker(ui.near.at, { radius: 6, weight: 2, color: "#FFFFFF", fillColor: "#0D0D0D", fillOpacity: 1, className: "here" }).bindTooltip("現在地", { permanent: true, direction: "left", offset: [-8, 0], className: "amap-name own here-name" }).addTo(amapLayer);
   amap.invalidateSize();
-  if (amapArea !== ui.area) {
-    amapArea = ui.area;
-    amap.fitBounds(L.latLngBounds(pins.map(p => p.c)).pad(.15), { maxZoom: 16 });
+  const key = ui.area || (ui.near ? ui.near.at.join() : "");
+  if (amapArea !== key) {
+    amapArea = key;
+    amap.fitBounds(L.latLngBounds((ui.near ? pins.slice(0, 8) : pins).map(p => p.c).concat(ui.near ? [ui.near.at] : [])).pad(.15), { maxZoom: 17 });
     box.classList.toggle("far", amap.getZoom() < 16);
   }
 }
@@ -2246,6 +2263,28 @@ $("#sheetRoot").addEventListener("click", e => {
   syncCfg = null; try { localStorage.removeItem(SYNC_KEY); } catch (err) {}
   syncState = { busy: false, again: false, last: null, error: "" }; syncStatus();
   closeSheet();
+});
+
+
+/* ---- 現在地の近く ---- */
+const walkMin = d => Math.max(1, Math.round(d * 1.3 / 80));
+$("#nearBtn").addEventListener("click", () => {
+  const msg = $("#nearMsg");
+  if (!navigator.geolocation) { msg.textContent = "この端末では現在地が使えません"; return; }
+  msg.textContent = "現在地を探しています…";
+  navigator.geolocation.getCurrentPosition(pos => {
+    const at = [pos.coords.latitude, pos.coords.longitude];
+    // 1.5km以内（少なければ近い順に6件、多くても30件）
+    const all = allSpots().filter(s => !s.months).map(s => ({ s, c: coordOf(s) })).filter(o => o.c).map(o => ({ id: o.s.id, d: distM(at, o.c) })).sort((a, b) => a.d - b.d);
+    let pick = all.filter(o => o.d <= 1500);
+    if (pick.length < 6) pick = all.slice(0, 6);
+    pick = pick.slice(0, 30);
+    ui.near = { at, dist: new Map(pick.map(o => [o.id, o.d])) };
+    msg.textContent = "";
+    render(); window.scrollTo({ top: 0 });
+  }, err => {
+    msg.textContent = err.code === 1 ? "位置情報の利用が許可されていません。端末の設定で許可してください" : "現在地が分かりませんでした";
+  }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
 });
 
 /* ---- events ---- */
