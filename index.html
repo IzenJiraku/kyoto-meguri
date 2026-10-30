@@ -669,6 +669,7 @@ body, button, input, textarea, select { font-family: var(--f-body); }
 
 /* 地図：CARTO の黒い地図をそのまま。白黒反転はやめる */
 .amap .leaflet-tile-pane { filter: none !important; opacity: 1 !important; }
+.amap.gsi .leaflet-tile-pane { filter: invert(1) grayscale(1) brightness(.92) contrast(.9) !important; opacity: .3 !important; }
 .amap .leaflet-container { background: #0E0E0E !important; }
 /* メニューの英字は少し控えめに */
 .branch { font-size: 20px !important; letter-spacing: .08em !important; color: rgba(237, 237, 234, .82); }
@@ -2335,7 +2336,7 @@ $("#viewNav").addEventListener("click", e => {
 
 
 /* ---- エリアの地図: 一覧の下に、道や駅名の入った地図とスポット ---- */
-// 地図は CARTO の黒い地図（文字なし）に、通りや地名の文字を薄く重ねる。スポットは今の絞り込み（エリア以外）に合う所を全部出す
+// 地図は Esri の濃いグレーの地図（文字なし）に、地名の文字を薄く重ねる。読めないときは国土地理院の淡色地図を反転して使う。スポットは今の絞り込み（エリア以外）に合う所を全部出す
 let amap = null, amapLayer = null, amapArea = null;
 function renderAreaMap(list) {
   const box = $("#areaMap");
@@ -2343,7 +2344,7 @@ function renderAreaMap(list) {
   if (!pins.length || !window.L) { box.hidden = true; return; }
   box.hidden = false;
   if (!amap) {
-    box.innerHTML = `<div class="amap-canvas" id="amapCanvas"></div><div class="amap-credit">地図: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a></div>`;
+    box.innerHTML = `<div class="amap-canvas" id="amapCanvas"></div><div class="amap-credit">地図: Esri, HERE, Garmin, © OpenStreetMap contributors</div>`;
     // スマホでは1本指はページのスクロールに使い、地図は2本指で動かす（ピンチで拡大縮小しながら移動）
     const coarse = matchMedia("(pointer: coarse)").matches;
     amap = L.map("amapCanvas", { zoomControl: false, scrollWheelZoom: false, attributionControl: false, minZoom: 11, maxZoom: 18, dragging: !coarse });
@@ -2354,9 +2355,18 @@ function renderAreaMap(list) {
         box.classList.add("hint"); clearTimeout(hintT); hintT = setTimeout(() => box.classList.remove("hint"), 1200);
       }, { passive: true });
     }
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png", { subdomains: "abcd", maxZoom: 18, maxNativeZoom: 19 }).addTo(amap);
+    const ESRI = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/";
+    const base = L.tileLayer(ESRI + "World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", { maxZoom: 18, maxNativeZoom: 16 }).addTo(amap);
     amap.createPane("basemapLabels").style.zIndex = 350;
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png", { subdomains: "abcd", maxZoom: 18, maxNativeZoom: 19, pane: "basemapLabels", opacity: .5 }).addTo(amap);
+    const labels = L.tileLayer(ESRI + "World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", { maxZoom: 18, maxNativeZoom: 16, pane: "basemapLabels", opacity: .55 }).addTo(amap);
+    let errs = 0;
+    base.on("tileerror", () => {
+      if (++errs !== 3) return;
+      amap.removeLayer(base); amap.removeLayer(labels);
+      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", { maxZoom: 18, maxNativeZoom: 18 }).addTo(amap);
+      box.classList.add("gsi");
+      const cr = box.querySelector(".amap-credit"); if (cr) cr.innerHTML = `地図: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a>`;
+    });
     L.control.zoom({ position: "bottomright" }).addTo(amap);
     amapLayer = L.layerGroup().addTo(amap);
     // そのエリアの名前はいつも、ほかの名前は寄ったときだけ
