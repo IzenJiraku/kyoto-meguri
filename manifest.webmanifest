@@ -1,13 +1,13 @@
 {
-  "name": "ごばん",
-  "short_name": "ごばん",
+  "name": "GOBAN",
+  "short_name": "GOBAN",
   "description": "碁盤の目の町を歩いて、建物・寺社・史跡・祭り・和菓子・ごはんを記録する自分用の帖",
   "lang": "ja",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#0D0D0D",
+  "theme_color": "#0D0D0D",
   "icons": [
     {
       "src": "icons/icon-192.png",

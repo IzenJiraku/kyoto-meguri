@@ -3,12 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0D0D0D">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="ごばん">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOBAN">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -35,7 +34,7 @@ body { padding-top: 0; }
 .cover-logo { position: relative; z-index: 1; }
 .cover-cap { position: absolute; left: max(20px, env(safe-area-inset-left, 0px)); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 1; font-size: 11px; letter-spacing: .1em; max-width: 60%; }
 .cover-cap .d { font-family: var(--f-mono); display: block; opacity: .7; margin-top: 2px; }
-.cover-cap.empty { opacity: .6; }
+.cover-cap.nophoto { opacity: .6; }
 .cue { position: absolute; right: max(20px, env(safe-area-inset-right, 0px)); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 1; color: #fff; font-family: var(--f-mono); font-size: 11px; letter-spacing: .3em; }
 
 .menubtn, .minilogo { position: fixed; z-index: 30; color: #fff; mix-blend-mode: difference; }
@@ -119,7 +118,7 @@ html, body { overflow-x: clip; }
 :root[data-theme="dark"] { --board: rgba(255, 255, 255, .14); }
 @media (prefers-reduced-motion: reduce) { #splash { animation: none; } }
 </style>
-<title>ごばん GOBAN</title>
+<title>GOBAN</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Shippori+Mincho+B1:wght@500;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
@@ -272,6 +271,59 @@ h1 { font-size: 15px; font-weight: 500; letter-spacing: .12em; margin: 0; white-
   .sub select { flex: 1; min-width: 0; }
   .sub select:first-of-type { border-left: 0; }
 }
+
+/* ==== 黒い碁盤（GOBAN） ==== */
+:root:root:root { --bg: #0D0D0D; --ink: #EDEDEA; --muted: #8C8C88; --line: #2A2A2A; --tile: #161616; --scrim: rgba(13, 13, 13, .9); --board: #2E2E2E; --board-inv: rgba(255, 255, 255, .08); color-scheme: dark; }
+body { background: var(--bg); color: var(--ink); }
+.logo .k { font-family: var(--f-mono); font-weight: 500; font-size: 44px; letter-spacing: .32em; padding-left: .32em; }
+.logo .r:empty { display: none; }
+.logo.small .k { font-size: 22px; }
+.minilogo { font-family: var(--f-mono); font-weight: 500; font-size: 14px; letter-spacing: .3em; }
+.minilogo .k { font-size: 14px; font-weight: 500; }
+.hb { position: relative; display: inline-block; width: .62em; height: 1em; vertical-align: top; overflow: hidden; }
+.hb > span { position: absolute; left: 0; top: 0; }
+.hb .b { transform: translateY(100%); opacity: 0; }
+#splash .hb .h { animation: hOut .45s .85s ease forwards; }
+#splash .hb .b { animation: bIn .45s .85s ease forwards; }
+@keyframes hOut { to { transform: translateY(-100%); opacity: 0; } }
+@keyframes bIn { to { transform: none; opacity: 1; } }
+.cover-logo, #splash .logo { background: transparent; padding: 0; }
+#cover, #splash { background-color: #0D0D0D; }
+.menubtn, .minilogo { mix-blend-mode: normal; color: #EDEDEA; }
+body.menu-open .menubtn, body.menu-open .minilogo { color: var(--ink); }
+.branch { font-family: var(--f-mono); font-size: 22px; letter-spacing: .24em; font-weight: 400; }
+.branch[aria-expanded="true"] { font-weight: 500; }
+.tree, .twigs { border-left-color: var(--ink); }
+
+/* 一覧: 正方形の写真のマス目を1pxの線で区切る */
+#list .top { background: var(--bg); }
+.top, .top > *, .bar h1, .bar .current, .addbtn, .sub select { border-color: var(--line) !important; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1px; background: var(--board); border: 1px solid var(--board); outline: 0; margin-top: 24px; }
+.pin { position: relative; border: 0 !important; padding: 0; background: var(--bg); aspect-ratio: 1 / 1; overflow: hidden; display: block; }
+.pin::before { left: -3px; top: -3px; width: 5px; height: 5px; background: #5A5A5A; z-index: 3; }
+.pin .ph { position: absolute; inset: 0; margin: 0; background: var(--tile); aspect-ratio: auto; }
+.pin .ph img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(.15) contrast(1.02); transition: transform .5s ease, filter .3s; }
+.pin:hover .ph img { transform: scale(1.04); filter: none; }
+.pin .ph .blank { height: 100%; background-image: linear-gradient(var(--board) 1px, transparent 1px), linear-gradient(90deg, var(--board) 1px, transparent 1px); background-size: 25% 25%; background-position: -1px -1px; opacity: .3; }
+.ov { position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 10px 9px; display: grid; gap: 2px; z-index: 2; }
+.pin.has .ov { background: linear-gradient(to top, rgba(0, 0, 0, .72), transparent); }
+.ov .n { font-size: 12px; font-weight: 500; letter-spacing: .06em; color: #F2F2EF; line-height: 1.4; }
+.ov .m { max-width: 100%; font-family: var(--f-mono); font-size: 9px; letter-spacing: .12em; color: rgba(242, 242, 239, .62); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pin:not(.has) .ov { top: 0; align-content: center; justify-items: center; text-align: center; padding: 12px; }
+.stones { position: absolute; top: 6px; right: 6px; z-index: 2; display: flex; gap: 0; }
+.stones button { width: 26px; height: 26px; display: grid; place-items: center; color: rgba(242, 242, 239, .55); }
+.stones svg { width: 14px; height: 14px; }
+.stones button[aria-pressed="true"] { color: #F2F2EF; --stone-fill: currentColor; }
+.stones .st-want[aria-pressed="true"] { --dash: none; --stone-fill: none; }
+.stones .st-want svg circle { fill: transparent; }
+.pin:not(:hover) .stones button[aria-pressed="false"] { opacity: 0; }
+@media (hover: none) { .pin .stones button[aria-pressed="false"] { opacity: .5; } }
+.sheet { border-left-color: var(--line); }
+.hero { border-bottom: 1px solid var(--line); }
+.facts { border-top-color: var(--line); }
+.mame, .log { border-top-color: var(--line); }
+@media (max-width: 520px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .ov .n { font-size: 10.5px; } .ov .m { display: none; } .ov { padding: 18px 6px 6px; } .stones { top: 2px; right: 2px; } .stones button { width: 22px; height: 22px; } .stones svg { width: 11px; height: 11px; } .logo .k { font-size: 34px; } }
+@media (prefers-reduced-motion: reduce) { #splash .hb .h, #splash .hb .b { animation: none; } #splash .hb .h { opacity: 0; } #splash .hb .b { transform: none; opacity: 1; } }
 </style>
 
 </head>
@@ -936,22 +988,17 @@ function filtered() {
 /* ---- grid ---- */
 function colCount() { const w = $(".wrap").clientWidth; return w >= 1100 ? 5 : w >= 860 ? 4 : w >= 560 ? 3 : 2; }
 function shortName(s) { return s.name.replace(/（.*?）/g, ""); }
-function ratioFor() { return 1.25; }
+function ratioFor() { return 1; }
 function pin(s) {
   const p = photoOf(s);
   const done = isDone(s.id), want = flag(s.id, "want"), again = flag(s.id, "again");
-  const img = p ? `<img src="${esc(p.url)}" alt="${esc(shortName(s))}" loading="lazy">` : `<div class="blank">${esc(shortName(s))}</div>`;
-  const meta = [s.area].concat(again ? ["また行きたい"] : []).filter(Boolean).map(esc).join(" · ");
-  return `<div class="pin" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.name)}の詳細">
-    <div class="spec"><span>${esc(KIND[s.kind] || "")}</span><span class="yr">${esc(yearText(s))}</span></div>
-    <div class="ph" style="aspect-ratio: 1 / ${ratioFor(s)}">${img}</div>
-    <div class="cap">
-      <div class="n">${esc(shortName(s))}</div>
-      <div class="icons">
-        <button type="button" class="st-want" data-act="want" aria-pressed="${want}" aria-label="${want ? "行きたいを外す" : "行きたい"}">${BOOK_SVG}</button>
-        <button type="button" data-act="toggle" aria-pressed="${done}" aria-label="${done ? "行ったを外す" : "行った"}">${CHECK_SVG}</button>
-      </div>
-      <div class="m">${meta}</div>
+  const img = p ? `<img src="${esc(p.url)}" alt="" loading="lazy">` : `<div class="blank"></div>`;
+  return `<div class="pin${p ? " has" : ""}" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.name)}の詳細">
+    <div class="ph">${img}</div>
+    <div class="ov"><span class="m">${esc(KIND[s.kind] || "")}${yearText(s) ? " · " + esc(yearText(s)) : ""}${again ? " · また行きたい" : ""}</span><span class="n">${esc(shortName(s))}</span></div>
+    <div class="stones">
+      <button type="button" class="st-want" data-act="want" aria-pressed="${want}" aria-label="${want ? "行きたいを外す" : "行きたい"}">${BOOK_SVG}</button>
+      <button type="button" data-act="toggle" aria-pressed="${done}" aria-label="${done ? "行ったを外す" : "行った"}">${CHECK_SVG}</button>
     </div>
   </div>`;
 }
@@ -1221,10 +1268,13 @@ function answerQuiz(i) {
 
 
 /* ---- 起動演出・表紙・メニュー ---- */
-const APP = { r: "GOBAN" };
+const APP = { r: "" };
 // 「ごはん」の「は」に濁点が落ちて「ごばん」になるロゴ
+// GOHAN の H が B に変わって GOBAN になるロゴ（碁盤とご飯）
 document.querySelectorAll("[data-logo-k]").forEach(e => {
-  if (e.closest(".minilogo")) { e.textContent = "ごばん"; return; } e.innerHTML = 'ご<span class="ha">は<span class="ten" aria-hidden="true">゛</span></span>ん'; e.setAttribute("aria-label", "ごばん"); });
+  e.setAttribute("aria-label", "GOBAN");
+  e.innerHTML = e.closest("#splash") ? 'GO<span class="hb"><span class="h">H</span><span class="b">B</span></span>AN' : "GOBAN";
+});
 document.querySelectorAll("[data-logo-r]").forEach(e => e.textContent = APP.r);
 (function splash() {
   const el = $("#splash");
@@ -1247,7 +1297,7 @@ function renderCover() {
   clearInterval(slideTimer);
   if (!list.length) {
     box.innerHTML = "";
-    cap.className = "cover-cap empty";
+    cap.className = "cover-cap nophoto";
     cap.textContent = "行った場所で撮った写真を追加すると、ここに表紙として映ります";
     return;
   }
@@ -1270,14 +1320,14 @@ io.observe($("#cover"));
 const TREE = [
   { key: "kind", ja: "見る", en: "CATEGORY", items: () => [["all", "すべて"], ["month", THIS_MONTH + "月の行事"], ["arch", "建築"], ["classic", "寺社・名所"], ["history", "史跡"], ["festival", "祭り・行事"], ["sweets", "和菓子"], ["food", "食・老舗"], ["cafe", "喫茶"], ["church", "教会"], ["fest", "建築祭2026"], ["mine", "自分で追加"]] },
   { key: "area", ja: "歩く", en: "AREA", items: () => [["", "全エリア"]].concat(AREAS.concat(["その他"]).map(a => [a, a])) },
-  { key: "status", ja: "しるし", en: "MARK", items: () => [["all", "すべて"], ["want", "行きたい"], ["done", "行った"], ["again", "また行きたい"], ["todo", "まだ"]] },
-  { key: "write", ja: "書く", en: "NOTE", items: () => [["add", "スポットを追加"], ["export", "記録を書き出す"], ["import", "記録を読み込む"]] },
+  { key: "status", ja: "しるし", en: "STATUS", items: () => [["all", "すべて"], ["want", "行きたい"], ["done", "行った"], ["again", "また行きたい"], ["todo", "まだ"]] },
+  { key: "write", ja: "書く", en: "EDIT", items: () => [["add", "スポットを追加"], ["export", "記録を書き出す"], ["import", "記録を読み込む"]] },
 ];
 let openBranch = null;
 function currentOf(key) { return key === "kind" ? ui.filter : key === "area" ? ui.area : key === "status" ? ui.status : null; }
 function renderTree() {
   $("#tree").innerHTML = TREE.map(b => `<li>
-    <button type="button" class="branch" data-branch="${b.key}" aria-expanded="${openBranch === b.key}">${b.ja}<span class="en">${b.en}</span></button>
+    <button type="button" class="branch" data-branch="${b.key}" aria-expanded="${openBranch === b.key}">${b.en}</button>
     ${openBranch === b.key ? `<ul class="twigs">${b.items().map(([v, l]) => `<li><button type="button" class="twig" data-key="${b.key}" data-v="${esc(v)}" aria-current="${currentOf(b.key) === v}">${esc(l)}</button></li>`).join("")}</ul>` : ""}
   </li>`).join("");
 }
