@@ -459,6 +459,18 @@ body.menu-open #hdr .current, body.menu-open #hdr .search { visibility: hidden; 
 /* メニューは右から */
 #menu { inset: 0 0 0 auto !important; border-right: 0; border-left: 1px solid var(--lc); }
 @media (prefers-reduced-motion: no-preference) { #menu:not([hidden]) { animation-name: drawerInR; } @keyframes drawerInR { from { transform: translateX(100%); } } }
+
+/* 詳細の写真: 横にスワイプして複数枚 */
+.hero { position: relative; }
+.hero .track { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+.hero .track::-webkit-scrollbar { display: none; }
+.hero .slide { position: relative; flex: 0 0 100%; height: 100%; scroll-snap-align: start; }
+.hero .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero .count { position: absolute; top: 10px; right: 12px; font-family: var(--f-mono); font-size: 10px; letter-spacing: .16em; color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, .6); }
+
+.cover-cap { color: #fff; text-align: left; padding: 8px 10px 8px 0; margin: -8px 0; cursor: pointer; }
+.cover-cap::after { content: " →"; font-family: var(--f-mono); opacity: .7; }
+.cover-cap:empty::after { content: none; }
 </style>
 
 </head>
@@ -467,7 +479,7 @@ body.menu-open #hdr .current, body.menu-open #hdr .search { visibility: hidden; 
   <div class="slides" id="slides"></div>
   <div class="lines" id="lines" aria-hidden="true"></div>
   <div class="cover-logo"><svg class="glogo" viewBox="-0.5 -0.5 24 13" role="img" aria-label="碁盤 GOBAN"><path d="M1 1H9 M3 0V5 M7 0V5 M3 2.5H7 M3 3.8H7 M0 5H10 M2.5 5.7V6.5 M7.5 5.7V6.5 M0 7.5H10 M3.5 7.5V12 M5 9H9 M5 9V12 M9 9V12 M5 12H9 M15.5 0V1 M14 1H17 M14 1V6 M17 1V6 M13 3.5H18 M15.5 2V2.8 M15.5 4.5V5.3 M19.5 0V2 M19.5 0H22 M22 0V2 M19 3H23 M21 3V6 M19 6H23 M14 8H22 M14 8V11.5 M16.7 8V11.5 M19.3 8V11.5 M22 8V11.5 M13 11.5H23" pathLength="1"/></svg></div>
-  <div class="cover-cap" id="coverCap"></div>
+  <button type="button" class="cover-cap" id="coverCap"></button>
 </section>
 
 <header id="hdr">
@@ -1212,9 +1224,23 @@ function allSpots() { return SPOTS.concat(customSpots()); }
 function findSpot(id) { return allSpots().find(x => x.id === id); }
 const ratioIndex = id => { let h = 0; for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; };
 
+// 自分の写真は何枚でも。先頭の1枚がマスと表紙に使われる
+function myPhotos(id) { const v = visits[id] || {}; return (v.photos || (v.photo ? [v.photo] : [])).filter(Boolean); }
+function setMyPhotos(id, arr) {
+  const v = Object.assign({}, visits[id] || {});
+  v.photos = arr; if (arr.length) v.photo = arr[0]; else delete v.photo;
+  delete v.photoRatio;
+  visits[id] = v;
+}
+function listedPhoto(s) {
+  const p = PHOTOS[s.id]; if (!p) return null;
+  const f = encodeURIComponent(p.f);
+  return { url: FILEPATH + f + "?width=960", thumb: FILEPATH + f + "?width=500", credit: photoCredits[s.id] || "作者・ライセンスはリンク先", src: "https://commons.wikimedia.org/wiki/File:" + f };
+}
+let heroIdx = 0;
 function photoOf(s) {
-  const mine = visits[s.id] && visits[s.id].photo;
-  if (mine) return { url: blobUrls[mine] || "", mine: true, ratio: visits[s.id].photoRatio };
+  const mine = myPhotos(s.id)[0];
+  if (mine) return { url: blobUrls[mine] || "", mine: true };
   const p = PHOTOS[s.id];
   if (p) {
     const f = encodeURIComponent(p.f);
@@ -1305,18 +1331,21 @@ function render() {
 
 /* ---- sheet ---- */
 function openSheet(id) {
+  if (openId !== id) heroIdx = 0;
   openId = id;
   const s = findSpot(id); if (!s) { closeSheet(); return; }
   const v = visits[id] || {};
   const p = photoOf(s);
+  const mineIds = myPhotos(id);
+  const lp = listedPhoto(s);
+  const gallery = mineIds.filter(k => blobUrls[k]).map(k => ({ url: blobUrls[k], mine: k })).concat(lp ? [lp] : []);
   const done = !!v.done, want = !!v.want, again = !!v.again;
-  if (p && p.src && PHOTOS[s.id]) loadPhotoCredit(s.id, PHOTOS[s.id], p.src);  // クレジットは開いたときだけ取得
+  if (PHOTOS[s.id]) loadPhotoCredit(s.id, PHOTOS[s.id], listedPhoto(s).src);  // クレジットは開いたときだけ取得
   const map = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(shortName(s) + " " + (s.addr || "京都"));
   const yl = s.mine ? (s.year !== 9999 ? `${s.year}年` : "") : s.era ? s.era : s.id === "maeda-meirin" ? `${s.year}年 開設（芸術センター）` : `${s.year}年（${wareki(s.year)}）`;
   $("#sheetRoot").innerHTML = `<div class="scrim" data-act="close">
     <div class="sheet ${s.kind}" role="dialog" aria-modal="true" aria-labelledby="sh-title">
-      <div class="hero">${p ? `<img src="${esc(p.url)}" alt="${esc(shortName(s))}">` : `<div class="blank">写真はまだありません</div>`}
-        ${p && p.credit ? `<div class="credit">写真: ${esc(p.credit)} · <a href="${esc(p.src)}" target="_blank" rel="noopener">Wikimedia Commons</a></div>` : ""}
+      <div class="hero">${gallery.length ? `<div class="track" id="heroTrack">${gallery.map(g => `<div class="slide">${`<img src="${esc(g.url)}" alt="${esc(shortName(s))}" loading="lazy">`}${g.credit ? `<div class="credit">写真: ${esc(g.credit)} · <a href="${esc(g.src)}" target="_blank" rel="noopener">Wikimedia Commons</a></div>` : ""}</div>`).join("")}</div>${gallery.length > 1 ? `<div class="count" id="heroCount">1 / ${gallery.length}</div>` : ""}` : `<div class="blank">写真はまだありません</div>`}
       </div>
       <div class="body">
         <button type="button" class="close" data-act="close" aria-label="閉じる">×</button>
@@ -1341,8 +1370,9 @@ function openSheet(id) {
         ${s.fest ? `<div class="fine">京都モダン建築祭2026（10/31〜11/8）の公開・特典の対象です。普段は入れない所が公開されることも。<a href="https://kyoto.kenchikusai.jp/program/" target="_blank" rel="noopener">プログラムを見る ↗</a></div>` : ""}
         <div class="actions">
           <a class="btn" href="${map}" target="_blank" rel="noopener">地図 ↗</a>
-          ${assets ? `<label class="btn" for="up-${esc(s.id)}">${v.photo ? "写真を差し替え" : "自分の写真を追加"}</label><input type="file" id="up-${esc(s.id)}" accept="image/*" data-act="upload" hidden>` : ""}
-          ${assets && v.photo ? `<button type="button" class="btn" data-act="rmphoto">自分の写真を外す</button>` : ""}
+          ${assets ? `<label class="btn" for="up-${esc(s.id)}">写真を追加</label><input type="file" id="up-${esc(s.id)}" accept="image/*" multiple data-act="upload" hidden>` : ""}
+          ${assets && mineIds.length ? `<button type="button" class="btn" data-act="rmphoto" id="rmPhotoBtn">この写真を外す</button>` : ""}
+          ${assets && mineIds.length > 1 ? `<button type="button" class="btn" data-act="firstphoto" id="firstPhotoBtn" hidden>この写真をマスに使う</button>` : ""}
           ${s.mine ? `<button type="button" class="btn" data-act="edit">編集</button><button type="button" class="btn${confirmDelete ? " danger" : ""}" data-act="del">${confirmDelete ? "もう一度押すと削除" : "削除"}</button>` : ""}
         </div>
         <div class="fine" id="upmsg"></div>
@@ -1353,8 +1383,23 @@ function openSheet(id) {
       </div>
     </div>
   </div>`;
+  setupHero(id);
 }
-function closeSheet() { openId = null; confirmDelete = false; $("#sheetRoot").innerHTML = ""; }
+// 写真のスライド: いま見ている1枚に合わせて「外す」「マスに使う」を出し分ける
+function setupHero(id) {
+  const tr = $("#heroTrack"); if (!tr) return;
+  const n = tr.children.length, mineN = myPhotos(id).length;
+  const sync = () => {
+    heroIdx = Math.min(n - 1, Math.round(tr.scrollLeft / Math.max(1, tr.clientWidth)));
+    if ($("#heroCount")) $("#heroCount").textContent = `${heroIdx + 1} / ${n}`;
+    if ($("#rmPhotoBtn")) $("#rmPhotoBtn").hidden = heroIdx >= mineN;
+    if ($("#firstPhotoBtn")) $("#firstPhotoBtn").hidden = heroIdx === 0 || heroIdx >= mineN;
+  };
+  if (heroIdx) tr.scrollLeft = heroIdx * tr.clientWidth;
+  sync();
+  tr.addEventListener("scroll", () => requestAnimationFrame(sync), { passive: true });
+}
+function closeSheet() { heroIdx = 0; openId = null; confirmDelete = false; $("#sheetRoot").innerHTML = ""; }
 
 /* ---- add / edit form ---- */
 function openForm(id) {
@@ -1420,16 +1465,19 @@ function resize(file) {
     img.src = URL.createObjectURL(file);
   });
 }
-async function upload(id, file) {
+async function upload(id, files) {
   const msg = $("#upmsg");
   try {
-    msg.textContent = "アップロードしています…";
-    const { blob, ratio } = await resize(file);
-    const res = await assets.upload(blob, { type: "image/jpeg" });
-    const old = visits[id] && visits[id].photo;
-    visits[id] = Object.assign({}, visits[id] || {}, { photo: res.id, photoRatio: ratio });
-    persist(true); render(); openSheet(id); renderCover();
-    if (old) assets.delete(old).catch(() => {});
+    const added = [];
+    for (const [i, file] of [...files].entries()) {
+      msg.textContent = files.length > 1 ? `保存しています… ${i + 1} / ${files.length}` : "保存しています…";
+      const { blob } = await resize(file);
+      const res = await assets.upload(blob, { type: "image/jpeg" });
+      added.push(res.id);
+    }
+    const before = myPhotos(id).length;
+    setMyPhotos(id, myPhotos(id).concat(added));
+    persist(true); render(); heroIdx = before; openSheet(id); renderCover();
   } catch (err) {
     console.error(err);
     msg.textContent = "写真を保存できませんでした。JPEGかPNGの画像でもう一度試してください。";
@@ -1596,8 +1644,7 @@ window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(re
 
 let slideTimer = null;
 function coverPhotos() {
-  const mine = allSpots().filter(s => visits[s.id] && visits[s.id].photo && blobUrls[visits[s.id].photo])
-    .map(s => ({ s, url: blobUrls[visits[s.id].photo], date: visits[s.id].date || "" }))
+  const mine = allSpots().flatMap(s => myPhotos(s.id).filter(k => blobUrls[k]).map(k => ({ s, url: blobUrls[k], date: (visits[s.id] && visits[s.id].date) || "" })))
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   if (mine.length) return mine;
   // 自分の写真がまだないときは、行った所 → すべての順で掲載写真を使う
@@ -1615,12 +1662,16 @@ function renderCover() {
   const show = () => {
     box.querySelectorAll("img").forEach((im, k) => im.classList.toggle("on", k === i));
     const p = list[i];
+    cap.dataset.id = p.s.id;
+    cap.setAttribute("aria-label", shortName(p.s) + "の詳細");
     cap.innerHTML = `${esc(shortName(p.s))}${p.date ? `<span class="d">${esc(p.date.replace(/-/g, "."))}</span>` : ""}`;
   };
   show();
   if (list.length > 1) slideTimer = setInterval(() => { i = (i + 1) % list.length; show(); }, 6000);
 }
 // 表紙を過ぎたらヘッダーを黒くしてロゴを出す
+// 表紙の左下の名前から、その場所の詳細へ
+$("#coverCap").addEventListener("click", e => { const id = e.currentTarget.dataset.id; if (id) openSheet(id); });
 const hdrSentinel = document.createElement("div");
 hdrSentinel.style.cssText = "position:absolute;left:0;bottom:60px;width:1px;height:1px;pointer-events:none";
 $("#cover").appendChild(hdrSentinel);
@@ -1716,22 +1767,31 @@ $("#sheetRoot").addEventListener("click", e => {
   else if (a === "edit") openForm(openId);
   else if (a === "del") {
     if (!confirmDelete) { confirmDelete = true; openSheet(openId); return; }
-    const id = openId, old = visits[id] && visits[id].photo;
+    const id = openId, olds = myPhotos(id);
     delete custom[id]; delete visits[id];
     persist(true); closeSheet(); render();
-    if (assets && old) assets.delete(old).catch(() => {});
+    if (assets) olds.forEach(k => assets.delete(k).catch(() => {}));
   }
-  else if (a === "rmphoto") {
-    const old = visits[openId].photo;
-    const v = Object.assign({}, visits[openId]); delete v.photo; delete v.photoRatio; visits[openId] = v;
-    persist(true); render(); openSheet(openId);
-    if (assets && old) assets.delete(old).catch(() => {});
+  else if (a === "rmphoto" || a === "firstphoto") {
+    const list = myPhotos(openId), k = list[heroIdx];
+    if (!k) return;
+    const rest = list.filter(x => x !== k);
+    if (a === "rmphoto") { setMyPhotos(openId, rest); heroIdx = Math.max(0, heroIdx - 1); }
+    else { setMyPhotos(openId, [k].concat(rest)); heroIdx = 0; }
+    persist(true); render(); openSheet(openId); renderCover();
+    if (a === "rmphoto" && assets) assets.delete(k).catch(() => {});
   }
 });
 $("#sheetRoot").addEventListener("change", e => {
   const a = e.target.dataset.act;
-  if (a === "date") { visits[openId] = Object.assign({}, visits[openId] || {}, { date: e.target.value }); persist(true); }
-  if (a === "upload" && e.target.files[0]) upload(openId, e.target.files[0]);
+  if (a === "date") {
+    // 訪問日を入れたら「行った」にして、一覧のマスをすぐカラーに
+    const v = Object.assign({}, visits[openId] || {}, { date: e.target.value });
+    if (v.date) v.done = true;
+    visits[openId] = v; persist(true); render();
+    const t = $('#sheetRoot .marks [data-act="toggle"]'); if (t) t.setAttribute("aria-pressed", !!v.done);
+  }
+  if (a === "upload" && e.target.files.length) upload(openId, e.target.files);
 });
 $("#sheetRoot").addEventListener("input", e => {
   if (e.target.dataset.act !== "memo") return;
