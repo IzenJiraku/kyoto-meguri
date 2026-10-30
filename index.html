@@ -580,6 +580,10 @@ body.menu-open #hdr .clear { visibility: hidden !important; }
 .near-btn span:empty { display: none; }
 .pin .nm .walk { font-style: normal; display: block; text-align: left; justify-self: start; font-family: var(--f-mono); font-size: 9px; letter-spacing: .1em; opacity: .75; }
 .amap .here-name { font-family: var(--f-mono); font-size: 10px !important; letter-spacing: .14em; }
+
+/* 様式・設計から絞り込み */
+.facts .facet { all: unset; cursor: pointer; border-bottom: 1px solid rgba(255, 255, 255, .35); transition: border-color .2s, color .2s; }
+.facts .facet:hover, .facts .facet:focus-visible { border-bottom-color: #fff; color: #fff; }
 </style>
 
 </head>
@@ -1352,7 +1356,7 @@ const LS_KEY = "kyoto-modern-visits-v1";
 let visits = {}, custom = {};
 try { visits = JSON.parse(localStorage.getItem(LS_KEY) || "{}") || {}; } catch (e) { visits = {}; }
 try { custom = JSON.parse(localStorage.getItem(LS_KEY + "-custom") || "{}") || {}; } catch (e) { custom = {}; }
-const ui = { filter: "all", status: "all", sort: "area", q: "", area: "", near: null };
+const ui = { filter: "all", status: "all", sort: "area", q: "", area: "", near: null, facet: null };
 try { const s = JSON.parse(localStorage.getItem(LS_KEY + "-ui2") || "null"); if (s) Object.assign(ui, { filter: s.filter || "all", status: s.status || "all", sort: s.sort || "area" }); } catch (e) {}
 if (ui.filter.startsWith("area:")) ui.filter = "all";
 let openId = null, confirmDelete = false;
@@ -1439,6 +1443,27 @@ function statusOk(id) {
     default: return true;
   }
 }
+/* ---- 詳細の「様式」「設計」から絞り込む ---- */
+// 様式は説明的な書き方が多いので、ひとまとまりの系統名で拾う
+const STYLE_KEYS = ["禅宗伽藍", "禅宗様", "流造", "稲荷造", "祇園造", "権現造", "懸造", "寝殿造", "書院造", "数寄屋", "枯山水", "町家", "和様", "近代和風", "帝冠様式", "和洋折衷", "辰野式", "洋風建築", "ルネサンス", "バロック", "ゴシック", "ロマネスク", "ビザンチン", "スパニッシュ", "セセッション", "アール・デコ", "ポストモダン", "モダニズム", "ライトの影響", "インド・サラセン", "煉瓦造", "バシリカ", "揚屋"].sort((a, b) => b.length - a.length);
+const BY_SKIP = /^(新館|改修|顧問|意匠|監修|デザイン|ほか)$/;
+function facetBtn(k, v, label) { return `<button type="button" class="facet" data-facet="${k}" data-v="${esc(v)}">${esc(label)}</button>`; }
+function facetHtml(k, text) {
+  if (k === "style") {
+    const re = new RegExp("(" + STYLE_KEYS.join("|") + ")");
+    const parts = text.split(re);
+    if (parts.length === 1) return facetBtn(k, text, text);
+    return parts.map((t, i) => i % 2 ? facetBtn(k, t, t) : esc(t)).join("");
+  }
+  // 設計者は「・」「（）」で区切って一人ずつ
+  return text.split(/([・、（）()\s]+)/).map((t, i) => {
+    if (i % 2) return esc(t);
+    const name = t.replace(/(ほか|監修)$/, "");
+    if (!name || BY_SKIP.test(name) || name.length < 2) return esc(t);
+    return facetBtn(k, name, name) + esc(t.slice(name.length));
+  }).join("");
+}
+
 function filtered() {
   const q = ui.q.trim().toLowerCase();
   const f = ui.filter;
@@ -1446,6 +1471,7 @@ function filtered() {
     (f === "all" || s.kind === f || (f === "fest" && s.fest) || (f === "church" && s.church) || (f === "mine" && s.mine) || (f === "month" && s.months && s.months.includes(THIS_MONTH))) &&
     (!ui.area || s.area === ui.area) &&
     (!ui.near || ui.near.dist.has(s.id)) &&
+    (!ui.facet || (s[ui.facet.k] || "").includes(ui.facet.v)) &&
     statusOk(s.id) &&
     (!q || [s.name, s.kana, s.area, s.addr, s.style, s.by || "", s.desc, (s.tips || []).join(" "), (visits[s.id] && visits[s.id].memo) || ""].join(" ").toLowerCase().includes(q))
   );
@@ -1536,8 +1562,8 @@ function openSheet(id) {
           <dt>エリア</dt><dd>${esc(s.area)}</dd>
           ${s.addr ? `<dt>住所</dt><dd>${esc(s.addr)}</dd>` : ""}
           ${yl ? `<dt>${s.kind === "festival" ? "時期" : (s.kind === "cafe" || s.kind === "sweets" || s.kind === "food" || (s.kind === "book" && !s.months)) ? "創業" : s.months ? "時期" : s.kind === "arch" ? "竣工" : "年代"}</dt><dd>${esc(yl)}</dd>` : ""}
-          ${s.style ? `<dt>様式</dt><dd>${esc(s.style)}</dd>` : ""}
-          ${s.by ? `<dt>設計</dt><dd>${esc(s.by)}</dd>` : ""}
+          ${s.style ? `<dt>様式</dt><dd>${facetHtml("style", s.style)}</dd>` : ""}
+          ${s.by ? `<dt>設計</dt><dd>${facetHtml("by", s.by)}</dd>` : ""}
         </dl>
         ${s.desc ? `<p>${esc(s.desc)}</p>` : ""}
         ${s.link ? `<a class="fine" href="${esc(s.link)}" target="_blank" rel="noopener">${esc(s.link)}</a>` : ""}
@@ -1943,16 +1969,16 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#menu"
 function renderCurrent() {
   const kindLabel = ui.filter === "all" ? "" : (TREE[0].items().find(([v]) => v === ui.filter) || [, ""])[1];
   const st = (TREE[2].items().find(([v]) => v === ui.status) || [, ""])[1];
-  const parts = [ui.near ? "現在地の近く" : "", kindLabel, ui.area || "", ui.status !== "all" ? st : ""].filter(Boolean);
+  const parts = [ui.near ? "現在地の近く" : "", ui.facet ? (ui.facet.k === "by" ? "設計 " : "様式 ") + ui.facet.v : "", kindLabel, ui.area || "", ui.status !== "all" ? st : ""].filter(Boolean);
   $("#current").textContent = parts.join(" · ") || "ALL";
   $("#clearBtn").hidden = !filtersActive();
 }
 
 
 /* ---- 絞り込みを一括で戻す ---- */
-function filtersActive() { return ui.filter !== "all" || !!ui.area || ui.status !== "all" || !!ui.q || !!ui.near; }
+function filtersActive() { return ui.filter !== "all" || !!ui.area || ui.status !== "all" || !!ui.q || !!ui.near || !!ui.facet; }
 function resetFilters() {
-  ui.filter = "all"; ui.area = ""; ui.status = "all"; ui.q = ""; ui.near = null;
+  ui.filter = "all"; ui.area = ""; ui.status = "all"; ui.q = ""; ui.near = null; ui.facet = null;
   $("#q").value = ""; $("#hdr").classList.remove("searching"); $("#searchBtn").setAttribute("aria-expanded", false);
   saveUi(); render();
 }
@@ -2312,6 +2338,15 @@ $("#grid").addEventListener("keydown", e => {
 });
 $("#sheetRoot").addEventListener("submit", e => { e.preventDefault(); saveForm(e.target); });
 $("#sheetRoot").addEventListener("click", e => {
+  const fb = e.target.closest("[data-facet]");
+  if (fb) {
+    // 他の条件は外して、この設計者・様式だけで並べる
+    ui.filter = "all"; ui.area = ""; ui.status = "all"; ui.q = ""; ui.near = null;
+    $("#q").value = ""; $("#hdr").classList.remove("searching");
+    ui.facet = { k: fb.dataset.facet, v: fb.dataset.v };
+    closeSheet(); render(); window.scrollTo({ top: 0 });
+    return;
+  }
   const nb = e.target.closest("[data-near]");
   if (nb) { openSheet(nb.dataset.near); const sh = $("#sheetRoot .sheet"); if (sh) sh.scrollTop = 0; return; }
   const act = e.target.closest("[data-act]");
