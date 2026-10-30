@@ -471,6 +471,47 @@ body.menu-open #hdr .current, body.menu-open #hdr .search { visibility: hidden; 
 .cover-cap { color: #fff; text-align: left; padding: 8px 10px 8px 0; margin: -8px 0; cursor: pointer; }
 .cover-cap::after { content: " →"; font-family: var(--f-mono); opacity: .7; }
 .cover-cap:empty::after { content: none; }
+
+/* 絞り込みを戻す × */
+#hdr .clear { width: 32px; opacity: .8; }
+#hdr .clear svg { width: 14px; height: 14px; }
+#hdr:not(.solid) .clear { visibility: hidden; }
+/* MAP / CALENDAR */
+#view { position: fixed; inset: 0; z-index: 35; background: #0D0D0D; color: #EDEDEA; display: flex; flex-direction: column; }
+.vbar { flex: none; height: calc(var(--hh) + env(safe-area-inset-top, 0px)); padding: env(safe-area-inset-top, 0px) max(8px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--lc); }
+.vt { font-family: var(--f-mono); font-size: 12px; letter-spacing: .3em; flex: 1; }
+.vnav { display: flex; align-items: center; }
+.vnav .ym { font-family: var(--f-mono); font-size: 13px; letter-spacing: .14em; min-width: 6em; text-align: center; }
+.vbody { position: relative; flex: 1; min-height: 0; overflow: auto; }
+.map { display: block; }
+.map line { stroke: rgba(255, 255, 255, .26); stroke-width: 1; }
+.map .river { fill: none; stroke: rgba(255, 255, 255, .7); stroke-width: 1; }
+.map text { fill: rgba(255, 255, 255, .38); font-family: var(--f-mono); font-size: 8px; letter-spacing: .12em; }
+.map .stone { cursor: pointer; outline: none; }
+.map .stone circle { fill: #EDEDEA; stroke: #0D0D0D; stroke-width: 1.5; }
+.map .stone .hit { fill: transparent; stroke: none; }
+.map .stone:focus-visible circle:last-of-type { stroke: #fff; }
+.maplabel { position: absolute; transform: translate(-50%, -100%); background: #EDEDEA; color: #0D0D0D; font-size: 11px; letter-spacing: .06em; padding: 5px 8px; white-space: nowrap; cursor: pointer; }
+.vnote { position: absolute; left: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); font-size: 11px; color: var(--muted); }
+.cal { max-width: 720px; margin: 0 auto; padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
+.dow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); font-family: var(--f-mono); font-size: 9px; letter-spacing: .16em; color: var(--muted); text-align: center; padding: 12px 0 8px; }
+.days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; background: var(--lc); border-block: 1px solid var(--lc); }
+.day { position: relative; aspect-ratio: 1 / 1; background: #0D0D0D; overflow: hidden; }
+.day.void { background: #080808; }
+.day img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.day .dn { position: absolute; left: 5px; top: 3px; font-family: var(--f-mono); font-size: 10px; color: #6E6E6B; }
+.day.hit { cursor: pointer; }
+.day.hit .dn { color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, .7); }
+.day.today .dn { color: #EDEDEA; border-bottom: 1px solid currentColor; }
+.day .more { position: absolute; right: 5px; bottom: 3px; font-family: var(--f-mono); font-size: 9px; color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, .7); }
+.vlist { list-style: none; margin: 0; padding: 8px 16px; }
+.vlist li { border-bottom: 1px solid var(--line); }
+.vlist button { width: 100%; text-align: left; padding: 12px 0; font-size: 13px; display: flex; gap: 16px; }
+.vlist .d { font-family: var(--f-mono); color: var(--muted); font-size: 12px; }
+.vlist .none { color: var(--muted); font-size: 12px; padding: 12px 0; border: 0; }
+
+.vnav .seg { font-family: var(--f-mono); font-size: 10px; letter-spacing: .2em; padding: 8px 10px; color: var(--muted); }
+.vnav .seg[aria-pressed="true"] { color: #EDEDEA; text-decoration: underline; text-underline-offset: 5px; }
 </style>
 
 </head>
@@ -485,6 +526,7 @@ body.menu-open #hdr .current, body.menu-open #hdr .search { visibility: hidden; 
 <header id="hdr">
   <a class="hlogo" href="#cover" aria-label="表紙へ"><svg class="glogo" viewBox="-0.5 -0.5 24 13" role="img" aria-label="碁盤 GOBAN"><path d="M1 1H9 M3 0V5 M7 0V5 M3 2.5H7 M3 3.8H7 M0 5H10 M2.5 5.7V6.5 M7.5 5.7V6.5 M0 7.5H10 M3.5 7.5V12 M5 9H9 M5 9V12 M9 9V12 M5 12H9 M15.5 0V1 M14 1H17 M14 1V6 M17 1V6 M13 3.5H18 M15.5 2V2.8 M15.5 4.5V5.3 M19.5 0V2 M19.5 0H22 M22 0V2 M19 3H23 M21 3V6 M19 6H23 M14 8H22 M14 8V11.5 M16.7 8V11.5 M19.3 8V11.5 M22 8V11.5 M13 11.5H23"/></svg></a>
   <button type="button" class="current" id="current" aria-label="絞り込みを変える"></button>
+  <button type="button" class="ic clear" id="clearBtn" aria-label="絞り込みをすべて戻す" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 6L14 14 M14 6L6 14"/></svg></button>
   <input class="search" type="search" id="q" placeholder="SEARCH" aria-label="名前・説明・豆知識で検索" autocomplete="off">
   <button type="button" class="ic" id="searchBtn" aria-label="さがす" aria-expanded="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3H12V12H3Z M12 12L17 17"/></svg></button>
   <button type="button" class="ic" id="menuBtn" aria-label="メニュー" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="i-open" d="M7 2V18 M13 2V18 M2 7H18 M2 13H18"/><path class="i-close" d="M4 4L16 16 M16 4L4 16"/></svg></button>
@@ -529,6 +571,10 @@ body.menu-open #hdr .current, body.menu-open #hdr .search { visibility: hidden; 
   <p class="fine" style="margin-top:48px">年は竣工年・創業年・始まりの年です。営業時間や公開日は変わるので、出かける前に公式情報を確かめてください。印・メモ・写真はこのスマホの中に保存されます。機種変更の前などは、下の「記録を書き出す」でバックアップしてください。</p>
   <div class="actions" style="margin-top:12px"><button type="button" class="btn" id="exportBtn">記録を書き出す</button><label class="btn" for="importFile">記録を読み込む</label><input type="file" id="importFile" accept="application/json,.json" hidden><span class="fine" id="bkmsg"></span></div>
 </div>
+<section id="view" hidden aria-labelledby="viewTitle">
+  <div class="vbar"><span class="vt" id="viewTitle"></span><span class="vnav" id="viewNav"></span><button type="button" class="ic" id="viewClose" aria-label="閉じる"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4L16 16 M16 4L4 16"/></svg></button></div>
+  <div class="vbody" id="viewBody"></div>
+</section>
 <div id="sheetRoot"></div>
 
 <script>
@@ -1143,6 +1189,7 @@ const PHOTOS = {
   "umekoji": {"p":"c/c2","f":"Umekoji_SL_museum_002_JPN.jpg"},
   "shichijo": {"p":"f/f4","f":"ShichijoBridge_20190103_134341.jpg"}
 };
+const COORDS = {"fucho":[35.02083,135.75556],"bunpaku":[35.0087,135.76285],"chukyo-post":[35.00894,135.76122],"shinpukan":[35.00953,135.76014],"1928":[35.00847,135.76653],"meirin":[35.00556,135.75833],"cityhall":[35.01117,135.76807],"harisutosu":[35.01442,135.76428],"heian-meiji":[35.02005,135.7588],"doshisha":[35.03008,135.76078],"kyodai-clock":[35.02622,135.7807],"komai":[35.03553,135.78883],"kyocera":[35.01284,135.78357],"fu-library":[35.01294,135.78194],"rohm":[35.0146,135.78075],"chorakukan":[35.00395,135.7809],"kyohaku":[34.98999,135.77312],"tokasaikan":[35.00361,135.77106],"dendoin":[34.9914,135.7538],"tower":[34.9875,135.75917],"icc":[35.06111,135.78333],"chochikukyo":[34.8964,135.6773],"kawaramachi-church":[35.00978,135.76914],"fukkatsu":[35.0455,135.7528],"kamogawa-lutheran":[35.043,135.7635],"nishijin-church":[35.02674,135.75589],"marutamachi-church":[35.017,135.7742],"kiyomizu":[34.99483,135.785],"kinkaku":[35.0395,135.7285],"ginkaku":[35.02667,135.79833],"ryoanji":[35.03444,135.71833],"ninnaji":[35.03111,135.71389],"kitano":[35.0292,135.73501],"myoshinji":[35.02317,135.72018],"daitokuji":[35.04389,135.74611],"kamigamo":[35.06051,135.75275],"shugakuin":[35.0537,135.80174],"shisendo":[35.04374,135.79624],"shimogamo":[35.03907,135.77301],"gosho":[35.02528,135.76222],"nijojo":[35.01417,135.7475],"nanzenji":[35.01111,135.79417],"suirokaku":[35.01056,135.79389],"eikando":[35.01452,135.79529],"heianjingu":[35.01667,135.78222],"chionin":[35.00521,135.7834],"yasaka":[35.00364,135.77853],"kodaiji":[35.00076,135.78111],"hokanji":[34.99877,135.7793],"kenninji":[35.00099,135.77366],"sanjusangendo":[34.98788,135.77171],"toji":[34.98056,135.74778],"nishihonganji":[34.99205,135.75161],"higashihonganji":[34.99081,135.75844],"kyotostation":[34.9858,135.7588],"tofukuji":[34.97571,135.77368],"fushimiinari":[34.9672,135.77339],"daigoji":[34.95111,135.81944],"tenryuji":[35.01599,135.67379],"togetsukyo":[35.01281,135.67772],"daikakuji":[35.02824,135.67774],"byodoin":[34.88944,135.80778],"ujigami":[34.89209,135.81146],"sanzenin":[35.11972,135.83444],"kozanji":[35.06014,135.67856],"saihoji":[34.9925,135.68417],"katsura":[34.98389,135.70944],"aoi":[35.03907,135.77301],"gion-matsuri":[35.0037,135.7595],"jidai":[35.01163,135.76804],"okuribi":[35.0235,135.8008],"kurama-hi":[35.1166,135.7725],"yasurai":[35.0493,135.7432],"miyako-odori":[35.0015,135.7759],"setsubun-yoshida":[35.0256,135.786],"kobo-ichi":[34.98056,135.74778],"okera":[35.00364,135.77853],"daikon-daki":[35.0319,135.7399],"kyokusui":[34.95112,135.74656],"honnoji":[35.0056,135.7536],"ikedaya":[35.0087,135.7706],"sanjo-ohashi":[35.00907,135.77174],"omiya-ryoma":[35.0056,135.7696],"teradaya":[34.9316,135.7631],"hamaguri":[35.02312,135.75958],"mibu":[35.0016,135.74334],"rashomon":[34.9754,135.743],"daigokuden":[35.0186,135.7422],"odoi":[35.0295,135.734],"sumiya":[34.99211,135.74314],"seimei":[35.02775,135.75103],"incline":[35.00751,135.79098],"ichiwa":[35.0498,135.7443],"futaba":[35.0305,135.7692],"sawaya":[35.0294,135.7355],"jinbado":[35.0595,135.7527],"nakamuraken":[34.9838,135.7099],"mangetsu":[35.0305,135.7758],"shogoin-yatsuhashi":[35.0206,135.7779],"tsuruya":[35.03,135.75],"kagizen":[35.004,135.7747],"ryokujuan":[35.0285,135.78],"oimatsu":[35.0292,135.738],"nishiki":[35.00503,135.76614],"daito":[35.0047,135.767],"murakamiju":[35.0031,135.7708],"izuu":[35.0045,135.7736],"owariya":[35.0122,135.7603],"matsuba":[35.0036,135.7724],"okutan":[34.9963,135.7818],"ippodo":[35.0131,135.7675],"aritsugu":[35.005,135.7676],"gekkeikan":[34.92969,135.76217],"hyotei":[35.01136,135.7865],"francois":[35.00333,135.77028],"soiree":[35.0041,135.7708],"tsukiji":[35.0044,135.7697],"smart":[35.0092,135.7676],"inoda":[35.008,135.7639],"rokuyosha":[35.008,135.7699],"maeda-meirin":[35.00556,135.75833],"tirol":[35.0107,135.7472],"shinshindo":[35.0295,135.7801],"ryugetsudo":[35.03,135.77361],"shizuka":[35.03,135.7415],"hisui":[35.0448,135.7519],"jingenkan":[35.04295,135.75812],"dwc":[35.02963,135.76361],"pontocho":[35.008,135.7715],"rissei":[35.00583,135.77028],"kaichi":[35.00075,135.76569],"kyuseigun":[35.0029,135.7662],"funatsuru":[34.9988,135.7707],"tsugu":[35.0087,135.7648],"sacra":[35.0087,135.7662],"hachikuan":[35.0092,135.7568],"gokomachi":[35.012,135.7678],"shimadzu":[35.01289,135.77024],"agnes":[35.0198,135.759],"horikawa":[35.021,135.751],"mainichi":[35.0178,135.7698],"toho":[35.0343,135.7903],"sonjodo":[35.0272,135.7815],"mitsui":[35.0365,135.7729],"westin":[35.00886,135.78794],"goryukaku":[34.99569,135.78117],"kokogaku":[35.02991,135.74964],"funaoka":[35.03691,135.74458],"domoto":[35.03514,135.72606],"kit":[35.04939,135.78185],"concerthall":[35.05,135.76667],"umekoji":[34.9872,135.743],"marufukuro":[34.9915,135.7693],"shichijo":[34.9893,135.7706],"moan":[35.0273,135.7872]};
 const COMMONS_UP = "https://upload.wikimedia.org/wikipedia/commons/";
 const FILEPATH = "https://commons.wikimedia.org/wiki/Special:FilePath/";
 const CREDIT_KEY = "kyoto-meguri-photo-credits-r2";
@@ -1440,12 +1487,13 @@ function saveForm(form) {
   persist(true); render(); openSheet(id);
 }
 
+function refreshView() { if (viewKind === "map") renderMap(); else if (viewKind === "cal") renderCal(); }
 function setFlag(id, k) {
   const v = Object.assign({}, visits[id] || {});
   v[k] = !v[k];
   if (k === "done" && v.done && !v.date) v.date = today();
   visits[id] = v;
-  persist(true); render();
+  persist(true); render(); refreshView();
   if (openId === id) openSheet(id);
 }
 
@@ -1653,21 +1701,31 @@ function coverPhotos() {
   return (done.length ? done : withPhoto).map(s => ({ s, url: photoOf(s).url, date: "" }));
 }
 function renderCover() {
-  const list = shuffle(coverPhotos()).slice(0, 8);
+  const pool = coverPhotos();
   const box = $("#slides"), cap = $("#coverCap");
   clearInterval(slideTimer);
-  if (!list.length) { box.innerHTML = ""; cap.textContent = ""; return; }
-  box.innerHTML = list.map((p, i) => `<img src="${esc(p.url)}" alt="" class="${i === 0 ? "on" : ""}">`).join("");
-  let i = 0;
+  if (!pool.length) { box.innerHTML = ""; cap.textContent = ""; return; }
+  box.innerHTML = `<img alt=""><img alt="">`;
+  const imgs = box.querySelectorAll("img");
+  let front = 0, last = -1;
+  // 毎回ランダムに1枚選ぶ（直前と同じものは避ける）
+  const pick = () => { let i = Math.floor(Math.random() * pool.length); if (pool.length > 1 && i === last) i = (i + 1) % pool.length; last = i; return pool[i]; };
   const show = () => {
-    box.querySelectorAll("img").forEach((im, k) => im.classList.toggle("on", k === i));
-    const p = list[i];
-    cap.dataset.id = p.s.id;
-    cap.setAttribute("aria-label", shortName(p.s) + "の詳細");
-    cap.innerHTML = `${esc(shortName(p.s))}${p.date ? `<span class="d">${esc(p.date.replace(/-/g, "."))}</span>` : ""}`;
+    const p = pick(), next = imgs[1 - front];
+    let swapped = false;
+    const swap = () => {
+      if (swapped) return; swapped = true;
+      next.classList.add("on"); imgs[front].classList.remove("on"); front = 1 - front;
+      cap.dataset.id = p.s.id;
+      cap.setAttribute("aria-label", shortName(p.s) + "の詳細");
+      cap.innerHTML = `${esc(shortName(p.s))}${p.date ? `<span class="d">${esc(p.date.replace(/-/g, "."))}</span>` : ""}`;
+    };
+    next.onload = swap; next.onerror = () => { if (pool.length > 1) show(); };
+    next.src = p.url;
+    if (next.complete && next.naturalWidth) swap();
   };
   show();
-  if (list.length > 1) slideTimer = setInterval(() => { i = (i + 1) % list.length; show(); }, 6000);
+  if (pool.length > 1) slideTimer = setInterval(show, 6000);
 }
 // 表紙を過ぎたらヘッダーを黒くしてロゴを出す
 // 表紙の左下の名前から、その場所の詳細へ
@@ -1691,12 +1749,15 @@ const TREE = [
   { key: "area", ja: "歩く", en: "AREA", items: () => [["", "全エリア"]].concat(AREAS.concat(["その他"]).map(a => [a, a])) },
   { key: "status", ja: "しるし", en: "STATUS", items: () => [["all", "すべて"], ["want", "行きたい"], ["done", "行った"], ["again", "また行きたい"], ["todo", "まだ"]] },
   { key: "sort", ja: "並び", en: "SORT", items: () => [["area", "エリア順"], ["year", "古い順"], ["yeardesc", "新しい順"], ["name", "名前順"], ["todo", "まだを先に"]] },
+  { key: "reset", en: "RESET", act: true, show: () => filtersActive() },
+  { key: "map", en: "MAP", act: true },
+  { key: "cal", en: "CALENDAR", act: true },
   { key: "write", ja: "書く", en: "EDIT", items: () => [["add", "スポットを追加"], ["export", "記録を書き出す"], ["import", "記録を読み込む"]] },
 ];
 let openBranch = null;
 function currentOf(key) { return key === "kind" ? ui.filter : key === "area" ? ui.area : key === "status" ? ui.status : key === "sort" ? ui.sort : null; }
 function renderTree() {
-  $("#tree").innerHTML = TREE.map(b => `<li>
+  $("#tree").innerHTML = TREE.filter(b => !b.show || b.show()).map(b => b.act ? `<li><button type="button" class="branch" data-act-branch="${b.key}">${b.en}</button></li>` : `<li>
     <button type="button" class="branch" data-branch="${b.key}" aria-expanded="${openBranch === b.key}">${b.en}</button>
     ${openBranch === b.key ? `<ul class="twigs">${b.items().map(([v, l]) => `<li><button type="button" class="twig" data-key="${b.key}" data-v="${esc(v)}" aria-current="${currentOf(b.key) === v}">${esc(l)}</button></li>`).join("")}</ul>` : ""}
   </li>`).join("");
@@ -1711,6 +1772,13 @@ $("#menuBtn").addEventListener("click", () => setMenu($("#menu").hidden));
 $("#menuScrim").addEventListener("click", () => setMenu(false));
 $("#current").addEventListener("click", () => { setMenu(true); });
 $("#tree").addEventListener("click", e => {
+  const ab = e.target.closest("[data-act-branch]");
+  if (ab) {
+    setMenu(false);
+    const k = ab.dataset.actBranch;
+    if (k === "reset") resetFilters(); else openView(k);
+    return;
+  }
   const br = e.target.closest("[data-branch]");
   if (br) { openBranch = openBranch === br.dataset.branch ? null : br.dataset.branch; renderTree(); return; }
   const t = e.target.closest(".twig"); if (!t) return;
@@ -1731,7 +1799,136 @@ function renderCurrent() {
   const st = (TREE[2].items().find(([v]) => v === ui.status) || [, ""])[1];
   const parts = [kindLabel, ui.area || "", ui.status !== "all" ? st : ""].filter(Boolean);
   $("#current").textContent = parts.join(" · ") || "ALL";
+  $("#clearBtn").hidden = !filtersActive();
 }
+
+
+/* ---- 絞り込みを一括で戻す ---- */
+function filtersActive() { return ui.filter !== "all" || !!ui.area || ui.status !== "all" || !!ui.q; }
+function resetFilters() {
+  ui.filter = "all"; ui.area = ""; ui.status = "all"; ui.q = "";
+  $("#q").value = ""; $("#hdr").classList.remove("searching"); $("#searchBtn").setAttribute("aria-expanded", false);
+  saveUi(); render();
+}
+$("#clearBtn").addEventListener("click", resetFilters);
+
+/* ---- MAP / CALENDAR ---- */
+let viewKind = null, mapAll = false;
+function openView(k) {
+  viewKind = k;
+  $("#view").hidden = false; document.body.classList.add("view-open");
+  if (k === "map") renderMap(); else renderCal();
+}
+function closeView() { viewKind = null; $("#view").hidden = true; document.body.classList.remove("view-open"); }
+$("#viewClose").addEventListener("click", closeView);
+document.addEventListener("keydown", e => { if (e.key === "Escape" && viewKind && !$("#sheetRoot").innerHTML) closeView(); });
+window.addEventListener("resize", () => { if (viewKind === "map") renderMap(); });
+function visitedSpots() { return allSpots().filter(s => isDone(s.id)); }
+function tileUrl(s) { const p = photoOf(s); return p ? (p.thumb || p.url) : ""; }
+
+// 位置: 組み込みのスポットは COORDS、自分で追加した所は住所から国土地理院の検索で探して覚えておく
+const GEO_KEY = LS_KEY + "-geo";
+let geoCache = {}; try { geoCache = JSON.parse(localStorage.getItem(GEO_KEY) || "{}") || {}; } catch (e) {}
+const geoPending = {};
+function coordOf(s) { return COORDS[s.id] || geoCache[s.id + "|" + (s.addr || "")] || null; }
+function geocode(s) {
+  const key = s.id + "|" + (s.addr || "");
+  if (!s.addr || geoCache[key] || geoPending[key] || !navigator.onLine) return;
+  geoPending[key] = true;
+  const q = (/^京都/.test(s.addr) ? "" : "京都府京都市") + s.addr;
+  fetch("https://msearch.gsi.go.jp/address-search/AddressSearch?q=" + encodeURIComponent(q)).then(r => r.json()).then(a => {
+    const c = a && a[0] && a[0].geometry && a[0].geometry.coordinates;
+    if (!c) return;
+    geoCache[key] = [+c[1].toFixed(5), +c[0].toFixed(5)];
+    try { localStorage.setItem(GEO_KEY, JSON.stringify(geoCache)); } catch (e) {}
+    if (viewKind === "map") renderMap();
+  }).catch(() => {});
+}
+// 京都の碁盤の目: 東西の通り（緯度）と南北の通り（経度）、それに鴨川
+const STREETS_EW = [["KITAOJI", 35.0440], ["IMADEGAWA", 35.0293], ["MARUTAMACHI", 35.0175], ["OIKE", 35.0105], ["SHIJO", 35.0037], ["GOJO", 34.9960], ["SHICHIJO", 34.9880], ["KUJO", 34.9800]];
+const STREETS_NS = [["NISHIOJI", 135.7323], ["SENBON", 135.7417], ["HORIKAWA", 135.7505], ["KARASUMA", 135.7595], ["KAWARAMACHI", 135.7690], ["HIGASHIOJI", 135.7790]];
+const KAMO = [[35.0620, 135.7590], [35.0480, 135.7570], [35.0390, 135.7620], [35.0305, 135.7722], [35.0175, 135.7718], [35.0037, 135.7717], [34.9960, 135.7703], [34.9880, 135.7697], [34.9780, 135.7650], [34.9620, 135.7560]];
+const TAKANO = [[35.0305, 135.7722], [35.0420, 135.7800], [35.0560, 135.7880]];
+const GRID_BOX = { n: 35.0440, s: 34.9800, w: 135.7323, e: 135.7790 };
+function renderMap() {
+  $("#viewTitle").textContent = "MAP";
+  $("#viewNav").innerHTML = `<button type="button" class="seg" data-zoom="city" aria-pressed="${!mapAll}">CITY</button><button type="button" class="seg" data-zoom="all" aria-pressed="${mapAll}">ALL</button>`;
+  const box = $("#viewBody");
+  const spots = visitedSpots();
+  spots.filter(s => !coordOf(s)).forEach(geocode);
+  const pins = spots.map(s => ({ s, c: coordOf(s) })).filter(x => x.c);
+  // CITY は碁盤の目と東山・岡崎あたりまで、ALL は行った所すべてが入る広さ
+  let n = GRID_BOX.n + .004, so = GRID_BOX.s - .003, w = GRID_BOX.w, e = GRID_BOX.e + .014;
+  if (mapAll) pins.forEach(({ c }) => { n = Math.max(n, c[0]); so = Math.min(so, c[0]); w = Math.min(w, c[1]); e = Math.max(e, c[1]); });
+  const kx = Math.cos(35 * Math.PI / 180);
+  const W = box.clientWidth, H = Math.max(240, box.clientHeight), pl = 76, pr = 24, pt = 28, pb = 84;
+  const sc = Math.min((W - pl - pr) / ((e - w) * kx), (H - pt - pb) / (n - so));
+  const ox = pl + (W - pl - pr - (e - w) * kx * sc) / 2, oy = pt + (H - pt - pb - (n - so) * sc) / 2;
+  const X = lng => ox + (lng - w) * kx * sc, Y = lat => oy + (n - lat) * sc;
+  const line = (x1, y1, x2, y2, c) => `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"${c ? ` class="${c}"` : ""}/>`;
+  let g = "";
+  STREETS_EW.forEach(([nm, lat]) => { g += line(X(GRID_BOX.w), Y(lat), X(GRID_BOX.e), Y(lat)) + `<text x="${(X(GRID_BOX.w) - 6).toFixed(1)}" y="${(Y(lat) + 3).toFixed(1)}" text-anchor="end">${nm}</text>`; });
+  STREETS_NS.forEach(([nm, lng]) => { g += line(X(lng), Y(GRID_BOX.n), X(lng), Y(GRID_BOX.s)) + `<text x="${(X(lng) + 3).toFixed(1)}" y="${(Y(GRID_BOX.s) + 6).toFixed(1)}" text-anchor="end" transform="rotate(-90 ${(X(lng) + 3).toFixed(1)} ${(Y(GRID_BOX.s) + 6).toFixed(1)})">${nm}</text>`; });
+  const river = pts => `<polyline class="river" points="${pts.map(([la, lo]) => X(lo).toFixed(1) + "," + Y(la).toFixed(1)).join(" ")}"/>`;
+  g += river(KAMO) + river(TAKANO);
+  const stones = pins.map(({ s, c }) => `<g class="stone" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(shortName(s))}"><circle cx="${X(c[1]).toFixed(1)}" cy="${Y(c[0]).toFixed(1)}" r="14" class="hit"/><circle cx="${X(c[1]).toFixed(1)}" cy="${Y(c[0]).toFixed(1)}" r="5"/><title>${esc(shortName(s))}</title></g>`).join("");
+  const missing = spots.length - pins.length;
+  box.innerHTML = `<svg class="map" overflow="hidden" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${g}${stones}</svg>
+    <div class="vnote">${spots.length ? (missing ? `位置が分からない所が${missing}件あります` : "") : "行った所に印をつけると、ここに石が置かれます"}</div>
+    <div class="maplabel" id="mapLabel" hidden></div>`;
+}
+$("#viewBody").addEventListener("click", e => {
+  const st = e.target.closest(".stone");
+  if (st) {
+    const lb = $("#mapLabel"), s = findSpot(st.dataset.id), r = st.querySelector("circle:last-of-type").getBoundingClientRect(), br = $("#viewBody").getBoundingClientRect();
+    lb.hidden = false; lb.dataset.id = s.id; lb.textContent = shortName(s) + " →";
+    const half = lb.offsetWidth / 2 + 8;
+    lb.style.left = Math.min(br.width - half, Math.max(half, r.left - br.left + r.width / 2)) + "px"; lb.style.top = (r.top - br.top - 8) + "px";
+    return;
+  }
+  const lb = e.target.closest(".maplabel"); if (lb) { openSheet(lb.dataset.id); return; }
+  const d = e.target.closest("[data-day]"); if (d && d.dataset.ids) { openSheet(d.dataset.ids.split(",")[0]); return; }
+  const it = e.target.closest("[data-open]"); if (it) { openSheet(it.dataset.open); return; }
+  if ($("#mapLabel")) $("#mapLabel").hidden = true;
+});
+$("#viewBody").addEventListener("keydown", e => { const st = e.target.closest && e.target.closest(".stone"); if (st && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openSheet(st.dataset.id); } });
+
+// カレンダー: 行った日のマスにその場所の写真
+let calMonth = null;
+function renderCal() {
+  const dated = visitedSpots().filter(s => visits[s.id].date).map(s => ({ s, d: visits[s.id].date })).sort((a, b) => a.d.localeCompare(b.d) || a.s.kana.localeCompare(b.s.kana, "ja"));
+  if (!calMonth) calMonth = (dated.length ? dated[dated.length - 1].d : today()).slice(0, 7);
+  const [y, m] = calMonth.split("-").map(Number);
+  $("#viewTitle").textContent = "CALENDAR";
+  $("#viewNav").innerHTML = `<button type="button" class="ic" data-cal="-1" aria-label="前の月"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12 4L6 10L12 16"/></svg></button><span class="ym">${y}.${String(m).padStart(2, "0")}</span><button type="button" class="ic" data-cal="1" aria-label="次の月"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 4L14 10L8 16"/></svg></button>`;
+  const first = new Date(y, m - 1, 1), days = new Date(y, m, 0).getDate();
+  const lead = (first.getDay() + 6) % 7;  // 月曜はじまり
+  const inMonth = dated.filter(x => x.d.startsWith(calMonth));
+  let cells = "";
+  for (let i = 0; i < lead; i++) cells += `<div class="day void"></div>`;
+  for (let dd = 1; dd <= days; dd++) {
+    const key = `${calMonth}-${String(dd).padStart(2, "0")}`;
+    const hits = inMonth.filter(x => x.d === key);
+    const img = hits.length ? tileUrl(hits[0].s) : "";
+    cells += `<div class="day${hits.length ? " hit" : ""}${key === today() ? " today" : ""}" data-day="${key}"${hits.length ? ` data-ids="${hits.map(x => esc(x.s.id)).join(",")}" role="button" tabindex="0" aria-label="${dd}日 ${esc(hits.map(x => shortName(x.s)).join("、"))}"` : ""}>
+      ${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : ""}<span class="dn">${dd}</span>${hits.length > 1 ? `<span class="more">+${hits.length - 1}</span>` : ""}</div>`;
+  }
+  const rest = (7 - (lead + days) % 7) % 7;
+  for (let i = 0; i < rest; i++) cells += `<div class="day void"></div>`;
+  $("#viewBody").innerHTML = `<div class="cal">
+    <div class="dow">${["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(d => `<span>${d}</span>`).join("")}</div>
+    <div class="days">${cells}</div>
+    <ul class="vlist">${inMonth.map(x => `<li><button type="button" data-open="${esc(x.s.id)}"><span class="d">${x.d.slice(5).replace("-", ".")}</span>${esc(shortName(x.s))}</button></li>`).join("") || `<li class="none">この月の記録はありません</li>`}</ul>
+  </div>`;
+}
+$("#viewNav").addEventListener("click", e => {
+  const z = e.target.closest("[data-zoom]"); if (z) { mapAll = z.dataset.zoom === "all"; renderMap(); return; }
+  const b = e.target.closest("[data-cal]"); if (!b) return;
+  const [y, m] = calMonth.split("-").map(Number);
+  const d = new Date(y, m - 1 + Number(b.dataset.cal), 1);
+  calMonth = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  renderCal();
+});
 
 /* ---- events ---- */
 $("#pills").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; ui.filter = b.dataset.f; saveUi(); render(); renderTip(); });
@@ -1788,7 +1985,7 @@ $("#sheetRoot").addEventListener("change", e => {
     // 訪問日を入れたら「行った」にして、一覧のマスをすぐカラーに
     const v = Object.assign({}, visits[openId] || {}, { date: e.target.value });
     if (v.date) v.done = true;
-    visits[openId] = v; persist(true); render();
+    visits[openId] = v; persist(true); render(); refreshView();
     const t = $('#sheetRoot .marks [data-act="toggle"]'); if (t) t.setAttribute("aria-pressed", !!v.done);
   }
   if (a === "upload" && e.target.files.length) upload(openId, e.target.files);
