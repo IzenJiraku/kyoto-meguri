@@ -619,6 +619,41 @@ body.menu-open #hdr .current, body.menu-open.filtered #hdr .current { visibility
 .mosaic { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 .mosaic i { position: absolute; background: center / cover no-repeat #0D0D0D; opacity: 0; transition: opacity .35s ease; }
 .mosaic i.on { opacity: .9; }
+
+/* ==== 写真のないスポット：黒地に名前を大きく ==== */
+.pin .ph .tt { position: absolute; left: 0; right: 0; top: 0; padding: 12px 10px 0; font-weight: 400; font-size: clamp(13px, 3.9vw, 19px); line-height: 1.4; letter-spacing: .06em; color: #6E6E6B; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; word-break: auto-phrase; transition: color .3s; }
+.pin .ph .tk { position: absolute; left: 10px; bottom: 9px; font-family: var(--f-mono); font-size: 8px; letter-spacing: .22em; color: #4A4A48; }
+.pin.done .ph .tt { color: #F2F2EF; }
+.pin.done .ph .tk { color: #8C8C88; }
+@media (min-width: 600px) { .pin .ph .tt { font-size: clamp(15px, 1.5vw, 21px); padding: 16px 14px 0; } .pin .ph .tk { left: 14px; bottom: 12px; } }
+.pin:not(.has) .nm:empty { display: none; }
+.pin:not(.has) .nm { background: none; padding-bottom: 22px; }
+/* ==== メニュー：FILTER / ARCHIVE / EDIT ==== */
+.trees { display: grid; gap: 30px; }
+.grp-h { margin: 0 0 14px; font-family: var(--f-mono); font-size: 10px; letter-spacing: .32em; color: var(--muted); }
+/* ==== ヘッダーの並び順 ==== */
+.sortbtn { flex: none; display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 6px; font-family: var(--f-mono); font-size: 10px; letter-spacing: .16em; color: rgba(237, 237, 234, .75); opacity: 0; pointer-events: none; transition: opacity .3s; }
+.sortbtn svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.4; }
+#hdr.solid .sortbtn, body.filtered #hdr .sortbtn { opacity: 1; pointer-events: auto; }
+#hdr.searching .sortbtn, body.menu-open #hdr .sortbtn { visibility: hidden; }
+.sortbtn:disabled { opacity: .4 !important; }
+.sortpop { position: fixed; z-index: 60; min-width: 168px; background: #0D0D0D; border: 1px solid var(--lc, #3A3A3A); display: grid; padding: 6px 0; }
+.sortpop button { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; letter-spacing: .06em; color: #EDEDEA; text-align: left; }
+.sortpop button small { margin-left: auto; font-family: var(--f-mono); font-size: 9px; letter-spacing: .18em; color: var(--muted); }
+.sortpop button i { width: 7px; height: 7px; border-radius: 50%; border: 1px solid rgba(237, 237, 234, .45); flex: none; }
+.sortpop button[aria-checked="true"] i { background: #EDEDEA; border-color: #EDEDEA; }
+.sortpop button:hover { background: #161616; }
+
+/* ==== 上ル：行った印の瞬間 ==== */
+.marks button .agaru { position: absolute; left: 50%; top: -6px; width: 0; height: 26px; pointer-events: none; animation: agaruOut 1.9s ease forwards; }
+.marks button .agaru::after { content: ""; position: absolute; left: 0; bottom: 0; width: 1px; height: 100%; background: #EDEDEA; transform-origin: bottom; animation: agaruLine .45s cubic-bezier(.2, .8, .2, 1) both; }
+.marks button .agaru .roll { position: absolute; left: 8px; top: -2px; height: 14px; overflow: hidden; font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; line-height: 14px; color: #EDEDEA; }
+.marks button .agaru .roll b { display: block; height: 14px; line-height: 14px; font-weight: 400; animation: agaruRoll .5s cubic-bezier(.3, 1.4, .5, 1) .35s both; }
+@keyframes agaruLine { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes agaruRoll { from { transform: translateY(0); } to { transform: translateY(-100%); } }
+@keyframes agaruOut { 0%, 70% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-8px); } }
+.glogo.jump { animation: logoJump .6s cubic-bezier(.3, 1.5, .5, 1); }
+@keyframes logoJump { 0% { transform: translateY(0); } 35% { transform: translateY(-5px); } 100% { transform: translateY(0); } }
 </style>
 
 </head>
@@ -635,16 +670,18 @@ body.menu-open #hdr .current, body.menu-open.filtered #hdr .current { visibility
 <header id="hdr">
   <a class="hlogo" href="#cover" aria-label="表紙へ"><svg class="glogo" viewBox="-0.5 -0.5 24 13" role="img" aria-label="上ル AGARU"><path d="M5 0V11 M5 5H9 M0 11H10 M15.5 1.5V7.5L13.5 11.5 M19.5 1V11.5L22.5 8.5"/></svg></a>
   <button type="button" class="current" id="current" aria-label="絞り込みを変える"></button>
+  <button type="button" class="sortbtn" id="sortBtn" aria-label="並び順を変える" aria-expanded="false" aria-controls="sortPop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16M4 12h11M4 17.5h6"/></svg><span id="sortNow"></span></button>
   <button type="button" class="ic clear" id="clearBtn" aria-label="絞り込みをすべて戻す" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 6L14 14 M14 6L6 14"/></svg></button>
   <input class="search" type="search" id="q" placeholder="SEARCH" aria-label="名前・説明・豆知識で検索" autocomplete="off">
   <button type="button" class="ic" id="searchBtn" aria-label="さがす" aria-expanded="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3H12V12H3Z M12 12L17 17"/></svg></button>
   <button type="button" class="ic" id="menuBtn" aria-label="メニュー" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 20 20" aria-hidden="true"><g class="mi"><line class="l1" x1="7" y1="2" x2="7" y2="18"/><line class="l2" x1="13" y1="2" x2="13" y2="18"/><line class="l3" x1="2" y1="7" x2="18" y2="7"/><line class="l4" x1="2" y1="13" x2="18" y2="13"/></g></svg></button>
 </header>
+<div class="sortpop" id="sortPop" hidden role="menu" aria-label="並び順"></div>
 <div id="menuScrim" hidden></div>
 <nav id="menu" hidden aria-label="メニュー">
   <div class="menu-inner">
     <div class="menu-reset" id="menuReset" hidden><span id="menuNow"></span><button type="button" id="menuResetBtn">RESET ×</button></div>
-    <ul class="tree" id="tree"></ul>
+    <div class="trees" id="tree"></div>
   </div>
 </nav>
 
@@ -1377,6 +1414,7 @@ function loadPhotoCredit(id, p, src) {
 }
 
 const KIND = { arch: "建築", classic: "寺社・名所", history: "史跡", festival: "祭り・行事", sweets: "和菓子", food: "食・老舗", cafe: "喫茶", book: "本屋", other: "その他" };
+const KIND_EN = { arch: "ARCHITECTURE", classic: "TEMPLE · SHRINE", history: "HISTORY", festival: "FESTIVAL", sweets: "WAGASHI", food: "FOOD", cafe: "CAFE", book: "BOOKS", other: "OTHER" };
 const THIS_MONTH = new Date().getMonth() + 1;
 const RATIOS = [1.25, 1.5, 1.0, 1.33, 1.15, 1.45];
 
@@ -1556,8 +1594,8 @@ function pin(s) {
   const mk = want ? `<span class="mk" aria-hidden="true"></span>` : again ? `<span class="mk again" aria-hidden="true"></span>` : "";
   const st = done ? "行った" : want ? "行きたい" : "まだ";
   return `<div class="pin${p ? " has" : ""}${done ? " done" : ""}" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.name)}（${st}）">
-    <div class="ph">${p ? `<img src="${esc(p.thumb || p.url)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">` : ""}</div>
-    <span class="nm">${esc(shortName(s))}${ui.near && ui.near.dist.has(s.id) ? `<em class="walk">徒歩${walkMin(ui.near.dist.get(s.id))}分</em>` : ui.sort === "near" && sortPos && posDist(s) < 5000 ? `<em class="walk">徒歩${walkMin(posDist(s))}分</em>` : ""}</span>${mk}
+    <div class="ph">${p ? `<img src="${esc(p.thumb || p.url)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">` : `<b class="tt">${esc(shortName(s))}</b><small class="tk">${KIND_EN[s.kind] || ""}</small>`}</div>
+    <span class="nm">${p ? esc(shortName(s)) : ""}${ui.near && ui.near.dist.has(s.id) ? `<em class="walk">徒歩${walkMin(ui.near.dist.get(s.id))}分</em>` : ui.sort === "near" && sortPos && posDist(s) < 5000 ? `<em class="walk">徒歩${walkMin(posDist(s))}分</em>` : ""}</span>${mk}
   </div>`;
 }
 let tipSpot = null;
@@ -1723,6 +1761,21 @@ function setFlag(id, k) {
   visits[id] = v;
   persist(true); render(); refreshView();
   if (openId === id) openSheet(id);
+  if (k === "done" && v.done) agaru();
+}
+// 行った印をつけた瞬間の「上がる」：石から線が上へ伸び、行った数が繰り上がる。ヘッダーのロゴも小さく跳ねる
+function agaru() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const n = allSpots().filter(s => isDone(s.id)).length, pad = x => String(Math.max(0, x)).padStart(3, "0");
+  const btn = $('#sheetRoot .marks [data-act="toggle"]');
+  if (btn) {
+    const el = document.createElement("span");
+    el.className = "agaru"; el.setAttribute("aria-hidden", "true");
+    el.innerHTML = `<span class="roll"><b>${pad(n - 1)}</b><b>${pad(n)}</b></span>`;
+    btn.appendChild(el);
+    setTimeout(() => el.remove(), 2000);
+  }
+  document.querySelectorAll(".hlogo .glogo").forEach(g => { g.classList.remove("jump"); void g.getBoundingClientRect(); g.classList.add("jump"); });
 }
 
 /* ---- image upload ---- */
@@ -2035,7 +2088,6 @@ const TREE = [
   { key: "kind", ja: "見る", en: "CATEGORY", items: () => [["all", "すべて"], ["month", THIS_MONTH + "月の行事"], ["arch", "建築"], ["classic", "寺社・名所"], ["history", "史跡"], ["festival", "祭り・行事"], ["sweets", "和菓子"], ["food", "食・老舗"], ["cafe", "喫茶"], ["book", "本屋"], ["church", "教会"], ["fest", "建築祭2026"], ["mine", "自分で追加"]] },
   { key: "area", ja: "歩く", en: "AREA", items: () => [["", "全エリア"]].concat(AREAS.concat(["その他"]).map(a => [a, a])) },
   { key: "status", ja: "しるし", en: "STATUS", items: () => [["all", "すべて"], ["want", "行きたい"], ["done", "行った"], ["again", "また行きたい"], ["todo", "まだ"]] },
-  { key: "sort", ja: "並び", en: "SORT", items: () => [["area", "エリア順"], ["year", "古い順"], ["yeardesc", "新しい順"], ["near", "近い順"], ["name", "名前順"], ["todo", "まだを先に"]] },
   { key: "map", en: "MAP", act: true },
   { key: "cal", en: "CALENDAR", act: true },
   { key: "write", ja: "書く", en: "EDIT", items: () => [["add", "スポットを追加"], ["export", "記録を書き出す"], ["import", "記録を読み込む"], ["sync", "PCとスマホの同期"]] },
@@ -2052,15 +2104,40 @@ const BR_ICON = {
 };
 function brIcon(k) { return BR_ICON[k] ? `<svg class="bi" viewBox="0 0 24 24" aria-hidden="true">${BR_ICON[k]}</svg>` : ""; }
 let openBranch = null;
+// 並び順はメニューから出して、ヘッダーの小さなボタンで切り替える
+const SORTS = [["area", "エリア順", "AREA"], ["near", "近い順", "NEAR"], ["year", "古い順", "OLD"], ["yeardesc", "新しい順", "NEW"], ["name", "名前順", "NAME"], ["todo", "まだを先に", "TODO"]];
+function setSortPop(open) {
+  const pop = $("#sortPop");
+  pop.hidden = !open; $("#sortBtn").setAttribute("aria-expanded", open);
+  if (!open) return;
+  pop.innerHTML = SORTS.map(([v, l, en]) => `<button type="button" role="menuitemradio" data-sort="${v}" aria-checked="${ui.sort === v}"><i></i>${l}<small>${en}</small></button>`).join("");
+  const r = $("#sortBtn").getBoundingClientRect();
+  pop.style.top = r.bottom + 6 + "px";
+  pop.style.right = Math.max(8, document.documentElement.clientWidth - r.right) + "px";
+}
+$("#sortBtn").addEventListener("click", e => { e.stopPropagation(); setSortPop($("#sortPop").hidden); });
+$("#sortPop").addEventListener("click", e => {
+  const b = e.target.closest("[data-sort]"); if (!b) return;
+  ui.sort = b.dataset.sort; saveUi();
+  if (ui.sort === "near") locateForSort(true);
+  setSortPop(false); render();
+  window.scrollTo({ top: Math.max(window.scrollY, $("#cover").offsetHeight - 1) });
+});
+document.addEventListener("click", e => { if (!$("#sortPop").hidden && !e.target.closest("#sortPop")) setSortPop(false); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") setSortPop(false); });
+window.addEventListener("scroll", () => { if (!$("#sortPop").hidden) setSortPop(false); }, { passive: true });
 function currentOf(key) { return key === "kind" ? ui.filter : key === "area" ? ui.area : key === "status" ? ui.status : key === "sort" ? ui.sort : null; }
 function renderTree() {
   // 絞り込み中だけ、ツリーの上に小さく「いまの条件」と RESET
   $("#menuReset").hidden = !filtersActive();
   $("#menuNow").textContent = $("#current").textContent;
-  $("#tree").innerHTML = TREE.filter(b => !b.show || b.show()).map(b => b.act ? `<li><button type="button" class="branch" data-act-branch="${b.key}">${b.en}${brIcon(b.key)}</button></li>` : `<li>
+  // FILTER（絞る）／ ARCHIVE（行った記録を眺める）／ EDIT の3つに分ける
+  const GROUPS = [["FILTER", ["kind", "area", "status"]], ["ARCHIVE", ["map", "cal"]], ["", ["write"]]];
+  const branch = b => b.act ? `<li><button type="button" class="branch" data-act-branch="${b.key}">${b.en}${brIcon(b.key)}</button></li>` : `<li>
     <button type="button" class="branch" data-branch="${b.key}" aria-expanded="${openBranch === b.key}">${b.en}${brIcon(b.key)}</button>
     ${openBranch === b.key ? `<ul class="twigs">${b.items().map(([v, l]) => `<li><button type="button" class="twig" data-key="${b.key}" data-v="${esc(v)}" aria-current="${currentOf(b.key) === v}">${esc(l)}</button></li>`).join("")}</ul>` : ""}
-  </li>`).join("");
+  </li>`;
+  $("#tree").innerHTML = GROUPS.map(([h, keys]) => `<section class="grp">${h ? `<p class="grp-h">${h}</p>` : ""}<ul class="tree">${keys.map(k => branch(TREE.find(b => b.key === k))).join("")}</ul></section>`).join("");
 }
 function setMenu(open) {
   $("#menu").hidden = !open; $("#menuScrim").hidden = !open;
@@ -2098,7 +2175,10 @@ function renderCurrent() {
   const kindLabel = ui.filter === "all" ? "" : (TREE[0].items().find(([v]) => v === ui.filter) || [, ""])[1];
   const st = (TREE[2].items().find(([v]) => v === ui.status) || [, ""])[1];
   const parts = [ui.near ? "現在地の近く" : "", ui.facet ? (ui.facet.k === "by" ? "設計 " : "様式 ") + ui.facet.v : "", kindLabel, ui.area || "", ui.status !== "all" ? st : ""].filter(Boolean);
-  $("#current").textContent = (parts.join(" · ") || "ALL") + (ui.sort === "near" && sortPos && !ui.near ? " · NEAR" : "");
+  $("#current").textContent = parts.join(" · ") || "ALL";
+  const so = SORTS.find(([v]) => v === ui.sort) || SORTS[0];
+  $("#sortNow").textContent = ui.near ? "NEAR" : so[2];
+  $("#sortBtn").disabled = !!ui.near;
   $("#clearBtn").hidden = !filtersActive();
 }
 
