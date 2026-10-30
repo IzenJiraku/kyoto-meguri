@@ -1851,6 +1851,7 @@ function answerQuiz(i) {
 })();
 
 // 表紙の線を一覧のマス目と同じ位置に引く。表紙の高さもマスの倍数にする
+let coverW = 0, coverVH = 0;
 function layoutBoard() {
   const cv = $("#cover"), grid = $("#grid");
   const tiles = [...grid.querySelectorAll(".pin")];
@@ -1865,16 +1866,19 @@ function layoutBoard() {
     cell = (W - (cols - 1)) / cols + 1;
     for (let k = 1; k < cols; k++) xs.push(k * cell - 1);
   }
-  const rows = Math.max(3, Math.floor(window.innerHeight / cell));
-  const H = rows * cell;
-  cv.style.setProperty("--cover-h", H + "px");
+  // 表紙は画面ぴったり（下の一覧は覗かせない）。線は画面の下端まで引く
+  // スマホのアドレスバーが出入りしても高さは変えない（幅が変わったときだけ測り直す）
+  if (W !== coverW) { coverW = W; coverVH = window.innerHeight; }
+  const vh = coverVH;
+  const rows = Math.max(3, Math.floor(vh / cell));
+  cv.style.setProperty("--cover-h", Math.max(vh, 3 * cell) + "px");
   // ロゴは線の交点ではなく、真ん中あたりのマスの中央に置く
   const c = Math.ceil(cols / 2) - 1, r = Math.ceil(rows / 2) - 1;
   const lx = c === 0 ? cell / 2 - 0.5 : xs[c - 1] + 1 + (cell - 1) / 2;
   cv.style.setProperty("--lx", lx + "px");
   cv.style.setProperty("--ly", (r * cell + (cell - 1) / 2) + "px");
   let html = xs.map(x => `<i class="v" style="left:${x.toFixed(2)}px"></i>`).join("");
-  for (let j = 1; j <= rows; j++) html += `<i class="h" style="top:${(j * cell - 1).toFixed(2)}px"></i>`;
+  for (let j = 1; j * cell - 1 < vh; j++) html += `<i class="h" style="top:${(j * cell - 1).toFixed(2)}px"></i>`;
   $("#lines").innerHTML = html;
 }
 let rsT = null;
