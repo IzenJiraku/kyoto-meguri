@@ -877,8 +877,150 @@ const SPOTS = [
     note: "建物も見どころ。見学のみの入店は不可" },
 ];
 
-// 掲載写真（Wikimedia Commons）。id は artifact の assets。
-const PHOTOS = {};
+// 掲載写真（Wikimedia Commons）。p はハッシュのパス、f はファイル名、o は元画像が小さいので原寸を使う印。
+// 画像は閲覧時に Commons の標準サイズのサムネイルを直接読み、作者とライセンスは Commons API から取って表示する。
+const PHOTOS = {
+  "fucho": {"p":"7/74","f":"Kyoto-Pref-former-main-bldg-01.jpg"},
+  "bunpaku": {"p":"9/93","f":"Former_Bank_of_Japan_building,_Kyoto_Branch.jpg"},
+  "chukyo-post": {"p":"2/24","f":"Nakagyō_Post_Office_001.JPG"},
+  "shinpukan": {"p":"3/33","f":"Shinpukan_Kyoto.JPG"},
+  "1928": {"p":"d/d5","f":"1928_building_Kyoto.jpg"},
+  "meirin": {"p":"4/4a","f":"Kyoto_art_center.jpg"},
+  "cityhall": {"p":"7/7c","f":"Kyoto_City_Hall_Main_Building_2025.jpg"},
+  "harisutosu": {"p":"7/75","f":"Kyoto_Annunciation_Cathedral01s2000.jpg"},
+  "heian-meiji": {"p":"c/c7","f":"St_Agnes_School01bs3200.jpg"},
+  "doshisha": {"p":"3/34","f":"Imadegawa_Campus,_Doshisha_University.jpg"},
+  "kyodai-clock": {"p":"0/05","f":"Kyoto_University_Clock_Tower.jpg"},
+  "komai": {"p":"a/a2","f":"Komai_House_Kyoto_Japan01s3.jpg"},
+  "kyocera": {"p":"3/39","f":"Kyoto-City-KYOCERA-Museum-of-Art.jpg"},
+  "fu-library": {"p":"9/9f","f":"Kyoto_Prefectural_Library_ac.jpg"},
+  "rohm": {"p":"e/e3","f":"Rohm_Theatre_Kyoto.jpg"},
+  "kyohaku": {"p":"6/60","f":"Kyoto_National_Museum_(Higashiyama-Ku)_Museum_hdsr_S5_02.jpg"},
+  "tokasaikan": {"p":"6/63","f":"Tōkasai-kan_building,_Kyoto,_20240820_1748_5194.jpg"},
+  "dendoin": {"p":"7/79","f":"Dendoin_Temple_of_West_Honganji_Temple.jpg"},
+  "tower": {"p":"4/42","f":"Kyoto_Tower_20150919.jpg"},
+  "icc": {"p":"6/6b","f":"Kyoto_International_Conference_Center_-_exterior.JPG"},
+  "chochikukyo": {"p":"e/eb","f":"Chōchikukyo_01.jpg"},
+  "kawaramachi-church": {"p":"a/a4","f":"Roman_Catholic_Kawaramachi_Church,_St_Francis_Xavier's_Cathedral_front_(renewal).jpg"},
+  "kiyomizu": {"p":"e/ed","f":"Kiyomizu-dera_-_August_2013_-_Sarah_Stierch_02.jpg"},
+  "kinkaku": {"p":"9/93","f":"Kinkaku-ji_2009-03-22.jpg"},
+  "ginkaku": {"p":"1/18","f":"Ginkaku-ji_Kyoto_1.jpg"},
+  "ryoanji": {"p":"7/77","f":"150207_Ryoan-ji_Kyoto_Japan09s3.jpg"},
+  "ninnaji": {"p":"5/5a","f":"Ninnaji-temple_from_Narabigaoka.JPG"},
+  "kitano": {"p":"1/18","f":"Kitano_Tenmangu_shrine_1.jpg"},
+  "myoshinji": {"p":"c/c7","f":"Myoshin-ji_5.JPG"},
+  "daitokuji": {"p":"9/9f","f":"Daitokuji_(Kita-Ku_Kyoto)_Temple_hdsr_S5_01.jpg"},
+  "kamigamo": {"p":"b/b2","f":"Kamigamo_Shrine-01.jpg"},
+  "shugakuin": {"p":"4/49","f":"Kyoto,_Shugakuin_Imperial_Villa.jpg","o":1},
+  "shisendo": {"p":"4/4b","f":"Shisen-do.JPG"},
+  "shimogamo": {"p":"3/39","f":"Shimogamo_jinja_Kyoto_16.jpg"},
+  "gosho": {"p":"3/35","f":"Kyoto_Imperial_Palace_(京都御所,_Kyōto_Gosho)_2.jpg"},
+  "nijojo": {"p":"a/a4","f":"Nijo_Castle_17.JPG"},
+  "nanzenji": {"p":"8/8e","f":"251213_Nanzen-ji_Kyoto_Japan19s3.jpg"},
+  "suirokaku": {"p":"2/26","f":"251213_Nanzen-ji_Suirokaku_Kyoto_Japan01s3.jpg"},
+  "eikando": {"p":"d/d5","f":"Eikan-do_Temple_-_Northern_Higashiyama_-_Kyoto_-_Japan_-_02_(47934819761).jpg"},
+  "heianjingu": {"p":"f/f4","f":"Heian_Shrine_2009-04-07_(3484405969).jpg"},
+  "chionin": {"p":"1/13","f":"Chion-in_-_IMG_5083.JPG"},
+  "yasaka": {"p":"e/e1","f":"Yasaka_jinja_in_2018.jpg"},
+  "kodaiji": {"p":"7/75","f":"170923_Kodaiji_Kyoto_Japan25n.jpg"},
+  "hokanji": {"p":"e/e8","f":"Yasaka_Pagode.jpg","o":1},
+  "kenninji": {"p":"2/27","f":"150124_Kenninji_Kyoto_Japan05s3.jpg"},
+  "sanjusangendo": {"p":"c/cd","f":"Sanjūsangen-dō_in_2013-5-3_No,2.JPG"},
+  "toji": {"p":"c/cb","f":"東寺_(1675487576).jpg"},
+  "nishihonganji": {"p":"3/39","f":"170216_Nishi_Honganji_Kyoto_Japan01s3.jpg"},
+  "higashihonganji": {"p":"7/78","f":"160211_Higashi_Honganji_Kyoto_Japan06s3.jpg"},
+  "kyotostation": {"p":"a/a4","f":"JR_Kyoto_Station.jpg"},
+  "tofukuji": {"p":"7/7e","f":"Tofuku-ji,_Kyoto_-_Tofukuji6592.jpg"},
+  "fushimiinari": {"p":"e/e1","f":"Fushimi_Inari_(3848737676).jpg"},
+  "daigoji": {"p":"e/eb","f":"Daigo-ji_National_Treasure_World_heritage_Kyoto_国宝・世界遺産_醍醐寺_京都007.JPG"},
+  "tenryuji": {"p":"8/8a","f":"Tenryu-ji_Temple_in_Kyoto.jpg"},
+  "togetsukyo": {"p":"0/05","f":"Arashiyama_Togetsukyo_Kyoto.jpg"},
+  "daikakuji": {"p":"3/35","f":"Daikakuji_Kyoto_001_JPN.jpg"},
+  "byodoin": {"p":"8/8e","f":"Byodoin_Uji_Kyoto04s3s4592.jpg"},
+  "ujigami": {"p":"f/fd","f":"Uji_kami_Jinja_(Uji,_Kyoto)_Shrine_hdsr_S5_01.jpg"},
+  "sanzenin": {"p":"f/f8","f":"Sanzen'in_Kyoto2023.jpg"},
+  "kozanji": {"p":"8/8f","f":"Kozanji_Kyoto_Kyoto01s5s4592.jpg"},
+  "saihoji": {"p":"4/47","f":"Saiho-ji,_Kyoto,_by_Jmhullot.jpg"},
+  "katsura": {"p":"b/bf","f":"Katsura_Gepparo.jpg","o":1},
+  "aoi": {"p":"1/13","f":"Aoi-Matsuri-parade-001.jpg","o":1},
+  "gion-matsuri": {"p":"a/a6","f":"Kyoto,_Gion-matsuri,_10.jpg"},
+  "jidai": {"p":"e/ed","f":"Jidai_matsuri.JPG"},
+  "okuribi": {"p":"1/17","f":"Gozan-okuribi_Daimonji.jpg","o":1},
+  "kurama-hi": {"p":"a/a4","f":"Fire_festival_of_KURAMA_Kyoto,_Japan.jpg"},
+  "miyako-odori": {"p":"2/28","f":"Miyako_Odori;_cherry_dance_in_Kyoto_Ryugu.jpg"},
+  "setsubun-yoshida": {"p":"4/40","f":"Yoshida-jinja_(Kyoto),_keidaitorii.jpg"},
+  "kobo-ichi": {"p":"0/03","f":"終い弘法＠東寺_(1720098853).jpg"},
+  "daikon-daki": {"p":"2/2e","f":"Daihoonji_temple_2.jpg"},
+  "kyokusui": {"p":"c/ce","f":"Jonangu_Kyoto02n3200.jpg"},
+  "sanjo-ohashi": {"p":"2/2f","f":"JP_日本_Japan_京都_Kyoto_tourism_river_bridge_1235pm_June_2026_N13P_122.jpg"},
+  "omiya-ryoma": {"p":"d/da","f":"坂本龍馬中岡慎太郎遭難之地.jpg"},
+  "teradaya": {"p":"7/7f","f":"Terada-ya,_gaikan.jpg"},
+  "hamaguri": {"p":"5/5d","f":"Hamaguri-Gomon_001.jpg"},
+  "mibu": {"p":"c/ca","f":"Mibu-dera_(Nakagyo-ku_Kyoto)_temple_hdsr_S5_02.jpg"},
+  "daigokuden": {"p":"e/e5","f":"Daigokuden-ato_(Heian_Palace).JPG"},
+  "odoi": {"p":"8/8e","f":"Takagamine_Odoi.JPG"},
+  "sumiya": {"p":"a/af","f":"角屋_-_外観.jpg"},
+  "seimei": {"p":"6/6f","f":"Seimei_Jinja_001.jpg"},
+  "incline": {"p":"b/b2","f":"Cherry_blossoms_at_Keage_Incline_01.jpg"},
+  "ichiwa": {"p":"e/e6","f":"Imamiya-jinja_(Kita-ku,_Kyoto)_Ichiwa_et_Kazariya_hdsr_S5_0.jpg"},
+  "sawaya": {"p":"0/03","f":"粟餅所_澤屋.jpg"},
+  "jinbado": {"p":"0/06","f":"Yakimochi_Jinbado.jpg","o":1},
+  "shogoin-yatsuhashi": {"p":"e/e4","f":"Syogoin_Yatsuhasi_Main_Store.JPG"},
+  "tsuruya": {"p":"4/43","f":"Tsuruya_Yoshinobu_Mainstore.jpg"},
+  "kagizen": {"p":"5/59","f":"Kagizen_kuzukiri.jpg","o":1},
+  "ryokujuan": {"p":"9/92","f":"Konpeitou_ryokujuanshimizu.jpg","o":1},
+  "nishiki": {"p":"f/f3","f":"A_view_of_Nishiki_Market,_Kyoto,_Japan.jpg"},
+  "owariya": {"p":"d/dc","f":"202506_Honke_Owariya,_Kyoto_01.jpg"},
+  "matsuba": {"p":"9/99","f":"Nishinsoba_matsuba.jpg"},
+  "aritsugu": {"p":"c/c9","f":"Kitchen_tools_store_by_matsuyuki_in_Nishiki_Ichiba,_Kyoto.jpg"},
+  "gekkeikan": {"p":"7/7b","f":"Gekkeikan_Okura_Sake_Museum02s4592.jpg"},
+  "hyotei": {"p":"9/97","f":"Hyotei_Tamago.jpg","o":1},
+  "francois": {"p":"a/ad","f":"Facade_of_Salon_de_thé_François.jpg"},
+  "inoda": {"p":"b/b7","f":"イノダ本店外観.JPG"},
+  "ryugetsudo": {"p":"8/8e","f":"Famous_Music_Cafe「Ryugetsudou」リスニングルーム１.jpg"},
+  "jingenkan": {"p":"f/f0","f":"Jingen.jpg"},
+  "dwc": {"p":"5/5a","f":"ジェームズ館.jpg"},
+  "pontocho": {"p":"d/d5","f":"2013_1122_Ponto-cho_Kaburenjo_Theater.jpg"},
+  "rissei": {"p":"f/f5","f":"Rissei_Garden_Hulic_Kyoto_20200802-001.jpg"},
+  "kaichi": {"p":"d/db","f":"Kyoto_Museum_of_School_History_gate.JPG"},
+  "shimadzu": {"p":"0/03","f":"Shimadzu-Foundation-Memorial-Hall-01.jpg"},
+  "agnes": {"p":"0/05","f":"St._Agnes'_Episcopal_Church_(Kyoto).JPG"},
+  "horikawa": {"p":"0/05","f":"Horikawadanchi.jpg"},
+  "mitsui": {"p":"9/92","f":"旧三井家下鴨別邸主屋.jpg"},
+  "westin": {"p":"7/77","f":"Westin_Miyako_Kyoto_Kasuien_20120716-001.jpg"},
+  "goryukaku": {"p":"5/5b","f":"Goryukaku_Kyoto_Japan01s5.jpg"},
+  "kokogaku": {"p":"1/1b","f":"Kyu-Nishijin-Orimonokan-19991002.JPG"},
+  "funaoka": {"p":"8/8b","f":"Funaoka_Onsen_20180410_01.jpg"},
+  "domoto": {"p":"6/6d","f":"Insho-Domoto_Museum_of_Fine_Arts01s5.jpg"},
+  "kit": {"p":"6/64","f":"Kyu-Kyotokotokogeigakko-Honkan-20071215.jpg"},
+  "concerthall": {"p":"a/a6","f":"Kyoto_Concert_Hall_ac.jpg"},
+  "umekoji": {"p":"2/24","f":"UMEKOJI_STEAM_LOCOMOTIVE_MUSEUM_ROUNDHOUSE_KYOTO_JAPAN_JUNE_2012_(7454421072).jpg"},
+  "shichijo": {"p":"9/9a","f":"Shichijō_Bridge,_Kyoto_-_Apr_4,_2012.jpg"}
+};
+const COMMONS_UP = "https://upload.wikimedia.org/wikipedia/commons/";
+const CREDIT_KEY = "kyoto-meguri-photo-credits";
+let photoCredits = {};
+try { photoCredits = JSON.parse(localStorage.getItem(CREDIT_KEY) || "{}") || {}; } catch (e) { photoCredits = {}; }
+const creditPending = {};
+function loadPhotoCredit(id, p, src) {
+  if (photoCredits[id] || creditPending[id]) return;
+  creditPending[id] = true;
+  const api = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=imageinfo&iiprop=extmetadata&iiextmetadatafilter=Artist%7CLicenseShortName&titles=" + encodeURIComponent("File:" + p.f);
+  fetch(api).then(r => r.json()).then(j => {
+    const page = Object.values((j.query && j.query.pages) || {})[0];
+    const md = (page && page.imageinfo && page.imageinfo[0].extmetadata) || {};
+    const div = document.createElement("div");
+    div.innerHTML = (md.Artist && md.Artist.value) || "";
+    const text = [div.textContent.replace(/\s+/g, " ").trim(), md.LicenseShortName && md.LicenseShortName.value].filter(Boolean).join(" / ");
+    if (!text) return;
+    photoCredits[id] = text;
+    try { localStorage.setItem(CREDIT_KEY, JSON.stringify(photoCredits)); } catch (e) {}
+    document.querySelectorAll(".credit").forEach(el => {
+      const a = el.querySelector("a");
+      if (a && a.getAttribute("href") === src && el.firstChild) el.firstChild.textContent = "写真: " + text + " · ";
+    });
+  }).catch(() => {}).finally(() => { creditPending[id] = false; });
+}
 
 const KIND = { arch: "建築", classic: "寺社・名所", history: "史跡", festival: "祭り・行事", sweets: "和菓子", food: "食・老舗", cafe: "喫茶", other: "その他" };
 const THIS_MONTH = new Date().getMonth() + 1;
@@ -939,7 +1081,11 @@ function photoOf(s) {
   const mine = visits[s.id] && visits[s.id].photo;
   if (mine) return { url: blobUrls[mine] || "", mine: true, ratio: visits[s.id].photoRatio };
   const p = PHOTOS[s.id];
-  if (p) return { url: "/_blob/" + p.id, ratio: p.ratio, credit: p.credit, src: p.src };
+  if (p) {
+    const f = encodeURIComponent(p.f);
+    const src = "https://commons.wikimedia.org/wiki/File:" + f;
+    return { url: COMMONS_UP + (p.o ? p.p + "/" + f : "thumb/" + p.p + "/" + f + "/960px-" + f), credit: photoCredits[s.id] || "作者・ライセンスはリンク先", src };
+  }
   return null;
 }
 // 碁石: 行った＝黒石、行きたい＝白石
@@ -1029,6 +1175,7 @@ function openSheet(id) {
   const v = visits[id] || {};
   const p = photoOf(s);
   const done = !!v.done, want = !!v.want, again = !!v.again;
+  if (p && p.src && PHOTOS[s.id]) loadPhotoCredit(s.id, PHOTOS[s.id], p.src);  // クレジットは開いたときだけ取得
   const map = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(shortName(s) + " " + (s.addr || "京都"));
   const yl = s.mine ? (s.year !== 9999 ? `${s.year}年` : "") : s.era ? s.era : s.id === "maeda-meirin" ? `${s.year}年 開設（芸術センター）` : `${s.year}年（${wareki(s.year)}）`;
   $("#sheetRoot").innerHTML = `<div class="scrim" data-act="close">
