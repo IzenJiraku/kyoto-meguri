@@ -88,9 +88,36 @@ body.menu-open .menubtn, body.menu-open .minilogo { mix-blend-mode: normal; colo
 @keyframes tenDrop { to { opacity: 1; transform: none; } }
 .minilogo .k { font-size: 18px; font-weight: 800; }
 .minilogo .ten { font-size: .7em; top: -.02em; right: -.3em; }
-.cover-cap { text-align: left; }
+#cover .cover-cap { text-align: left; justify-self: start; }
 .minilogo { font-size: 18px; letter-spacing: .06em; }
 @media (prefers-reduced-motion: reduce) { #splash .ten { animation: none; opacity: 1; transform: none; } }
+
+/* ---- 碁盤と碁石 ---- */
+html, body { overflow-x: clip; }
+.spec, .cap { min-width: 0; }
+:root { --board: rgba(17, 17, 17, .14); --board-inv: rgba(255, 255, 255, .13); }
+.icons button[aria-pressed="true"] { --stone-fill: currentColor; }
+.icons .st-want[aria-pressed="true"] { --dash: none; }
+.icons button { width: 28px; height: 28px; }
+.icons svg { width: 15px; height: 15px; }
+/* 一覧: 罫線は細く、交点に星（黒点） */
+.grid { border-color: var(--ink); position: relative; }
+.pin { border-color: var(--board); border-right: 1px solid var(--board); border-bottom: 1px solid var(--board); position: relative; }
+.pin::before { content: ""; position: absolute; left: -3px; top: -3px; width: 5px; height: 5px; background: var(--ink); border-radius: 50%; z-index: 1; }
+.grid { border-top: 1px solid var(--ink); border-left: 1px solid var(--ink); outline: 1px solid var(--ink); outline-offset: -1px; }
+.spec { border-bottom: 1px solid var(--board); }
+/* 表紙と起動画面: 碁盤の目 */
+#cover, #splash { background-color: #111; background-image: linear-gradient(var(--board-inv) 1px, transparent 1px), linear-gradient(90deg, var(--board-inv) 1px, transparent 1px); background-size: 56px 56px; background-position: center center; }
+#splash { animation: boardIn .8s ease both; }
+@keyframes boardIn { from { background-size: 120px 120px; } }
+.cover-logo, #splash .logo { padding: 22px 30px 18px; background: #111; }
+/* メニュー: 枝の分かれ目に黒石 */
+.tree > li::after { content: ""; position: absolute; left: -4px; top: calc(1.05em - 3.5px); width: 7px; height: 7px; border-radius: 50%; background: var(--ink); }
+.twigs li::after { content: ""; position: absolute; left: -29px; top: calc(.85em - 2.5px); width: 5px; height: 5px; border-radius: 50%; background: var(--bg); border: 1px solid var(--ink); }
+.twig[aria-current="true"] + * , .twigs li:has(.twig[aria-current="true"])::after { background: var(--ink); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --board: rgba(255, 255, 255, .14); } }
+:root[data-theme="dark"] { --board: rgba(255, 255, 255, .14); }
+@media (prefers-reduced-motion: reduce) { #splash { animation: none; } }
 </style>
 <title>ごばん GOBAN</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -863,8 +890,9 @@ function photoOf(s) {
   if (p) return { url: "/_blob/" + p.id, ratio: p.ratio, credit: p.credit, src: p.src };
   return null;
 }
-const CHECK_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const BOOK_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h8v11l-4-3-4 3z" fill="var(--bk-fill, none)" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+// 碁石: 行った＝黒石、行きたい＝白石
+const CHECK_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="var(--stone-fill, none)" stroke="currentColor" stroke-width="1.2"/></svg>';
+const BOOK_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="var(--bg)" stroke="currentColor" stroke-width="1.2" stroke-dasharray="var(--dash, 2 2)"/></svg>';
 const yearText = s => s.mine ? (s.year !== 9999 ? s.year : "") : (s.era ? s.era.split("（")[0] : s.year);
 
 /* ---- filters ---- */
@@ -920,7 +948,7 @@ function pin(s) {
     <div class="cap">
       <div class="n">${esc(shortName(s))}</div>
       <div class="icons">
-        <button type="button" data-act="want" aria-pressed="${want}" aria-label="${want ? "行きたいを外す" : "行きたい"}">${BOOK_SVG}</button>
+        <button type="button" class="st-want" data-act="want" aria-pressed="${want}" aria-label="${want ? "行きたいを外す" : "行きたい"}">${BOOK_SVG}</button>
         <button type="button" data-act="toggle" aria-pressed="${done}" aria-label="${done ? "行ったを外す" : "行った"}">${CHECK_SVG}</button>
       </div>
       <div class="m">${meta}</div>
@@ -978,8 +1006,8 @@ function openSheet(id) {
         ${s.note ? `<div class="note">${esc(s.note)}</div>` : ""}
         ${s.fest ? `<div class="fine">京都モダン建築祭2026（10/31〜11/8）の公開・特典の対象です。普段は入れない所が公開されることも。<a href="https://kyoto.kenchikusai.jp/program/" target="_blank" rel="noopener">プログラムを見る ↗</a></div>` : ""}
         <div class="actions">
-          <button type="button" class="btn primary" data-act="toggle" aria-pressed="${done}">${s.kind === "festival" ? (done ? "見た ✓" : "見た") : (done ? "行った ✓" : "行った")}</button>
-          <button type="button" class="btn${want ? " on" : ""}" data-act="want" aria-pressed="${want}">${want ? "行きたい ✓" : "行きたい"}</button>
+          <button type="button" class="btn primary" data-act="toggle" aria-pressed="${done}">${s.kind === "festival" ? (done ? "● 見た" : "見た") : (done ? "● 行った" : "行った")}</button>
+          <button type="button" class="btn${want ? " on" : ""}" data-act="want" aria-pressed="${want}">${want ? "○ 行きたい" : "行きたい"}</button>
           <button type="button" class="btn${again ? " on" : ""}" data-act="again" aria-pressed="${again}">${again ? "また行きたい ✓" : "また行きたい"}</button>
         </div>
         <div class="actions">
@@ -1195,7 +1223,8 @@ function answerQuiz(i) {
 /* ---- 起動演出・表紙・メニュー ---- */
 const APP = { r: "GOBAN" };
 // 「ごはん」の「は」に濁点が落ちて「ごばん」になるロゴ
-document.querySelectorAll("[data-logo-k]").forEach(e => { e.innerHTML = 'ご<span class="ha">は<span class="ten" aria-hidden="true">゛</span></span>ん'; e.setAttribute("aria-label", "ごばん"); });
+document.querySelectorAll("[data-logo-k]").forEach(e => {
+  if (e.closest(".minilogo")) { e.textContent = "ごばん"; return; } e.innerHTML = 'ご<span class="ha">は<span class="ten" aria-hidden="true">゛</span></span>ん'; e.setAttribute("aria-label", "ごばん"); });
 document.querySelectorAll("[data-logo-r]").forEach(e => e.textContent = APP.r);
 (function splash() {
   const el = $("#splash");
