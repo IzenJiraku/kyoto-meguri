@@ -1958,7 +1958,9 @@ function layoutBoard() {
   if (W !== coverW) { coverW = W; coverVH = window.innerHeight; }
   const vh = coverVH;
   const rows = Math.max(3, Math.floor(vh / cell));
-  cv.style.setProperty("--cover-h", Math.max(vh, 3 * cell) + "px");
+  // 表紙の下端はマスの線にそろえる（画面より少しはみ出し、半端なマスを作らない）
+  const H = Math.max(3, Math.ceil((vh + 1) / cell)) * cell;
+  cv.style.setProperty("--cover-h", H + "px");
   // ロゴは線の交点ではなく、真ん中あたりのマスの中央に置く
   const c = Math.ceil(cols / 2) - 1, r = Math.ceil(rows / 2) - 1;
   board = { xs, cell, vh, W, c, r };
@@ -1968,8 +1970,8 @@ function layoutBoard() {
   let html = xs.map(x => `<i class="v" style="left:${x.toFixed(2)}px"></i>`).join("");
   // 左下の写真名は線にかからないよう、マスの中に収める
   const lastLine = Math.floor((vh + 1) / cell) * cell - 1, gap = vh - lastLine;
-  cv.style.setProperty("--capb", (gap >= 84 ? 14 : gap + 14) + "px");
-  for (let j = 1; j * cell - 1 < vh; j++) html += `<i class="h" style="top:${(j * cell - 1).toFixed(2)}px"></i>`;
+  cv.style.setProperty("--capb", (H - vh) + (gap >= 84 ? 14 : gap + 14) + "px");
+  for (let j = 1; j <= Math.round(H / cell); j++) html += `<i class="h" style="top:${(j * cell - 1).toFixed(2)}px"></i>`;
   $("#lines").innerHTML = html;
 }
 let rsT = null;
