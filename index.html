@@ -603,6 +603,12 @@ body.menu-open #hdr .clear { visibility: hidden !important; }
 
 /* メニューを開いている間は、見出しの「いまの条件」を隠す（メニュー内に出ているので） */
 body.menu-open #hdr .current, body.menu-open.filtered #hdr .current { visibility: hidden !important; opacity: 0 !important; }
+
+/* 写真名は線にかからない位置に */
+#cover .cover-cap { bottom: var(--capb, 14px); }
+/* 矢印は日付の行末に置き、独立した行にしない */
+.cover-cap:has(.d)::after { content: none; }
+.cover-cap .d::after { content: " →"; }
 </style>
 
 </head>
@@ -1878,6 +1884,9 @@ function layoutBoard() {
   cv.style.setProperty("--lx", lx + "px");
   cv.style.setProperty("--ly", (r * cell + (cell - 1) / 2) + "px");
   let html = xs.map(x => `<i class="v" style="left:${x.toFixed(2)}px"></i>`).join("");
+  // 左下の写真名は線にかからないよう、マスの中に収める
+  const lastLine = Math.floor((vh + 1) / cell) * cell - 1, gap = vh - lastLine;
+  cv.style.setProperty("--capb", (gap >= 84 ? 14 : gap + 14) + "px");
   for (let j = 1; j * cell - 1 < vh; j++) html += `<i class="h" style="top:${(j * cell - 1).toFixed(2)}px"></i>`;
   $("#lines").innerHTML = html;
 }
