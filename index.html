@@ -666,6 +666,14 @@ body, button, input, textarea, select { font-family: var(--f-body); }
 .lines { transition-duration: 3.4s !important; transition-timing-function: cubic-bezier(.45, 0, .25, 1) !important; }
 /* Zen Antique は1ウェイトだけなので、太字の擬似加工をさせない */
 .pin .nm, #hdr .current, .sheet h2, .sheet h1 { font-weight: 400 !important; font-synthesis: none; }
+
+/* 地図：CARTO の黒い地図をそのまま。白黒反転はやめる */
+.amap .leaflet-tile-pane { filter: none !important; opacity: 1 !important; }
+.amap .leaflet-container { background: #0E0E0E !important; }
+/* メニューの英字は少し控えめに */
+.branch { font-size: 20px !important; letter-spacing: .08em !important; color: rgba(237, 237, 234, .82); }
+.branch[aria-expanded="true"], .branch:hover { color: #EDEDEA; }
+.tree > li + li { margin-top: 12px; }
 </style>
 
 </head>
@@ -2327,7 +2335,7 @@ $("#viewNav").addEventListener("click", e => {
 
 
 /* ---- エリアの地図: 一覧の下に、道や駅名の入った地図とスポット ---- */
-// 地図は国土地理院の淡色地図を白黒反転して黒地に。スポットは今の絞り込み（エリア以外）に合う所を全部出す
+// 地図は CARTO の黒い地図（文字なし）に、通りや地名の文字を薄く重ねる。スポットは今の絞り込み（エリア以外）に合う所を全部出す
 let amap = null, amapLayer = null, amapArea = null;
 function renderAreaMap(list) {
   const box = $("#areaMap");
@@ -2335,7 +2343,7 @@ function renderAreaMap(list) {
   if (!pins.length || !window.L) { box.hidden = true; return; }
   box.hidden = false;
   if (!amap) {
-    box.innerHTML = `<div class="amap-canvas" id="amapCanvas"></div><div class="amap-credit">地図: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a></div>`;
+    box.innerHTML = `<div class="amap-canvas" id="amapCanvas"></div><div class="amap-credit">地図: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a></div>`;
     // スマホでは1本指はページのスクロールに使い、地図は2本指で動かす（ピンチで拡大縮小しながら移動）
     const coarse = matchMedia("(pointer: coarse)").matches;
     amap = L.map("amapCanvas", { zoomControl: false, scrollWheelZoom: false, attributionControl: false, minZoom: 11, maxZoom: 18, dragging: !coarse });
@@ -2346,7 +2354,9 @@ function renderAreaMap(list) {
         box.classList.add("hint"); clearTimeout(hintT); hintT = setTimeout(() => box.classList.remove("hint"), 1200);
       }, { passive: true });
     }
-    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", { maxZoom: 18, maxNativeZoom: 18 }).addTo(amap);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png", { subdomains: "abcd", maxZoom: 18, maxNativeZoom: 19 }).addTo(amap);
+    amap.createPane("basemapLabels").style.zIndex = 350;
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png", { subdomains: "abcd", maxZoom: 18, maxNativeZoom: 19, pane: "basemapLabels", opacity: .5 }).addTo(amap);
     L.control.zoom({ position: "bottomright" }).addTo(amap);
     amapLayer = L.layerGroup().addTo(amap);
     // そのエリアの名前はいつも、ほかの名前は寄ったときだけ
