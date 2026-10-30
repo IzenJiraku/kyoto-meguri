@@ -1385,7 +1385,9 @@ function openSheet(id) {
   const p = photoOf(s);
   const mineIds = myPhotos(id);
   const lp = listedPhoto(s);
-  const gallery = mineIds.filter(k => blobUrls[k]).map(k => ({ url: blobUrls[k], mine: k })).concat(lp ? [lp] : []);
+  // 自分の写真があるときは掲載写真を出さない
+  const own = mineIds.filter(k => blobUrls[k]).map(k => ({ url: blobUrls[k], mine: k }));
+  const gallery = own.length ? own : lp ? [lp] : [];
   const done = !!v.done, want = !!v.want, again = !!v.again;
   if (PHOTOS[s.id]) loadPhotoCredit(s.id, PHOTOS[s.id], listedPhoto(s).src);  // クレジットは開いたときだけ取得
   const map = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(shortName(s) + " " + (s.addr || "京都"));
