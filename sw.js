@@ -1,5 +1,5 @@
 // 京都めぐり帖 service worker: アプリ本体はキャッシュ優先、フォントは取得時にキャッシュ
-const VERSION = "v21";
+const VERSION = "v22";
 const CORE = ["./", "index.html", "manifest.webmanifest", "icons/icon-192-v2.png", "icons/icon-512-v2.png", "icons/apple-touch-icon-v2.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));

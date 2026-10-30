@@ -542,6 +542,10 @@ body.menu-open #hdr .current, body.menu-open #hdr .search { visibility: hidden; 
 .near .nm2 { font-size: 13px; }
 .near .nm2::after { content: " →"; color: var(--muted); font-family: var(--f-mono); }
 .near .nk { flex: none; font-size: 11px; color: var(--muted); }
+
+.menu-reset { display: flex; align-items: baseline; gap: 14px; margin-bottom: -16px; font-family: var(--f-mono); font-size: 10px; letter-spacing: .16em; color: var(--muted); }
+.menu-reset span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--f-body); letter-spacing: .06em; font-size: 11px; }
+.menu-reset button { flex: none; color: #EDEDEA; border-bottom: 1px solid var(--lc); padding-bottom: 1px; }
 </style>
 
 </head>
@@ -564,6 +568,7 @@ body.menu-open #hdr .current, body.menu-open #hdr .search { visibility: hidden; 
 <div id="menuScrim" hidden></div>
 <nav id="menu" hidden aria-label="メニュー">
   <div class="menu-inner">
+    <div class="menu-reset" id="menuReset" hidden><span id="menuNow"></span><button type="button" id="menuResetBtn">RESET ×</button></div>
     <ul class="tree" id="tree"></ul>
   </div>
 </nav>
@@ -1847,7 +1852,6 @@ const TREE = [
   { key: "area", ja: "歩く", en: "AREA", items: () => [["", "全エリア"]].concat(AREAS.concat(["その他"]).map(a => [a, a])) },
   { key: "status", ja: "しるし", en: "STATUS", items: () => [["all", "すべて"], ["want", "行きたい"], ["done", "行った"], ["again", "また行きたい"], ["todo", "まだ"]] },
   { key: "sort", ja: "並び", en: "SORT", items: () => [["area", "エリア順"], ["year", "古い順"], ["yeardesc", "新しい順"], ["name", "名前順"], ["todo", "まだを先に"]] },
-  { key: "reset", en: "RESET", act: true, show: () => filtersActive() },
   { key: "map", en: "MAP", act: true },
   { key: "cal", en: "CALENDAR", act: true },
   { key: "write", ja: "書く", en: "EDIT", items: () => [["add", "スポットを追加"], ["export", "記録を書き出す"], ["import", "記録を読み込む"], ["sync", "PCとスマホの同期"]] },
@@ -1855,6 +1859,9 @@ const TREE = [
 let openBranch = null;
 function currentOf(key) { return key === "kind" ? ui.filter : key === "area" ? ui.area : key === "status" ? ui.status : key === "sort" ? ui.sort : null; }
 function renderTree() {
+  // 絞り込み中だけ、ツリーの上に小さく「いまの条件」と RESET
+  $("#menuReset").hidden = !filtersActive();
+  $("#menuNow").textContent = $("#current").textContent;
   $("#tree").innerHTML = TREE.filter(b => !b.show || b.show()).map(b => b.act ? `<li><button type="button" class="branch" data-act-branch="${b.key}">${b.en}</button></li>` : `<li>
     <button type="button" class="branch" data-branch="${b.key}" aria-expanded="${openBranch === b.key}">${b.en}</button>
     ${openBranch === b.key ? `<ul class="twigs">${b.items().map(([v, l]) => `<li><button type="button" class="twig" data-key="${b.key}" data-v="${esc(v)}" aria-current="${currentOf(b.key) === v}">${esc(l)}</button></li>`).join("")}</ul>` : ""}
@@ -1909,6 +1916,7 @@ function resetFilters() {
   saveUi(); render();
 }
 $("#clearBtn").addEventListener("click", resetFilters);
+$("#menuResetBtn").addEventListener("click", () => { resetFilters(); renderTree(); });
 
 /* ---- MAP / CALENDAR ---- */
 let viewKind = null, mapAll = false;
