@@ -676,13 +676,6 @@ body, button, input, textarea, select { font-family: var(--f-body); }
 .branch[aria-expanded="true"], .branch:hover { color: #EDEDEA; }
 .tree > li + li { margin-top: 12px; }
 
-/* ==== 表紙の線：古畑任三郎風に1本ずつ走る ==== */
-#cover .lines, #cover.open .lines { clip-path: none !important; transition: none !important; }
-#cover .lines .v { transform: scaleY(0); }
-#cover .lines .h { transform: scaleX(0); }
-#cover.open .lines i { transform: none; transition: transform .42s cubic-bezier(.75, 0, .15, 1) var(--d, 0s); }
-#cover.instant .lines i { transition: none !important; }
-@media (prefers-reduced-motion: reduce) { #cover .lines i { transform: none !important; transition: none !important; } }
 
 #cover .cover-logo { cursor: pointer; }
 </style>
@@ -1991,9 +1984,9 @@ function answerQuiz(i) {
 // 表紙の「上ル」を押すと、線の演出をもう一度
 function replayLines() {
   const cv = $("#cover");
-  cv.classList.remove("open");
+  cv.classList.add("instant"); cv.classList.remove("open");
   void cv.offsetWidth;
-  layoutBoard();
+  cv.classList.remove("instant");
   requestAnimationFrame(() => requestAnimationFrame(() => cv.classList.add("open")));
 }
 $("#cover .cover-logo").addEventListener("click", replayLines);
@@ -2072,16 +2065,7 @@ function layoutBoard() {
   const lastLine = Math.floor((vh + 1) / cell) * cell - 1, gap = vh - lastLine;
   cv.style.setProperty("--capb", (H - vh) + (gap >= 84 ? 14 : gap + 14) + "px");
   for (let j = 1; j <= Math.round(H / cell); j++) html += `<i class="h" style="top:${(j * cell - 1).toFixed(2)}px"></i>`;
-  // 古畑任三郎のように、線が1本ずつ画面の端から走ってマス目になる（順番はばらばら、向きも交互）
   $("#lines").innerHTML = html;
-  const items = [...$("#lines").children];
-  const order = items.map((_, i) => i).sort(() => Math.random() - .5);
-  const step = Math.min(.22, 1.9 / Math.max(1, items.length));
-  order.forEach((idx, k) => {
-    const el = items[idx], rev = Math.random() < .5;
-    el.style.setProperty("--d", (k * step).toFixed(2) + "s");
-    el.style.transformOrigin = el.classList.contains("v") ? (rev ? "50% 100%" : "50% 0") : (rev ? "100% 50%" : "0 50%");
-  });
 }
 let rsT = null;
 window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(render, 150); });
