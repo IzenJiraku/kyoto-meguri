@@ -584,6 +584,11 @@ body.menu-open #hdr .clear { visibility: hidden !important; }
 /* 様式・設計から絞り込み */
 .facts .facet { all: unset; cursor: pointer; border-bottom: 1px solid rgba(255, 255, 255, .35); transition: border-color .2s, color .2s; }
 .facts .facet:hover, .facts .facet:focus-visible { border-bottom-color: #fff; color: #fff; }
+
+/* 枝のアイコン */
+.tree .branch { align-items: center; }
+.branch .bi { width: .8em; height: .8em; flex: none; margin-left: .15em; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linejoin: miter; opacity: .55; transition: opacity .2s; }
+.branch:hover .bi, .branch[aria-expanded="true"] .bi { opacity: .9; }
 </style>
 
 </head>
@@ -1923,14 +1928,25 @@ const TREE = [
   { key: "cal", en: "CALENDAR", act: true },
   { key: "write", ja: "書く", en: "EDIT", items: () => [["add", "スポットを追加"], ["export", "記録を書き出す"], ["import", "記録を読み込む"], ["sync", "PCとスマホの同期"]] },
 ];
+// メニューの枝の右に添える線だけのアイコン（24×24）
+const BR_ICON = {
+  kind: '<rect x="4" y="4" width="6.5" height="6.5"/><rect x="13.5" y="4" width="6.5" height="6.5"/><rect x="4" y="13.5" width="6.5" height="6.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5"/>',
+  area: '<path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.2"/>',
+  status: '<circle cx="7" cy="12" r="4" fill="currentColor"/><circle cx="17" cy="12" r="4"/>',
+  sort: '<path d="M4 6.5h16M4 12h11M4 17.5h6"/>',
+  map: '<path d="M3.5 6l5.5-2 6 2 5.5-2v14l-5.5 2-6-2-5.5 2z M9 4v14 M15 6v14"/>',
+  cal: '<rect x="4" y="5.5" width="16" height="14.5"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/>',
+  write: '<path d="M15.5 4.5l4 4L9 19H5v-4z M13 7l4 4"/>',
+};
+function brIcon(k) { return BR_ICON[k] ? `<svg class="bi" viewBox="0 0 24 24" aria-hidden="true">${BR_ICON[k]}</svg>` : ""; }
 let openBranch = null;
 function currentOf(key) { return key === "kind" ? ui.filter : key === "area" ? ui.area : key === "status" ? ui.status : key === "sort" ? ui.sort : null; }
 function renderTree() {
   // 絞り込み中だけ、ツリーの上に小さく「いまの条件」と RESET
   $("#menuReset").hidden = !filtersActive();
   $("#menuNow").textContent = $("#current").textContent;
-  $("#tree").innerHTML = TREE.filter(b => !b.show || b.show()).map(b => b.act ? `<li><button type="button" class="branch" data-act-branch="${b.key}">${b.en}</button></li>` : `<li>
-    <button type="button" class="branch" data-branch="${b.key}" aria-expanded="${openBranch === b.key}">${b.en}</button>
+  $("#tree").innerHTML = TREE.filter(b => !b.show || b.show()).map(b => b.act ? `<li><button type="button" class="branch" data-act-branch="${b.key}">${b.en}${brIcon(b.key)}</button></li>` : `<li>
+    <button type="button" class="branch" data-branch="${b.key}" aria-expanded="${openBranch === b.key}">${b.en}${brIcon(b.key)}</button>
     ${openBranch === b.key ? `<ul class="twigs">${b.items().map(([v, l]) => `<li><button type="button" class="twig" data-key="${b.key}" data-v="${esc(v)}" aria-current="${currentOf(b.key) === v}">${esc(l)}</button></li>`).join("")}</ul>` : ""}
   </li>`).join("");
 }
