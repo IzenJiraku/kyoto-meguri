@@ -614,6 +614,11 @@ body.menu-open #hdr .current, body.menu-open.filtered #hdr .current { visibility
 .cover-logo .glogo { --sw: .55; }
 .hlogo .glogo { --sw: .75; }
 .cover-logo { width: min(64px, calc(var(--cellw, 120px) * .55)) !important; }
+
+/* 起動のモザイク：マスごとに写真がぱらぱら */
+.mosaic { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.mosaic i { position: absolute; background: center / cover no-repeat #0D0D0D; opacity: 0; transition: opacity .35s ease; }
+.mosaic i.on { opacity: .9; }
 </style>
 
 </head>
@@ -1850,19 +1855,68 @@ function answerQuiz(i) {
 // 起動: 小さな「碁盤」のロゴが描かれ、写真が浮かび、ロゴから白い線が広がって一覧のマス目につながる
 (function intro() {
   const cv = $("#cover");
+  // 試作: ?mosaic を付けたときだけ、毎回モザイク付きの起動演出を見せる
+  const trial = /[?&]mosaic\b/.test(location.search);
   let seen = false; try { seen = sessionStorage.getItem("intro") === "1"; sessionStorage.setItem("intro", "1"); } catch (e) {}
+  if (trial) seen = false;
   if (seen || matchMedia("(prefers-reduced-motion: reduce)").matches) {
     cv.classList.add("instant", "draw", "lit", "open");
     setTimeout(() => cv.classList.remove("instant"), 50);
     return;
   }
   requestAnimationFrame(() => requestAnimationFrame(() => cv.classList.add("draw")));
-  setTimeout(() => cv.classList.add("lit"), 800);
-  setTimeout(() => cv.classList.add("open"), 1300);
+  // ロゴ → 線が広がる → マスごとに写真がぱらぱら入れ替わる → 全画面の1枚へ
+  if (!trial) {
+    setTimeout(() => cv.classList.add("lit"), 800);
+    setTimeout(() => cv.classList.add("open"), 1300);
+    return;
+  }
+  const pre = mosaicPreload();
+  setTimeout(() => cv.classList.add("open"), 900);
+  setTimeout(() => mosaicRun(pre, () => cv.classList.add("lit")), 1300);
 })();
 
-// 表紙の線を一覧のマス目と同じ位置に引く。表紙の高さもマスの倍数にする
-let coverW = 0, coverVH = 0;
+// 起動のモザイク。通信量を抑えるため小さいサムネだけを、マスの数より少し多いくらい読む
+function mosaicPreload() {
+  const list = allSpots().map(photoOf).filter(p => p && (p.thumb || p.url)).map(p => p.thumb || p.url);
+  for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
+  const ready = [];
+  list.slice(0, 26).forEach(u => { const im = new Image(); im.decoding = "async"; im.onload = () => ready.push(u); im.src = u; });
+  return ready;
+}
+function mosaicRun(ready, done) {
+  const cv = $("#cover"), b = board;
+  if (!b || ready.length < 4) { done(); return; }
+  const box = document.createElement("div");
+  box.className = "mosaic"; box.setAttribute("aria-hidden", "true");
+  const lefts = [0].concat(b.xs.map(x => x + 1)), rights = b.xs.concat([b.W]);
+  const cells = [];
+  for (let r = 0; r * b.cell < b.vh; r++) for (let c = 0; c < lefts.length; c++) {
+    if (r === b.r && c === b.c) continue; // ロゴのマスは黒のまま
+    const el = document.createElement("i");
+    el.style.cssText = `left:${lefts[c]}px;top:${r * b.cell}px;width:${rights[c] - lefts[c]}px;height:${b.cell - 1}px`;
+    box.appendChild(el); cells.push(el);
+  }
+  $("#lines").before(box);
+  const any = () => ready[Math.floor(Math.random() * ready.length)];
+  const set = el => { el.style.backgroundImage = `url("${any().replace(/"/g, "%22")}")`; el.classList.add("on"); };
+  // 0.8秒かけてばらばらに点き、点いたマスは何度か写真が変わる
+  const timers = [];
+  cells.forEach(el => {
+    const t0 = Math.random() * 800;
+    timers.push(setTimeout(() => set(el), t0));
+    for (let k = 1; k <= 3; k++) { const t = t0 + k * (180 + Math.random() * 160); if (t < 1700) timers.push(setTimeout(() => set(el), t)); }
+  });
+  setTimeout(() => {
+    timers.forEach(clearTimeout);
+    done();
+    cells.forEach(el => setTimeout(() => el.classList.remove("on"), Math.random() * 500));
+    setTimeout(() => box.remove(), 1400);
+  }, 1900);
+}
+
+// 表紙の線を一覧のマス目と同じ位置に引く
+let coverW = 0, coverVH = 0, board = null;
 function layoutBoard() {
   const cv = $("#cover"), grid = $("#grid");
   const tiles = [...grid.querySelectorAll(".pin")];
@@ -1885,6 +1939,7 @@ function layoutBoard() {
   cv.style.setProperty("--cover-h", Math.max(vh, 3 * cell) + "px");
   // ロゴは線の交点ではなく、真ん中あたりのマスの中央に置く
   const c = Math.ceil(cols / 2) - 1, r = Math.ceil(rows / 2) - 1;
+  board = { xs, cell, vh, W, c, r };
   const lx = c === 0 ? cell / 2 - 0.5 : xs[c - 1] + 1 + (cell - 1) / 2;
   cv.style.setProperty("--lx", lx + "px");
   cv.style.setProperty("--ly", (r * cell + (cell - 1) / 2) + "px");
