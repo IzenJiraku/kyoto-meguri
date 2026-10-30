@@ -555,6 +555,20 @@ body.filtered #hdr::after { opacity: 1; }
 body.filtered #hdr .hlogo { opacity: 1; pointer-events: auto; }
 body.filtered #hdr .current, body.filtered #hdr .clear { opacity: 1; visibility: visible; }
 body.menu-open.filtered #hdr::after { opacity: 0; }
+
+/* エリアの地図が メニューの上に出ないように */
+.amap { z-index: 0; isolation: isolate; }
+/* メニューの # が真ん中に寄って十字になり、45°回って × になる */
+#menuBtn .mi { transform-origin: 10px 10px; transition: transform .38s cubic-bezier(.65, 0, .25, 1); }
+#menuBtn .mi line { stroke: currentColor; stroke-width: 1.2; stroke-linecap: square; transition: transform .32s cubic-bezier(.65, 0, .25, 1); }
+body.menu-open #menuBtn .mi { transform: rotate(45deg); transition-delay: .14s; }
+body.menu-open #menuBtn .l1 { transform: translateX(3px); }
+body.menu-open #menuBtn .l2 { transform: translateX(-3px); }
+body.menu-open #menuBtn .l3 { transform: translateY(3px); }
+body.menu-open #menuBtn .l4 { transform: translateY(-3px); }
+body:not(.menu-open) #menuBtn .mi line { transition-delay: .14s; }
+@media (prefers-reduced-motion: reduce) { #menuBtn .mi, #menuBtn .mi line { transition: none !important; } }
+body.menu-open #hdr .clear { visibility: hidden !important; }
 </style>
 
 </head>
@@ -572,7 +586,7 @@ body.menu-open.filtered #hdr::after { opacity: 0; }
   <button type="button" class="ic clear" id="clearBtn" aria-label="絞り込みをすべて戻す" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 6L14 14 M14 6L6 14"/></svg></button>
   <input class="search" type="search" id="q" placeholder="SEARCH" aria-label="名前・説明・豆知識で検索" autocomplete="off">
   <button type="button" class="ic" id="searchBtn" aria-label="さがす" aria-expanded="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3H12V12H3Z M12 12L17 17"/></svg></button>
-  <button type="button" class="ic" id="menuBtn" aria-label="メニュー" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="i-open" d="M7 2V18 M13 2V18 M2 7H18 M2 13H18"/><path class="i-close" d="M4 4L16 16 M16 4L4 16"/></svg></button>
+  <button type="button" class="ic" id="menuBtn" aria-label="メニュー" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 20 20" aria-hidden="true"><g class="mi"><line class="l1" x1="7" y1="2" x2="7" y2="18"/><line class="l2" x1="13" y1="2" x2="13" y2="18"/><line class="l3" x1="2" y1="7" x2="18" y2="7"/><line class="l4" x1="2" y1="13" x2="18" y2="13"/></g></svg></button>
 </header>
 <div id="menuScrim" hidden></div>
 <nav id="menu" hidden aria-label="メニュー">
