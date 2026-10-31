@@ -678,6 +678,19 @@ body, button, input, textarea, select { font-family: var(--f-body); }
 
 
 #cover .cover-logo { cursor: pointer; }
+
+/* ==== 試作 ?row：写真の最後の段をグラデーション、その下に説明の段 ==== */
+#cover.rowtrial .slides { bottom: auto; height: var(--photo-h); }
+#cover.rowtrial .cover-fade { position: absolute; left: 0; right: 0; top: calc(var(--photo-h) - var(--cell)); height: var(--cell); background: linear-gradient(to bottom, rgba(13, 13, 13, 0), #0D0D0D); pointer-events: none; }
+.cover-row { position: absolute; left: 0; right: 0; z-index: 2; color: #EDEDEA; }
+.cr-cell { position: absolute; top: 0; bottom: 0; padding: 14px 12px; display: flex; flex-direction: column; justify-content: flex-end; }
+.cr-tag p { margin: 0; font-size: clamp(13px, 3.3vw, 20px); line-height: 1.6; letter-spacing: .04em; white-space: nowrap; }
+.cr-desc p { margin: 0; font-size: clamp(10.5px, 1vw, 12px); line-height: 1.75; letter-spacing: .04em; color: #A6A6A2; }
+.cr-count { align-items: flex-end; text-align: right; gap: 2px; }
+.cr-count b { font-family: var(--f-disp, serif); font-weight: 400; font-size: clamp(30px, 9vw, 44px); line-height: 1; letter-spacing: .02em; }
+.cr-count span { font-family: var(--f-mono); font-size: 10px; letter-spacing: .14em; color: #A6A6A2; }
+.cr-count small { font-family: var(--f-mono); font-size: 8px; letter-spacing: .26em; color: #8C8C88; margin-top: 4px; }
+#cover:not(.rowtrial) .cover-row, #cover:not(.rowtrial) .cover-fade { display: none; }
 </style>
 
 </head>
@@ -2032,6 +2045,18 @@ function mosaicRun(ready, done) {
 
 // 表紙の線を一覧のマス目と同じ位置に引く
 let coverW = 0, coverVH = 0, board = null;
+const ROW_TRIAL = /[?&]row\b/.test(location.search);
+function renderCoverRow(xs, cell, W, top) {
+  let row = document.getElementById("coverRow");
+  if (!row) { row = document.createElement("div"); row.id = "coverRow"; row.className = "cover-row"; $("#lines").before(row); const f = document.createElement("div"); f.className = "cover-fade"; $("#slides").after(f); }
+  const lefts = [0].concat(xs.map(x => x + 1)), rights = xs.concat([W]);
+  const at = (i, span = 1) => `left:${lefts[i]}px;width:${rights[Math.min(i + span - 1, rights.length - 1)] - lefts[i]}px`;
+  const n = lefts.length, spots = allSpots(), done = spots.filter(s => isDone(s.id)).length;
+  row.style.cssText = `top:${top}px;height:${cell - 1}px`;
+  row.innerHTML = `<div class="cr-cell cr-tag" style="${at(0)}"><p>碁盤の目を<br>歩いて、上ル。</p></div>
+    <div class="cr-cell cr-desc" style="${at(1)}"><p>京都の建築・寺社・喫茶・本屋。歩いて、行った所に石を置いていく帖。</p></div>
+    <div class="cr-cell cr-count" style="${at(n - 1)}"><b>${String(done).padStart(3, "0")}</b><span>/ ${String(spots.length).padStart(3, "0")}</span><small>VISITED</small></div>`;
+}
 function layoutBoard() {
   const cv = $("#cover"), grid = $("#grid");
   const tiles = [...grid.querySelectorAll(".pin")];
@@ -2057,8 +2082,14 @@ function layoutBoard() {
   const vh = coverVH;
   const rows = Math.max(3, Math.floor(vh / cell));
   // 表紙の下端はマスの線にそろえる（画面より少しはみ出し、半端なマスを作らない）
-  const H = Math.max(3, Math.ceil((vh + 1) / cell)) * cell;
+  const H0 = Math.max(3, Math.ceil((vh + 1) / cell)) * cell;
+  // 試作（?row）: 写真の最後の段をグラデーションで暗くし、その下に1段あけて説明を置く
+  const H = ROW_TRIAL ? H0 + cell : H0;
   cv.style.setProperty("--cover-h", H + "px");
+  cv.style.setProperty("--photo-h", H0 + "px");
+  cv.style.setProperty("--cell", cell + "px");
+  cv.classList.toggle("rowtrial", ROW_TRIAL);
+  if (ROW_TRIAL) renderCoverRow(xs, cell, W, H0);
   // ロゴは線の交点ではなく、真ん中あたりのマスの中央に置く
   const c = Math.ceil(cols / 2) - 1, r = Math.ceil(rows / 2) - 1;
   board = { xs, cell, vh, W, c, r };
@@ -2068,7 +2099,7 @@ function layoutBoard() {
   let html = xs.map(x => `<i class="v" style="left:${x.toFixed(2)}px"></i>`).join("");
   // 左下の写真名は線にかからないよう、マスの中に収める
   const lastLine = Math.floor((vh + 1) / cell) * cell - 1, gap = vh - lastLine;
-  cv.style.setProperty("--capb", (H - vh) + (gap >= 84 ? 14 : gap + 14) + "px");
+  cv.style.setProperty("--capb", (H0 - vh) + (ROW_TRIAL ? cell : 0) + (gap >= 84 ? 14 : gap + 14) + "px");
   for (let j = 1; j <= Math.round(H / cell); j++) html += `<i class="h" style="top:${(j * cell - 1).toFixed(2)}px"></i>`;
   $("#lines").innerHTML = html;
 }
