@@ -2050,7 +2050,8 @@ function mosaicRun(ready, done) {
 
 // 表紙の線を一覧のマス目と同じ位置に引く
 let coverW = 0, coverVH = 0, board = null;
-const ROW_TRIAL = /[?&]row\b/.test(location.search);
+// 表紙の下に訪問数の行を一段はさむ（2026-10-31 ?row 試作から本番へ）
+const ROW_TRIAL = true;
 function renderCoverRow(xs, cell, W, top) {
   let row = document.getElementById("coverRow");
   if (!row) { row = document.createElement("div"); row.id = "coverRow"; row.className = "cover-row"; $("#lines").before(row); const f = document.createElement("div"); f.className = "cover-fade"; $("#slides").after(f); }
