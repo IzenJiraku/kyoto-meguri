@@ -696,8 +696,11 @@ body, button, input, textarea, select { font-family: var(--f-body); }
 .cover-row .cr-count b { font-size: clamp(26px, 7.5vw, 40px); white-space: nowrap; }
 .cover-row .cr-count b span { font-family: var(--f-disp, serif); font-size: .5em; letter-spacing: .04em; color: #A6A6A2; }
 .cover-row .cr-count small { margin-top: 0; }
-#cover.open .cover-cap.cyc { transition: opacity .8s; }
-#cover.open .cover-cap.hide { opacity: 0; transition: opacity .5s; }
+.cover-cap .cc { display: block; transition: opacity 1.6s ease-in-out .5s; }
+.cover-cap .cc.pre { opacity: 0; transition: none; }
+.cover-cap .cc.out { position: absolute; left: 0; bottom: 8px; white-space: nowrap; opacity: 0; transition: opacity 1.6s ease-in-out; }
+.cover-cap::after, .cover-cap:has(.d)::after { content: none; }
+.cover-cap .cc:not(:has(.d))::after { content: " →"; font-family: var(--f-mono); opacity: .7; }
 </style>
 
 </head>
@@ -2125,7 +2128,7 @@ function coverPhotos() {
   const done = withPhoto.filter(s => isDone(s.id));
   return (done.length ? done : withPhoto).map(s => ({ s, url: photoOf(s).url, date: "" }));
 }
-let coverPool = [], coverUrl = "", capTimer = null;
+let coverPool = [], coverUrl = "";
 function renderCover() {
   const pool = coverPhotos();
   const box = $("#slides"), cap = $("#coverCap");
@@ -2147,16 +2150,20 @@ function renderCover() {
     const swap = () => {
       if (swapped) return; swapped = true;
       next.classList.add("on"); imgs[front].classList.remove("on"); front = 1 - front;
-      const label = () => {
-        cap.dataset.id = p.s.id;
-        cap.setAttribute("aria-label", shortName(p.s) + "の詳細");
-        cap.innerHTML = `${esc(shortName(p.s))}${p.date ? `<span class="d">${esc(p.date.replace(/-/g, "."))}</span>` : ""}`;
-      };
-      // 2枚目からは、前の名前を消して写真が半分ほど替わったところで出す
-      clearTimeout(capTimer);
-      if (!cap.innerHTML) { label(); return; }
-      cap.classList.add("cyc", "hide");
-      capTimer = setTimeout(() => { label(); cap.classList.remove("hide"); }, 1400);
+      cap.dataset.id = p.s.id;
+      cap.setAttribute("aria-label", shortName(p.s) + "の詳細");
+      // 名前も写真と一緒に、前の名前から重ねて溶け替わる（消えている時間をつくらない）
+      const html = `${esc(shortName(p.s))}${p.date ? `<span class="d">${esc(p.date.replace(/-/g, "."))}</span>` : ""}`;
+      const old = cap.querySelector(".cc");
+      if (!old) { cap.innerHTML = `<span class="cc">${html}</span>`; return; }
+      cap.querySelectorAll(".cc.out").forEach(e => e.remove());
+      old.classList.add("out");
+      const nu = document.createElement("span");
+      nu.className = "cc pre"; nu.innerHTML = html;
+      cap.appendChild(nu);
+      nu.offsetWidth;
+      nu.classList.remove("pre");
+      setTimeout(() => old.remove(), 2600);
     };
     next.onload = swap; next.onerror = () => { if (coverPool.length > 1) show(); };
     next.src = p.url;
