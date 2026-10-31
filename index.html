@@ -2048,7 +2048,12 @@ function layoutBoard() {
   }
   // 表紙は画面ぴったり（下の一覧は覗かせない）。線は画面の下端まで引く
   // スマホのアドレスバーが出入りしても高さは変えない（幅が変わったときだけ測り直す）
-  if (W !== coverW) { coverW = W; coverVH = window.innerHeight; }
+  // 起動直後は画面の高さが小さく測れることがある（スプラッシュやアドレスバー）。
+  // 100lvh（いちばん広いときの画面の高さ）も測り、高くなったら追いかける。縮むのは幅が変わったときだけ
+  const probe = document.getElementById("vhProbe") || Object.assign(document.body.appendChild(document.createElement("div")), { id: "vhProbe" });
+  probe.style.cssText = "position:fixed;left:-9px;top:0;width:1px;height:100vh;height:100lvh;visibility:hidden;pointer-events:none";
+  const tall = Math.max(window.innerHeight, probe.offsetHeight || 0);
+  if (W !== coverW) { coverW = W; coverVH = tall; } else if (tall > coverVH) coverVH = tall;
   const vh = coverVH;
   const rows = Math.max(3, Math.floor(vh / cell));
   // 表紙の下端はマスの線にそろえる（画面より少しはみ出し、半端なマスを作らない）
