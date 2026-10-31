@@ -2128,7 +2128,7 @@ function coverPhotos() {
   const done = withPhoto.filter(s => isDone(s.id));
   return (done.length ? done : withPhoto).map(s => ({ s, url: photoOf(s).url, date: "" }));
 }
-let coverPool = [], coverUrl = "";
+let coverPool = [], coverUrl = "", coverGen = 0;
 function renderCover() {
   const pool = coverPhotos();
   const box = $("#slides"), cap = $("#coverCap");
@@ -2137,6 +2137,7 @@ function renderCover() {
   coverPool = pool;
   if (slideTimer && pool.length && !(coverUrl.startsWith("blob:") && !pool.some(p => p.url === coverUrl))) return;
   clearInterval(slideTimer); slideTimer = null;
+  const gen = ++coverGen;
   if (!pool.length) { box.innerHTML = ""; cap.textContent = ""; return; }
   box.innerHTML = `<img alt=""><img alt="">`;
   const imgs = box.querySelectorAll("img");
@@ -2148,13 +2149,15 @@ function renderCover() {
     coverUrl = p.url;
     let swapped = false;
     const swap = () => {
-      if (swapped) return; swapped = true;
+      // 表紙を作り直した後に、前の回の写真の読み込みが遅れて届いても無視する
+      if (swapped || gen !== coverGen) return; swapped = true;
       next.classList.add("on"); imgs[front].classList.remove("on"); front = 1 - front;
       cap.dataset.id = p.s.id;
       cap.setAttribute("aria-label", shortName(p.s) + "の詳細");
       // 名前も写真と一緒に、前の名前から重ねて溶け替わる（消えている時間をつくらない）
       const html = `${esc(shortName(p.s))}${p.date ? `<span class="d">${esc(p.date.replace(/-/g, "."))}</span>` : ""}`;
-      const old = cap.querySelector(".cc");
+      // 切り替えが続けて来ても、いま見えている名前だけを消す側にする
+      const old = cap.querySelector(".cc:not(.out)");
       if (!old) { cap.innerHTML = `<span class="cc">${html}</span>`; return; }
       cap.querySelectorAll(".cc.out").forEach(e => e.remove());
       old.classList.add("out");
