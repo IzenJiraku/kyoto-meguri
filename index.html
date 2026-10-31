@@ -744,6 +744,16 @@ body.view-open, body.menu-open { scroll-snap-type: none; }
 body.menu-open .pin .nm { opacity: 0 !important; transition: opacity .2s; }
 /* 10 カレンダーの空きマスも同じ黒 */
 .day.void { background: #0D0D0D; }
+/* MENU は文字の幅に合わせて細く（2026-10-31） */
+#menu { width: min(100vw - 56px, 300px) !important; }
+.menu-inner { padding-right: 28px !important; }
+/* MAP はエリア地図と同じ下地で全面に */
+.vmap { position: absolute; inset: 0; border-top: 0; display: flex; flex-direction: column; }
+.vmap .amap-canvas { flex: 1; height: auto; min-height: 0; }
+.vmap .amap-credit { position: absolute; left: 0; bottom: calc(8px + env(safe-area-inset-bottom, 0px)); z-index: 500; padding: 0 12px; }
+.vmap::after { content: none; }
+.vbody .vnote { position: absolute; z-index: 600; left: 12px; right: 12px; top: 12px; padding: 8px 12px; background: rgba(13, 13, 13, .85); font-size: 11px; color: var(--muted); }
+body.menu-open .cover-cap { opacity: 0 !important; }
 </style>
 
 </head>
@@ -1758,7 +1768,6 @@ function openSheet(id) {
         ${s.tips && s.tips.length ? `<div class="mame"><h3>豆知識</h3><ul>${s.tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>` : ""}
         ${s.note ? `<div class="note">${esc(s.note)}</div>` : ""}
         ${s.fest ? `<div class="fine">京都モダン建築祭2026（10/31〜11/8）の公開・特典の対象です。普段は入れない所が公開されることも。<a href="https://kyoto.kenchikusai.jp/program/" target="_blank" rel="noopener">プログラムを見る ↗</a></div>` : ""}
-        ${nearbyHtml(s)}
         <div class="actions">
           <a class="btn" href="${map}" target="_blank" rel="noopener">地図 ↗</a>
           ${assets ? `<label class="btn" for="up-${esc(s.id)}">写真を追加</label><input type="file" id="up-${esc(s.id)}" accept="image/*" multiple data-act="upload" hidden>` : ""}
@@ -1772,6 +1781,7 @@ function openSheet(id) {
           <label for="m-${esc(s.id)}">メモ<textarea id="m-${esc(s.id)}" data-act="memo" placeholder="頼んだもの、印象に残ったところなど">${esc(v.memo || "")}</textarea></label>
         </div>
         ${gallery.map(g => g.credit ? `<div class="credit">写真: ${esc(g.credit)} · <a href="${esc(g.src)}" target="_blank" rel="noopener">Wikimedia Commons</a></div>` : "").join("")}
+        ${nearbyHtml(s)}
       </div>
     </div>
   </div>`;
@@ -2257,7 +2267,8 @@ const BR_ICON = {
   cal: '<rect x="4" y="5.5" width="16" height="14.5"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/>',
   write: '<path d="M15.5 4.5l4 4L9 19H5v-4z M13 7l4 4"/>',
 };
-function brIcon(k) { return BR_ICON[k] ? `<svg class="bi" viewBox="0 0 24 24" aria-hidden="true">${BR_ICON[k]}</svg>` : ""; }
+// 見出し横のアイコンはいったん外す（BR_ICON は残しておく）
+function brIcon(k) { return ""; }
 let openBranch = null;
 // 並び順はメニューから出して、ヘッダーの小さなボタンで切り替える
 const SORTS = [["area", "エリア順", "AREA"], ["near", "近い順", "NEAR"], ["year", "古い順", "OLD"], ["yeardesc", "新しい順", "NEW"], ["name", "名前順", "NAME"], ["todo", "まだを先に", "TODO"]];
@@ -2360,7 +2371,7 @@ function openView(k) {
 function closeView() { viewKind = null; $("#view").hidden = true; document.body.classList.remove("view-open"); }
 $("#viewClose").addEventListener("click", closeView);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && viewKind && !$("#sheetRoot").innerHTML) closeView(); });
-window.addEventListener("resize", () => { if (viewKind === "map") renderMap(); });
+window.addEventListener("resize", () => { if (viewKind === "map" && vmap) vmap.invalidateSize(); });
 function visitedSpots() { return allSpots().filter(s => isDone(s.id)); }
 function tileUrl(s) { const p = photoOf(s); return p ? (p.thumb || p.url) : ""; }
 
@@ -2388,6 +2399,7 @@ const STREETS_NS = [["NISHIOJI", 135.7323], ["SENBON", 135.7417], ["HORIKAWA", 1
 const KAMO = [[35.0620, 135.7590], [35.0480, 135.7570], [35.0390, 135.7620], [35.0305, 135.7722], [35.0175, 135.7718], [35.0037, 135.7717], [34.9960, 135.7703], [34.9880, 135.7697], [34.9780, 135.7650], [34.9620, 135.7560]];
 const TAKANO = [[35.0305, 135.7722], [35.0420, 135.7800], [35.0560, 135.7880]];
 const GRID_BOX = { n: 35.0440, s: 34.9800, w: 135.7323, e: 135.7790 };
+let vmap = null;
 function renderMap() {
   $("#viewTitle").textContent = "MAP";
   $("#viewNav").innerHTML = `<button type="button" class="seg" data-zoom="city" aria-pressed="${!mapAll}">CITY</button><button type="button" class="seg" data-zoom="all" aria-pressed="${mapAll}">ALL</button>`;
@@ -2395,31 +2407,28 @@ function renderMap() {
   const spots = visitedSpots();
   spots.filter(s => !coordOf(s)).forEach(geocode);
   const pins = spots.map(s => ({ s, c: coordOf(s) })).filter(x => x.c);
-  // CITY は碁盤の目と東山・岡崎あたりまで、ALL は行った所すべてが入る広さ
-  let n = GRID_BOX.n + .004, so = GRID_BOX.s - .003, w = GRID_BOX.w, e = GRID_BOX.e + .014;
-  // CITY でも碁盤の近く（洛中のすぐ外）の石は入るように広げる。ALL はすべて
-  const nearGrid = c => c[0] < GRID_BOX.n + .02 && c[0] > GRID_BOX.s - .02 && c[1] > GRID_BOX.w - .03 && c[1] < GRID_BOX.e + .03;
-  pins.filter(({ c }) => mapAll || nearGrid(c)).forEach(({ c }) => { n = Math.max(n, c[0] + .002); so = Math.min(so, c[0] - .002); w = Math.min(w, c[1] - .002); e = Math.max(e, c[1] + .002); });
-  const kx = Math.cos(35 * Math.PI / 180);
-  const W = box.clientWidth, H = Math.max(240, box.clientHeight), pl = 76, pr = 24, pt = 28, pb = 84;
-  const sc = Math.min((W - pl - pr) / ((e - w) * kx), (H - pt - pb) / (n - so));
-  const ox = pl + (W - pl - pr - (e - w) * kx * sc) / 2, oy = pt + (H - pt - pb - (n - so) * sc) / 2;
-  const X = lng => ox + (lng - w) * kx * sc, Y = lat => oy + (n - lat) * sc;
-  // 見えている石がすべて通りの格子の内側に来るように、格子を広げる
-  const inView = pins.filter(({ c }) => c[0] <= n && c[0] >= so && c[1] >= w && c[1] <= e);
-  const B = { n: Math.max(GRID_BOX.n, ...inView.map(p => p.c[0] + .002)), s: Math.min(GRID_BOX.s, ...inView.map(p => p.c[0] - .002)),
-    w: Math.min(GRID_BOX.w, ...inView.map(p => p.c[1] - .002)), e: Math.max(GRID_BOX.e, ...inView.map(p => p.c[1] + .002)) };
-  const line = (x1, y1, x2, y2, c) => `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"${c ? ` class="${c}"` : ""}/>`;
-  let g = "";
-  STREETS_EW.forEach(([nm, lat]) => { g += line(X(B.w), Y(lat), X(B.e), Y(lat)) + `<text x="${(X(B.w) - 6).toFixed(1)}" y="${(Y(lat) + 3).toFixed(1)}" text-anchor="end">${nm}</text>`; });
-  STREETS_NS.forEach(([nm, lng]) => { g += line(X(lng), Y(B.n), X(lng), Y(B.s)) + `<text x="${(X(lng) + 3).toFixed(1)}" y="${(Y(B.s) + 6).toFixed(1)}" text-anchor="end" transform="rotate(-90 ${(X(lng) + 3).toFixed(1)} ${(Y(B.s) + 6).toFixed(1)})">${nm}</text>`; });
-  const river = pts => `<polyline class="river" points="${pts.map(([la, lo]) => X(lo).toFixed(1) + "," + Y(la).toFixed(1)).join(" ")}"/>`;
-  g += river(KAMO) + river(TAKANO);
-  const stones = pins.map(({ s, c }) => `<g class="stone" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(shortName(s))}"><circle cx="${X(c[1]).toFixed(1)}" cy="${Y(c[0]).toFixed(1)}" r="14" class="hit"/><circle cx="${X(c[1]).toFixed(1)}" cy="${Y(c[0]).toFixed(1)}" r="5"/><title>${esc(shortName(s))}</title></g>`).join("");
   const missing = spots.length - pins.length;
-  box.innerHTML = `<svg class="map" overflow="hidden" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${g}${stones}</svg>
-    <div class="vnote">${spots.length ? (missing ? `位置が分からない所が${missing}件あります` : "") : "行った所に印をつけると、ここに石が置かれます"}</div>
-    <div class="maplabel" id="mapLabel" hidden></div>`;
+  const note = spots.length ? (missing ? `位置が分からない所が${missing}件あります` : "") : "行った所に印をつけると、ここに石が置かれます";
+  if (vmap) { vmap.remove(); vmap = null; }
+  if (!window.L) { box.innerHTML = `<div class="vnote">${note || "地図を読み込めませんでした"}</div>`; return; }
+  // エリア地図と同じ下地に、行った所の石を置く
+  box.innerHTML = `<div class="amap vmap" id="vmapBox"><div class="amap-canvas" id="vmapCanvas"></div><div class="amap-credit">地図: Esri, HERE, Garmin, © OpenStreetMap contributors</div></div>${note ? `<div class="vnote">${note}</div>` : ""}`;
+  const vb = $("#vmapBox");
+  vmap = L.map("vmapCanvas", { zoomControl: false, attributionControl: false, minZoom: 9, maxZoom: 18 });
+  addBaseTiles(vmap, vb);
+  L.control.zoom({ position: "bottomright" }).addTo(vmap);
+  pins.forEach(({ s, c }) => {
+    L.circleMarker(c, { radius: 7, weight: 2, color: "#0D0D0D", fillColor: "#FFFFFF", fillOpacity: 1 })
+      .bindTooltip(esc(shortName(s)), { permanent: true, direction: "right", offset: [6, 0], className: "amap-name" })
+      .on("click", () => openSheet(s.id))
+      .addTo(vmap);
+  });
+  // 名前は寄ったときだけ
+  vmap.on("zoomend", () => vb.classList.toggle("far", vmap.getZoom() < 15));
+  // CITY は碁盤の目、ALL は行った所すべて
+  const b = mapAll && pins.length ? L.latLngBounds(pins.map(p => p.c)).pad(.08) : L.latLngBounds([GRID_BOX.s, GRID_BOX.w], [GRID_BOX.n, GRID_BOX.e]);
+  vmap.fitBounds(b, { maxZoom: 16 });
+  vb.classList.toggle("far", vmap.getZoom() < 15);
 }
 $("#viewBody").addEventListener("click", e => {
   const st = e.target.closest(".stone");
@@ -2477,6 +2486,21 @@ $("#viewNav").addEventListener("click", e => {
 
 /* ---- エリアの地図: 一覧の下に、道や駅名の入った地図とスポット ---- */
 // 地図は Esri の濃いグレーの地図（文字なし）に、地名の文字を薄く重ねる。読めないときは国土地理院の淡色地図を反転して使う。スポットは今の絞り込み（エリア以外）に合う所を全部出す
+// 地図の下地: Esri の濃いグレー（文字は薄く重ねる）。読めないときは国土地理院の淡色を反転
+function addBaseTiles(m, box) {
+  const ESRI = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/";
+  const base = L.tileLayer(ESRI + "World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", { maxZoom: 18, maxNativeZoom: 16 }).addTo(m);
+  m.createPane("basemapLabels").style.zIndex = 350;
+  const labels = L.tileLayer(ESRI + "World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", { maxZoom: 18, maxNativeZoom: 16, pane: "basemapLabels", opacity: .55 }).addTo(m);
+  let errs = 0;
+  base.on("tileerror", () => {
+    if (++errs !== 3) return;
+    m.removeLayer(base); m.removeLayer(labels);
+    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", { maxZoom: 18, maxNativeZoom: 18 }).addTo(m);
+    box.classList.add("gsi");
+    const cr = box.querySelector(".amap-credit"); if (cr) cr.innerHTML = `地図: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a>`;
+  });
+}
 let amap = null, amapLayer = null, amapArea = null;
 function renderAreaMap(list) {
   const box = $("#areaMap");
@@ -2495,18 +2519,7 @@ function renderAreaMap(list) {
         box.classList.add("hint"); clearTimeout(hintT); hintT = setTimeout(() => box.classList.remove("hint"), 1200);
       }, { passive: true });
     }
-    const ESRI = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/";
-    const base = L.tileLayer(ESRI + "World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", { maxZoom: 18, maxNativeZoom: 16 }).addTo(amap);
-    amap.createPane("basemapLabels").style.zIndex = 350;
-    const labels = L.tileLayer(ESRI + "World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", { maxZoom: 18, maxNativeZoom: 16, pane: "basemapLabels", opacity: .55 }).addTo(amap);
-    let errs = 0;
-    base.on("tileerror", () => {
-      if (++errs !== 3) return;
-      amap.removeLayer(base); amap.removeLayer(labels);
-      L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", { maxZoom: 18, maxNativeZoom: 18 }).addTo(amap);
-      box.classList.add("gsi");
-      const cr = box.querySelector(".amap-credit"); if (cr) cr.innerHTML = `地図: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a>`;
-    });
+    addBaseTiles(amap, box);
     L.control.zoom({ position: "bottomright" }).addTo(amap);
     amapLayer = L.layerGroup().addTo(amap);
     // そのエリアの名前はいつも、ほかの名前は寄ったときだけ
