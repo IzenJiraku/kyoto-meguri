@@ -691,6 +691,11 @@ body, button, input, textarea, select { font-family: var(--f-body); }
 .cr-count span { font-family: var(--f-mono); font-size: 10px; letter-spacing: .14em; color: #A6A6A2; }
 .cr-count small { font-family: var(--f-mono); font-size: 8px; letter-spacing: .26em; color: #8C8C88; margin-top: 4px; }
 #cover:not(.rowtrial) .cover-row, #cover:not(.rowtrial) .cover-fade { display: none; }
+
+.cover-row .cr-count { align-items: center; justify-content: center; text-align: center; gap: 8px; }
+.cover-row .cr-count b { font-size: clamp(26px, 7.5vw, 40px); white-space: nowrap; }
+.cover-row .cr-count b span { font-family: var(--f-disp, serif); font-size: .5em; letter-spacing: .04em; color: #A6A6A2; }
+.cover-row .cr-count small { margin-top: 0; }
 </style>
 
 </head>
@@ -2053,9 +2058,9 @@ function renderCoverRow(xs, cell, W, top) {
   const at = (i, span = 1) => `left:${lefts[i]}px;width:${rights[Math.min(i + span - 1, rights.length - 1)] - lefts[i]}px`;
   const n = lefts.length, spots = allSpots(), done = spots.filter(s => isDone(s.id)).length;
   row.style.cssText = `top:${top}px;height:${cell - 1}px`;
-  row.innerHTML = `<div class="cr-cell cr-tag" style="${at(0)}"><p>碁盤の目を<br>歩いて、上ル。</p></div>
-    <div class="cr-cell cr-desc" style="${at(1)}"><p>京都の建築・寺社・喫茶・本屋。歩いて、行った所に石を置いていく帖。</p></div>
-    <div class="cr-cell cr-count" style="${at(n - 1)}"><b>${String(done).padStart(3, "0")}</b><span>/ ${String(spots.length).padStart(3, "0")}</span><small>VISITED</small></div>`;
+  // 説明はやめて、ロゴと同じ真ん中の列に訪問数だけ
+  const mid = Math.ceil(n / 2) - 1;
+  row.innerHTML = `<div class="cr-cell cr-count" style="${at(mid)}"><b>${done}<span> / ${spots.length}</span></b><small>VISITED</small></div>`;
 }
 function layoutBoard() {
   const cv = $("#cover"), grid = $("#grid");
