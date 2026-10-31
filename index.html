@@ -696,6 +696,8 @@ body, button, input, textarea, select { font-family: var(--f-body); }
 .cover-row .cr-count b { font-size: clamp(26px, 7.5vw, 40px); white-space: nowrap; }
 .cover-row .cr-count b span { font-family: var(--f-disp, serif); font-size: .5em; letter-spacing: .04em; color: #A6A6A2; }
 .cover-row .cr-count small { margin-top: 0; }
+#cover.open .cover-cap.cyc { transition: opacity .8s; }
+#cover.open .cover-cap.hide { opacity: 0; transition: opacity .5s; }
 </style>
 
 </head>
@@ -2123,7 +2125,7 @@ function coverPhotos() {
   const done = withPhoto.filter(s => isDone(s.id));
   return (done.length ? done : withPhoto).map(s => ({ s, url: photoOf(s).url, date: "" }));
 }
-let coverPool = [], coverUrl = "";
+let coverPool = [], coverUrl = "", capTimer = null;
 function renderCover() {
   const pool = coverPhotos();
   const box = $("#slides"), cap = $("#coverCap");
@@ -2145,9 +2147,16 @@ function renderCover() {
     const swap = () => {
       if (swapped) return; swapped = true;
       next.classList.add("on"); imgs[front].classList.remove("on"); front = 1 - front;
-      cap.dataset.id = p.s.id;
-      cap.setAttribute("aria-label", shortName(p.s) + "の詳細");
-      cap.innerHTML = `${esc(shortName(p.s))}${p.date ? `<span class="d">${esc(p.date.replace(/-/g, "."))}</span>` : ""}`;
+      const label = () => {
+        cap.dataset.id = p.s.id;
+        cap.setAttribute("aria-label", shortName(p.s) + "の詳細");
+        cap.innerHTML = `${esc(shortName(p.s))}${p.date ? `<span class="d">${esc(p.date.replace(/-/g, "."))}</span>` : ""}`;
+      };
+      // 2枚目からは、前の名前を消して写真が半分ほど替わったところで出す
+      clearTimeout(capTimer);
+      if (!cap.innerHTML) { label(); return; }
+      cap.classList.add("cyc", "hide");
+      capTimer = setTimeout(() => { label(); cap.classList.remove("hide"); }, 1400);
     };
     next.onload = swap; next.onerror = () => { if (coverPool.length > 1) show(); };
     next.src = p.url;
@@ -2155,7 +2164,7 @@ function renderCover() {
   };
   show();
   // 1枚をしばらく見せてから、ゆっくり次へ
-  slideTimer = setInterval(() => { if (coverPool.length > 1) show(); }, 14000);
+  slideTimer = setInterval(() => { if (coverPool.length > 1) show(); }, 9000);
 }
 // 表紙を過ぎたらヘッダーを黒くしてロゴを出す
 // 表紙の左下の名前から、その場所の詳細へ
