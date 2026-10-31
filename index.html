@@ -758,6 +758,39 @@ body.menu-open .cover-cap { opacity: 0 !important; }
 /* 書体は2つ（和文 Zen Antique・英数 DM Serif Display）、文字は 10 / 13 / 20px の3段（2026-10-31） */
 :root:root:root { --f-mono: "DM Serif Display", "Zen Antique", serif; --f-body: "Zen Antique", "Hiragino Mincho ProN", "Yu Mincho", serif; --f-disp: "DM Serif Display", "Zen Antique", serif; }
 body, input, textarea, select, button { font-family: var(--f-body); }
+
+/* 試作 ?sheet: 詳細を碁盤で組む */
+.gsheet .hero { aspect-ratio: 3 / 2; border-bottom: 1px solid var(--lc); }
+.gsheet .body { padding: 0 !important; display: block; }
+.g { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--lc); border-bottom: 1px solid var(--lc); }
+.g > * { background: #0D0D0D; margin: 0; min-width: 0; }
+.g .band { grid-column: 1 / -1; padding: 22px 16px; display: grid; gap: 10px; }
+.g .band > * { border-top: 0 !important; padding-top: 0 !important; margin: 0; }
+.g .band.title { padding-block: 26px 22px; gap: 8px; }
+.g .band.title .where { font-size: 10px; letter-spacing: .1em; color: var(--muted); }
+.g .band.head { padding-block: 22px 12px; }
+.g .band.credit-band { padding-block: 14px; }
+.g .cell { position: relative; aspect-ratio: 1 / 1; padding: 12px; overflow: hidden; }
+.g .cell .k { position: absolute; left: 12px; bottom: 10px; font-size: 10px; letter-spacing: .12em; color: var(--muted); }
+.g .cell .big { display: block; font-family: var(--f-disp); font-size: clamp(30px, 9vw, 44px); line-height: 1; letter-spacing: .02em; }
+.g .cell .sub { display: block; margin-top: 8px; font-size: 10px; color: var(--muted); letter-spacing: .06em; }
+.g .cell .v { font-size: 13px; line-height: 1.6; }
+.g .cell .v .facet { text-align: left; }
+.g .cell.void { pointer-events: none; }
+.g .pin { aspect-ratio: 1 / 1; }
+/* 印: マスの十字の交点に石 */
+.g .marks.row3 { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--lc); padding: 0; border: 0; }
+.g .marks.row3::before { content: none; }
+.g .marks.row3 button { aspect-ratio: 1 / 1; background: #0D0D0D !important; padding: 0; display: block; }
+.g .marks.row3 button::before { content: ""; position: absolute; inset: 50% 0 auto; height: 1px; width: auto; top: 50%; left: 0; right: 0; background: rgba(255, 255, 255, .18); }
+.g .marks.row3 button::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(255, 255, 255, .18); }
+.g .marks.row3 button i { position: absolute; left: 50%; top: 50%; margin: 0; width: 26px; height: 26px; translate: -50% -50%; z-index: 1; border: 1px solid rgba(255, 255, 255, .5); background: #0D0D0D; transform: scale(.45); }
+.g .marks.row3 button[aria-pressed="true"] i { background: #EDEDEA; border-color: #EDEDEA; transform: none; box-shadow: none; }
+.g .marks.row3 button b { position: absolute; left: 12px; bottom: 10px; padding: 0; }
+.g .marks.row3 button .agaru { left: 50%; top: calc(50% - 40px); }
+.g .cell .facet { all: unset; cursor: pointer; border-bottom: 1px solid rgba(255, 255, 255, .35); }
+.g .cell .facet:hover, .g .cell .facet:focus-visible { border-bottom-color: #fff; color: #fff; }
+.g .band:has(> :empty:only-child) { display: none; }
 </style>
 
 </head>
@@ -1789,7 +1822,57 @@ function openSheet(id) {
       </div>
     </div>
   </div>`;
+  if (SHEET_TRIAL) gridSheet(s);
   setupHero(id);
+}
+// 試作 ?sheet: 詳細も一覧と同じ正方形のマスに割り付ける
+const SHEET_TRIAL = /[?&]sheet\b/.test(location.search);
+function gridSheet(s) {
+  const sheet = $("#sheetRoot .sheet"), body = sheet && sheet.querySelector(".body"); if (!body) return;
+  sheet.classList.add("gsheet");
+  const g = document.createElement("div"); g.className = "g";
+  const band = (els, cls = "") => { const d = document.createElement("div"); d.className = "band " + cls; els.filter(Boolean).forEach(e => d.appendChild(e)); if (d.childNodes.length) g.appendChild(d); return d; };
+  const cell = (html, cls = "") => { const d = document.createElement("div"); d.className = "cell " + cls; d.innerHTML = html; g.appendChild(d); return d; };
+  // 名前の帯: 種類・名前・エリアと住所
+  const dl = body.querySelector(".facts"), pairs = [];
+  if (dl) dl.querySelectorAll("dt").forEach(dt => pairs.push([dt.textContent, dt.nextElementSibling]));
+  const take = k => { const i = pairs.findIndex(p => p[0] === k); return i < 0 ? null : pairs.splice(i, 1)[0][1]; };
+  const area = take("エリア"), addr = take("住所");
+  const where = document.createElement("div"); where.className = "where";
+  where.textContent = [area && area.textContent, addr && addr.textContent].filter(Boolean).join("　");
+  band([body.querySelector(".kind"), body.querySelector("h2"), where], "title");
+  // 印は3マス。マスの真ん中の交点に石を置く
+  const marks = body.querySelector(".marks"); if (marks) { marks.classList.add("row3"); g.appendChild(marks); }
+  // 年・様式・設計は1マスずつ。年は数字を大きく
+  const cells = pairs.map(([k, dd]) => {
+    const yr = /竣工|創業|年代|時期/.test(k) && s.year && s.year !== 9999 && !s.era;
+    return yr ? cell(`<span class="big">${s.year}</span><span class="sub">${esc(dd.textContent.replace(/^\d+年\s*/, ""))}</span><span class="k">${esc(k)}</span>`, "fact")
+      : cell(`<div class="v">${dd.innerHTML}</div><span class="k">${esc(k)}</span>`, "fact");
+  });
+  for (let i = cells.length % 3 ? 3 - cells.length % 3 : 0; i > 0; i--) cell("", "void");
+  if (dl) dl.remove();
+  // 説明・リンク・豆知識・注記は横に通した帯
+  const near = body.querySelector(".mame.near");
+  [...body.children].forEach(el => {
+    if (el === near || el.classList.contains("close")) return;
+    if (el.classList.contains("credit")) return;
+    band([el]);
+  });
+  // 近くにあるものは一覧と同じ写真のマスで
+  if (near) {
+    band([near.querySelector("h3")], "head");
+    near.querySelectorAll("[data-near]").forEach(b => {
+      const x = findSpot(b.dataset.near); if (!x) return;
+      const t = document.createElement("div"); t.innerHTML = pin(x).trim();
+      const el = t.firstElementChild; el.removeAttribute("data-id"); el.dataset.near = x.id;
+      const nk = b.querySelector(".nk"); if (nk) { const w = document.createElement("em"); w.className = "walk"; w.textContent = nk.textContent.split("·").pop().trim(); el.querySelector(".nm").appendChild(w); }
+      g.appendChild(el);
+    });
+    const n = near.querySelectorAll("[data-near]").length; for (let i = n % 3 ? 3 - n % 3 : 0; i > 0; i--) cell("", "void");
+    near.remove();
+  }
+  body.querySelectorAll(".credit").forEach(c => band([c], "credit-band"));
+  body.prepend(g);
 }
 // 写真のスライド: いま見ている1枚に合わせて「外す」「マスに使う」を出し分ける
 function setupHero(id) {
