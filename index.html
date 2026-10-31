@@ -28,7 +28,7 @@ body { padding-top: 0; }
 
 #cover { position: relative; height: 100svh; min-height: 480px; margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); margin-top: calc(-20px - env(safe-area-inset-top, 0px)); background: #111; color: #fff; overflow: hidden; display: grid; place-items: center; }
 .slides { position: absolute; inset: 0; }
-.slides img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.6s ease; }
+.slides img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 2.8s ease-in-out; }
 .slides img.on { opacity: 1; }
 .slides::after { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, .28); }
 .cover-logo { position: relative; z-index: 1; }
@@ -2123,18 +2123,24 @@ function coverPhotos() {
   const done = withPhoto.filter(s => isDone(s.id));
   return (done.length ? done : withPhoto).map(s => ({ s, url: photoOf(s).url, date: "" }));
 }
+let coverPool = [], coverUrl = "";
 function renderCover() {
   const pool = coverPhotos();
   const box = $("#slides"), cap = $("#coverCap");
-  clearInterval(slideTimer);
+  // 同期などで呼び直されても、いま出ている写真はそのまま。新しい候補は次の切り替えから使う
+  // （消した自分の写真だけは、すぐ差し替える）
+  coverPool = pool;
+  if (slideTimer && pool.length && !(coverUrl.startsWith("blob:") && !pool.some(p => p.url === coverUrl))) return;
+  clearInterval(slideTimer); slideTimer = null;
   if (!pool.length) { box.innerHTML = ""; cap.textContent = ""; return; }
   box.innerHTML = `<img alt=""><img alt="">`;
   const imgs = box.querySelectorAll("img");
   let front = 0, last = -1;
   // 毎回ランダムに1枚選ぶ（直前と同じものは避ける）
-  const pick = () => { let i = Math.floor(Math.random() * pool.length); if (pool.length > 1 && i === last) i = (i + 1) % pool.length; last = i; return pool[i]; };
+  const pick = () => { const pool = coverPool; let i = Math.floor(Math.random() * pool.length); if (pool.length > 1 && i === last) i = (i + 1) % pool.length; last = i; return pool[i]; };
   const show = () => {
     const p = pick(), next = imgs[1 - front];
+    coverUrl = p.url;
     let swapped = false;
     const swap = () => {
       if (swapped) return; swapped = true;
@@ -2143,12 +2149,13 @@ function renderCover() {
       cap.setAttribute("aria-label", shortName(p.s) + "の詳細");
       cap.innerHTML = `${esc(shortName(p.s))}${p.date ? `<span class="d">${esc(p.date.replace(/-/g, "."))}</span>` : ""}`;
     };
-    next.onload = swap; next.onerror = () => { if (pool.length > 1) show(); };
+    next.onload = swap; next.onerror = () => { if (coverPool.length > 1) show(); };
     next.src = p.url;
     if (next.complete && next.naturalWidth) swap();
   };
   show();
-  if (pool.length > 1) slideTimer = setInterval(show, 6000);
+  // 1枚をしばらく見せてから、ゆっくり次へ
+  slideTimer = setInterval(() => { if (coverPool.length > 1) show(); }, 14000);
 }
 // 表紙を過ぎたらヘッダーを黒くしてロゴを出す
 // 表紙の左下の名前から、その場所の詳細へ
