@@ -701,6 +701,49 @@ body, button, input, textarea, select { font-family: var(--f-body); }
 .cover-cap .cc.out { position: absolute; left: 0; bottom: 8px; white-space: nowrap; opacity: 0; transition: opacity 1.6s ease-in-out; }
 .cover-cap::after, .cover-cap:has(.d)::after { content: none; }
 .cover-cap .cc:not(:has(.d))::after { content: " →"; font-family: var(--f-mono); opacity: .7; }
+
+/* ---- スクショ映え（2026-10-31） ---- */
+/* 1 検索の標準の✖は消し、何もないときも碁盤のまま */
+#hdr .search::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
+.pin.void.none { display: grid; place-content: center; justify-items: center; gap: 6px; text-align: center; }
+.pin.void.none span { font-family: var(--f-mono); font-size: 10px; letter-spacing: .28em; color: var(--ink); }
+.pin.void.none small { font-size: 10px; letter-spacing: .1em; color: #6E6E6B; }
+#grid:has(.none) ~ .fine, #grid:has(.none) ~ .actions { display: none; }
+/* 2 追加フォーム: 欄は下線だけ、チェックは碁石、ボタンは四角 */
+.log input:not([type="checkbox"]):focus, .log textarea:focus, .log select:focus { outline: none; border-bottom-color: var(--ink); box-shadow: 0 1px 0 var(--ink); }
+.log select { -webkit-appearance: none; appearance: none; border-radius: 0; padding-right: 20px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4.5L6 8.5L10 4.5' fill='none' stroke='%238C8C88'/%3E%3C/svg%3E") right 2px center / 10px no-repeat; }
+.log select option { background: #0D0D0D; color: var(--ink); }
+.log input[type="checkbox"] { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; margin: 0; border: 1px solid var(--ink); border-radius: 50%; background: transparent; flex: none; }
+.log input[type="checkbox"]:checked { background: var(--ink); }
+.form .actions { gap: 0; margin-top: 8px; }
+.form .actions .btn { display: grid; place-items: center; height: 48px; padding: 0 28px; border: 1px solid transparent; font-family: var(--f-mono); letter-spacing: .2em; }
+.form .actions .btn.primary { border-color: var(--ink); color: var(--ink); }
+/* 3 写真のない詳細: 碁盤の線にロゴ */
+.hero .blank { position: relative; background-image: linear-gradient(var(--lc) 1px, transparent 1px), linear-gradient(90deg, var(--lc) 1px, transparent 1px); background-size: 25% 33.334%; background-position: -1px -1px; }
+.hero .blank::before { content: ""; position: absolute; inset: 0; background: rgba(13, 13, 13, .72); }
+.hero .blank svg { position: relative; width: 64px; overflow: visible; }
+.hero .blank svg path { fill: none; stroke: var(--ink); stroke-width: .6; stroke-linecap: square; }
+/* 4 一覧はマスの行に軽く吸い付く */
+html { scroll-snap-type: y proximity; }
+.pin, #coverRow { scroll-snap-align: start; scroll-margin-top: calc(var(--hh) + env(safe-area-inset-top, 0px)); }
+#cover { scroll-snap-align: start; }
+body.view-open, body.menu-open { scroll-snap-type: none; }
+/* 5 長い名前は「…」にせず2行まで */
+.pin .nm, .pin:not(.has) .nm { white-space: normal !important; text-overflow: clip !important; overflow: hidden; display: -webkit-box !important; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+/* 6 写真のクレジットは本文の最後に小さく */
+.body .credit { position: static; padding: 0; font-size: 10px; line-height: 1.6; color: #6E6E6B; text-shadow: none; }
+.body .credit a { color: inherit; }
+/* 7 閉じるは写真の上、右上に線の×。上の黒い帯はなくす */
+.sheet .close { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 4px); right: max(4px, env(safe-area-inset-right, 0px)); z-index: 3; width: 44px; height: 44px; display: grid; place-items: center; color: #fff; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .6)); }
+.sheet .close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.2; }
+.sheet .body { padding-top: 22px; }
+.sheet:not(:has(.hero)) .body { padding-top: calc(env(safe-area-inset-top, 0px) + 56px); }
+.hero .count { top: auto; bottom: 10px; }
+/* 8 MENUの横に残る一覧は、名前を消して暗く */
+#menuScrim { background: rgba(0, 0, 0, .7); }
+body.menu-open .pin .nm { opacity: 0 !important; transition: opacity .2s; }
+/* 10 カレンダーの空きマスも同じ黒 */
+.day.void { background: #0D0D0D; }
 </style>
 
 </head>
@@ -1662,7 +1705,9 @@ function render() {
   const list = filtered();
   const grid = $("#grid");
   const cols = colCount(), rest = (cols - list.length % cols) % cols;
-  grid.innerHTML = list.length ? list.map(pin).join("") + `<div class="pin void" aria-hidden="true"></div>`.repeat(rest) : `<div class="empty">ここにはまだ何もありません</div>`;
+  // 何もないときも碁盤のまま。真ん中の列の2段目にだけ「なし」
+  const voids = n => `<div class="pin void" aria-hidden="true"></div>`.repeat(n), mid = Math.ceil(cols / 2) - 1;
+  grid.innerHTML = list.length ? list.map(pin).join("") + voids(rest) : voids(cols + mid) + `<div class="pin void none"><span>NO MATCH</span><small>見つかりません</small></div>` + voids(cols * Math.max(4, Math.ceil(innerHeight / Math.max(1, grid.clientWidth / cols)) + 1) - cols - mid - 1);
   // 絞り込み中は表紙を出さず、結果から始める
   const wasF = document.body.classList.contains("filtered"), isF = typeof filtersActive === "function" && filtersActive();
   document.body.classList.toggle("filtered", isF);
@@ -1690,10 +1735,10 @@ function openSheet(id) {
   const yl = s.mine || s.year === 9999 ? (s.year !== 9999 ? `${s.year}年` : "") : s.era ? s.era : s.id === "maeda-meirin" ? `${s.year}年 開設（芸術センター）` : `${s.year}年（${wareki(s.year)}）`;
   $("#sheetRoot").innerHTML = `<div class="scrim" data-act="close">
     <div class="sheet ${s.kind}" role="dialog" aria-modal="true" aria-labelledby="sh-title">
-      <div class="hero">${gallery.length ? `<div class="track" id="heroTrack">${gallery.map(g => `<div class="slide">${`<img src="${esc(g.url)}" alt="${esc(shortName(s))}" loading="lazy">`}${g.credit ? `<div class="credit">写真: ${esc(g.credit)} · <a href="${esc(g.src)}" target="_blank" rel="noopener">Wikimedia Commons</a></div>` : ""}</div>`).join("")}</div>${gallery.length > 1 ? `<div class="count" id="heroCount">1 / ${gallery.length}</div>` : ""}` : `<div class="blank">写真はまだありません</div>`}
+      <div class="hero">${gallery.length ? `<div class="track" id="heroTrack">${gallery.map(g => `<div class="slide">${`<img src="${esc(g.url)}" alt="${esc(shortName(s))}" loading="lazy">`}</div>`).join("")}</div>${gallery.length > 1 ? `<div class="count" id="heroCount">1 / ${gallery.length}</div>` : ""}` : `<div class="blank"><svg class="glogo" viewBox="-0.5 -0.5 24 13" aria-hidden="true"><path d="M5 0V11 M5 5H9 M0 11H10 M15.5 1.5V7.5L13.5 11.5 M19.5 1V11.5L22.5 8.5"/></svg></div>`}
       </div>
       <div class="body">
-        <button type="button" class="close" data-act="close" aria-label="閉じる">×</button>
+        <button type="button" class="close" data-act="close" aria-label="閉じる"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5L15 15 M15 5L5 15"/></svg></button>
         <div class="kind">${esc(KIND[s.kind] || "")}</div>
         <h2 id="sh-title">${esc(s.name)}</h2>
         <div class="marks" role="group" aria-label="印">
@@ -1726,6 +1771,7 @@ function openSheet(id) {
           <label for="d-${esc(s.id)}">訪問日<input type="date" id="d-${esc(s.id)}" data-act="date" value="${esc(v.date || "")}"></label>
           <label for="m-${esc(s.id)}">メモ<textarea id="m-${esc(s.id)}" data-act="memo" placeholder="頼んだもの、印象に残ったところなど">${esc(v.memo || "")}</textarea></label>
         </div>
+        ${gallery.map(g => g.credit ? `<div class="credit">写真: ${esc(g.credit)} · <a href="${esc(g.src)}" target="_blank" rel="noopener">Wikimedia Commons</a></div>` : "").join("")}
       </div>
     </div>
   </div>`;
@@ -1770,7 +1816,7 @@ function openForm(id) {
   $("#sheetRoot").innerHTML = `<div class="scrim" data-act="close">
     <form class="sheet form" id="spotForm" role="dialog" aria-modal="true" aria-labelledby="fm-title" data-id="${esc(id || "")}">
       <div class="body">
-        <button type="button" class="close" data-act="close" aria-label="閉じる">×</button>
+        <button type="button" class="close" data-act="close" aria-label="閉じる"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5L15 15 M15 5L5 15"/></svg></button>
         <h2 id="fm-title">${id ? "スポットを編集" : "行きたいところを追加"}</h2>
         <div class="log">
           <label for="f-name">名前（必須）<input id="f-name" name="name" required value="${esc(c.name || "")}" placeholder="例：喫茶〇〇"></label>
@@ -1948,7 +1994,7 @@ function renderQuiz() {
   $("#sheetRoot").innerHTML = `<div class="scrim" data-act="close">
     <div class="sheet form quiz" role="dialog" aria-modal="true" aria-labelledby="qz-title">
       <div class="body">
-        <button type="button" class="close" data-act="close" aria-label="閉じる">×</button>
+        <button type="button" class="close" data-act="close" aria-label="閉じる"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5L15 15 M15 5L5 15"/></svg></button>
         <h2 id="qz-title">京都検定クイズ</h2>
         <div class="qbar">
           <button type="button" class="pill" data-act="qmode" data-mode="all" aria-pressed="${quiz.mode === "all"}">全問</button>
@@ -2351,16 +2397,22 @@ function renderMap() {
   const pins = spots.map(s => ({ s, c: coordOf(s) })).filter(x => x.c);
   // CITY は碁盤の目と東山・岡崎あたりまで、ALL は行った所すべてが入る広さ
   let n = GRID_BOX.n + .004, so = GRID_BOX.s - .003, w = GRID_BOX.w, e = GRID_BOX.e + .014;
-  if (mapAll) pins.forEach(({ c }) => { n = Math.max(n, c[0]); so = Math.min(so, c[0]); w = Math.min(w, c[1]); e = Math.max(e, c[1]); });
+  // CITY でも碁盤の近く（洛中のすぐ外）の石は入るように広げる。ALL はすべて
+  const nearGrid = c => c[0] < GRID_BOX.n + .02 && c[0] > GRID_BOX.s - .02 && c[1] > GRID_BOX.w - .03 && c[1] < GRID_BOX.e + .03;
+  pins.filter(({ c }) => mapAll || nearGrid(c)).forEach(({ c }) => { n = Math.max(n, c[0] + .002); so = Math.min(so, c[0] - .002); w = Math.min(w, c[1] - .002); e = Math.max(e, c[1] + .002); });
   const kx = Math.cos(35 * Math.PI / 180);
   const W = box.clientWidth, H = Math.max(240, box.clientHeight), pl = 76, pr = 24, pt = 28, pb = 84;
   const sc = Math.min((W - pl - pr) / ((e - w) * kx), (H - pt - pb) / (n - so));
   const ox = pl + (W - pl - pr - (e - w) * kx * sc) / 2, oy = pt + (H - pt - pb - (n - so) * sc) / 2;
   const X = lng => ox + (lng - w) * kx * sc, Y = lat => oy + (n - lat) * sc;
+  // 見えている石がすべて通りの格子の内側に来るように、格子を広げる
+  const inView = pins.filter(({ c }) => c[0] <= n && c[0] >= so && c[1] >= w && c[1] <= e);
+  const B = { n: Math.max(GRID_BOX.n, ...inView.map(p => p.c[0] + .002)), s: Math.min(GRID_BOX.s, ...inView.map(p => p.c[0] - .002)),
+    w: Math.min(GRID_BOX.w, ...inView.map(p => p.c[1] - .002)), e: Math.max(GRID_BOX.e, ...inView.map(p => p.c[1] + .002)) };
   const line = (x1, y1, x2, y2, c) => `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"${c ? ` class="${c}"` : ""}/>`;
   let g = "";
-  STREETS_EW.forEach(([nm, lat]) => { g += line(X(GRID_BOX.w), Y(lat), X(GRID_BOX.e), Y(lat)) + `<text x="${(X(GRID_BOX.w) - 6).toFixed(1)}" y="${(Y(lat) + 3).toFixed(1)}" text-anchor="end">${nm}</text>`; });
-  STREETS_NS.forEach(([nm, lng]) => { g += line(X(lng), Y(GRID_BOX.n), X(lng), Y(GRID_BOX.s)) + `<text x="${(X(lng) + 3).toFixed(1)}" y="${(Y(GRID_BOX.s) + 6).toFixed(1)}" text-anchor="end" transform="rotate(-90 ${(X(lng) + 3).toFixed(1)} ${(Y(GRID_BOX.s) + 6).toFixed(1)})">${nm}</text>`; });
+  STREETS_EW.forEach(([nm, lat]) => { g += line(X(B.w), Y(lat), X(B.e), Y(lat)) + `<text x="${(X(B.w) - 6).toFixed(1)}" y="${(Y(lat) + 3).toFixed(1)}" text-anchor="end">${nm}</text>`; });
+  STREETS_NS.forEach(([nm, lng]) => { g += line(X(lng), Y(B.n), X(lng), Y(B.s)) + `<text x="${(X(lng) + 3).toFixed(1)}" y="${(Y(B.s) + 6).toFixed(1)}" text-anchor="end" transform="rotate(-90 ${(X(lng) + 3).toFixed(1)} ${(Y(B.s) + 6).toFixed(1)})">${nm}</text>`; });
   const river = pts => `<polyline class="river" points="${pts.map(([la, lo]) => X(lo).toFixed(1) + "," + Y(la).toFixed(1)).join(" ")}"/>`;
   g += river(KAMO) + river(TAKANO);
   const stones = pins.map(({ s, c }) => `<g class="stone" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(shortName(s))}"><circle cx="${X(c[1]).toFixed(1)}" cy="${Y(c[0]).toFixed(1)}" r="14" class="hit"/><circle cx="${X(c[1]).toFixed(1)}" cy="${Y(c[0]).toFixed(1)}" r="5"/><title>${esc(shortName(s))}</title></g>`).join("");
@@ -2599,7 +2651,7 @@ function openSyncForm() {
   $("#sheetRoot").innerHTML = `<div class="scrim" data-act="close">
     <form class="sheet form" id="syncForm" role="dialog" aria-modal="true" aria-labelledby="sy-title">
       <div class="body">
-        <button type="button" class="close" data-act="close" aria-label="閉じる">×</button>
+        <button type="button" class="close" data-act="close" aria-label="閉じる"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5L15 15 M15 5L5 15"/></svg></button>
         <h2 id="sy-title">PCとスマホの同期</h2>
         <p class="fine">印・メモ・自分で追加した所・写真を、GitHub の非公開リポジトリに保存して、同じ設定をした端末どうしでそろえます。PCとスマホの両方で、同じリポジトリ名と鍵を入れてください。</p>
         <div class="log">
