@@ -793,6 +793,11 @@ body, input, textarea, select, button { font-family: var(--f-body); }
 .g .band:has(> :empty:only-child) { display: none; }
 /* 表紙の名前は一覧のマスの名前と同じ位置どり（左8px・下7px） */
 #cover.rowtrial .cover-cap { left: 8px; max-width: calc(var(--cell) * 2 - 16px); }
+/* 試作 ?dim */
+.dim .pin .ph img { filter: grayscale(1) brightness(.6) contrast(.95); }
+.dim .pin.done .ph img { filter: brightness(.85) contrast(.98); }
+.dim .pin:hover .ph img { filter: grayscale(1) brightness(.78) contrast(1); }
+.dim .pin.done:hover .ph img { filter: none; }
 </style>
 
 </head>
@@ -2202,6 +2207,8 @@ function mosaicRun(ready, done) {
 let coverW = 0, coverVH = 0, board = null;
 // 表紙の下に訪問数の行を一段はさむ（2026-10-31 ?row 試作から本番へ）
 const ROW_TRIAL = true;
+// 試作 ?dim: 一覧のマスを少し沈めて、線を立たせ、表紙からの明るさの段差を減らす
+if (/[?&]dim\b/.test(location.search)) document.documentElement.classList.add("dim");
 function renderCoverRow(xs, cell, W, top) {
   let row = document.getElementById("coverRow");
   if (!row) { row = document.createElement("div"); row.id = "coverRow"; row.className = "cover-row"; $("#lines").before(row); const f = document.createElement("div"); f.className = "cover-fade"; $("#slides").after(f); }
