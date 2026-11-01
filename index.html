@@ -804,6 +804,8 @@ body, input, textarea, select, button { font-family: var(--f-body); }
 .rank .rn { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .rank .rn small { font-size: 10px; color: var(--muted); letter-spacing: .06em; }
 .rank .rc { font-family: var(--f-disp); font-size: 20px; color: var(--ink); }
+.maplink { margin-left: .8em; white-space: nowrap; font-size: 10px; letter-spacing: .08em; color: var(--muted); text-decoration: none; border-bottom: 1px solid rgba(255, 255, 255, .3); }
+.maplink:hover { color: var(--ink); border-bottom-color: var(--ink); }
 </style>
 
 </head>
@@ -1796,6 +1798,7 @@ function openSheet(id) {
   const done = !!v.done, want = !!v.want, again = !!v.again;
   if (PHOTOS[s.id]) loadPhotoCredit(s.id, PHOTOS[s.id], listedPhoto(s).src);  // クレジットは開いたときだけ取得
   const map = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(shortName(s) + " " + (s.addr || "京都"));
+  const mapLink = ` <a class="maplink" href="${map}" target="_blank" rel="noopener">地図 ↗</a>`;
   const yl = s.mine || s.year === 9999 ? (s.year !== 9999 ? `${s.year}年` : "") : s.era ? s.era : s.id === "maeda-meirin" ? `${s.year}年 開設（芸術センター）` : `${s.year}年（${wareki(s.year)}）`;
   $("#sheetRoot").innerHTML = `<div class="scrim" data-act="close">
     <div class="sheet ${s.kind}" role="dialog" aria-modal="true" aria-labelledby="sh-title">
@@ -1811,8 +1814,8 @@ function openSheet(id) {
           <button type="button" data-act="again" aria-pressed="${again}" aria-label="また行きたい"><i></i><b>AGAIN</b></button>
         </div>
         <dl class="facts">
-          <dt>エリア</dt><dd>${esc(s.area)}</dd>
-          ${s.addr ? `<dt>住所</dt><dd>${esc(s.addr)}</dd>` : ""}
+          <dt>エリア</dt><dd>${esc(s.area)}${s.addr ? "" : mapLink}</dd>
+          ${s.addr ? `<dt>住所</dt><dd>${esc(s.addr)}${mapLink}</dd>` : ""}
           ${yl ? `<dt>${s.kind === "festival" ? "時期" : (s.kind === "cafe" || s.kind === "sweets" || s.kind === "food" || (s.kind === "book" && !s.months)) ? "創業" : s.months ? "時期" : s.kind === "arch" ? "竣工" : "年代"}</dt><dd>${esc(yl)}</dd>` : ""}
           ${s.style ? `<dt>様式</dt><dd>${facetHtml("style", s.style)}</dd>` : ""}
           ${s.by ? `<dt>設計</dt><dd>${facetHtml("by", s.by)}</dd>` : ""}
@@ -1823,7 +1826,6 @@ function openSheet(id) {
         ${s.note ? `<div class="note">${esc(s.note)}</div>` : ""}
         ${s.fest ? `<div class="fine">京都モダン建築祭2026（10/31〜11/8）の公開・特典の対象です。普段は入れない所が公開されることも。<a href="https://kyoto.kenchikusai.jp/program/" target="_blank" rel="noopener">プログラムを見る ↗</a></div>` : ""}
         <div class="actions">
-          <a class="btn" href="${map}" target="_blank" rel="noopener">地図 ↗</a>
           ${assets ? `<label class="btn" for="up-${esc(s.id)}">写真を追加</label><input type="file" id="up-${esc(s.id)}" accept="image/*" multiple data-act="upload" hidden>` : ""}
           ${assets && mineIds.length ? `<button type="button" class="btn" data-act="rmphoto" id="rmPhotoBtn">この写真を外す</button>` : ""}
           ${assets && mineIds.length > 1 ? `<button type="button" class="btn" data-act="firstphoto" id="firstPhotoBtn" hidden>この写真をマスに使う</button>` : ""}
@@ -1857,7 +1859,9 @@ function gridSheet(s) {
   const take = k => { const i = pairs.findIndex(p => p[0] === k); return i < 0 ? null : pairs.splice(i, 1)[0][1]; };
   const area = take("エリア"), addr = take("住所");
   const where = document.createElement("div"); where.className = "where";
-  where.textContent = [area && area.textContent, addr && addr.textContent].filter(Boolean).join("　");
+  const ml = (addr || area) && (addr || area).querySelector(".maplink"); if (ml) ml.remove();
+  where.textContent = [area && area.textContent.trim(), addr && addr.textContent.trim()].filter(Boolean).join("　");
+  if (ml) where.append(" ", ml);
   band([body.querySelector(".kind"), body.querySelector("h2"), where], "title");
   // 印は3マス。マスの真ん中の交点に石を置く
   const marks = body.querySelector(".marks"); if (marks) { marks.classList.add("row3"); g.appendChild(marks); }
