@@ -819,8 +819,6 @@ body, input, textarea, select, button { font-family: var(--f-body); }
 #upmsg:empty { display: none; }
 /* 試作 ?kanji */
 .cover-logo .kl { stroke: currentColor; stroke-width: var(--sw, .55); stroke-linecap: square; }
-.kanji-lab { position: absolute; left: 50%; bottom: calc(100% + 14px); translate: -50% 0; white-space: nowrap; font-family: var(--f-disp); font-size: 10px; letter-spacing: .32em; padding-left: .32em; color: rgba(255, 255, 255, .7); opacity: 0; transition: opacity .6s; }
-.cover-logo.kanji-on .kanji-lab { opacity: 1; transition-duration: .2s; }
 </style>
 
 </head>
@@ -2231,7 +2229,7 @@ function answerQuiz(i) {
   setTimeout(() => cv.classList.add("open"), 900);
   setTimeout(() => mosaicRun(pre, () => cv.classList.add("lit")), 1300);
 })();
-// 試作 ?kanji: 九条から一条へ、通りの数字を北へ「上がって」いき、最後の線が「上ル」に落ち着く
+// 試作 ?kanji: 九条から一条へ、通りの数字を北へ「上がって」いき、7本の線が組み変わり続けて「上ル」に落ち着く
 const KANJI_SEQ = [
   ["九", "KUJO", [[6, 4, 15, 4], [15, 4, 15, 10.5], [15, 10.5, 18, 10.5], [10, 0, 7, 11.5]]],
   ["八", "HACHIJO", [[10.5, 1, 7, 11.5], [13.5, 1, 17.5, 11.5]]],
@@ -2245,41 +2243,43 @@ const KANJI_SEQ = [
 ];
 const KANJI_LOGO = [[5, 0, 5, 11], [5, 5, 9, 5], [0, 11, 10, 11], [15.5, 1.5, 15.5, 7.5], [15.5, 7.5, 13.5, 11.5], [19.5, 1, 19.5, 11.5], [19.5, 11.5, 22.5, 8.5]];
 function kanjiIntro(cv, done) {
-  const svg = cv.querySelector(".cover-logo svg"), path = svg.querySelector("path"), box = cv.querySelector(".cover-logo");
+  const svg = cv.querySelector(".cover-logo svg"), path = svg.querySelector("path");
   const NS = "http://www.w3.org/2000/svg", N = KANJI_LOGO.length;
   path.style.visibility = "hidden";
   const ls = Array.from({ length: N }, () => { const l = document.createElementNS(NS, "line"); l.setAttribute("class", "kl"); svg.appendChild(l); return l; });
-  const lab = document.createElement("span"); lab.className = "kanji-lab"; box.appendChild(lab);
-  // 線の数を7本にそろえる（足りない分は前の線の終わりに長さ0で重ねておく）
-  const pad = g => Array.from({ length: N }, (_, i) => g[i] || (s => [s[2], s[3], s[2], s[3]])(g[g.length - 1]));
-  // 長さ0の線は角の点に見えるので隠す
-  const put = g => g.forEach((c, i) => { ls[i].setAttribute("x1", c[0]); ls[i].setAttribute("y1", c[1]); ls[i].setAttribute("x2", c[2]); ls[i].setAttribute("y2", c[3]); ls[i].style.opacity = Math.hypot(c[2] - c[0], c[3] - c[1]) < .3 ? 0 : 1; });
-  const tween = (a, b, ms, ease, then) => {
-    const t0 = performance.now();
-    const f = now => { const t = Math.min(1, (now - t0) / ms), k = ease(t); put(a.map((c, i) => c.map((v, j) => v + (b[i][j] - v) * k))); t < 1 ? requestAnimationFrame(f) : then(); };
-    requestAnimationFrame(f);
+  // 線はいつも7本。画数が少ない字は同じ線に重ねて、分かれたり合わさったりしながら次の字へ
+  const pad = g => Array.from({ length: N }, (_, i) => g[i % g.length].slice());
+  // 前の字の線から近い線へ受け渡す（向きも近いほうに合わせる）
+  const d = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]) + Math.hypot(a[2] - b[2], a[3] - b[3]);
+  const match = (prev, g) => {
+    const out = new Array(N), used = new Set(), pairs = [];
+    prev.forEach((p, i) => g.forEach((q, j) => { const r = [q[2], q[3], q[0], q[1]]; const a = d(p, q), b = d(p, r); pairs.push([Math.min(a, b), i, j, b < a ? r : q]); }));
+    pairs.sort((x, y) => x[0] - y[0]);
+    for (const [, i, j, q] of pairs) if (out[i] === undefined && !used.has(j)) { out[i] = q; used.add(j); }
+    return out;
   };
-  const out = t => 1 - Math.pow(1 - t, 3), inout = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-  let cur = pad(KANJI_SEQ[0][2]); put(cur); lab.textContent = KANJI_SEQ[0][1];
-  requestAnimationFrame(() => box.classList.add("kanji-on"));
-  let i = 0;
-  const next = () => {
-    if (++i < KANJI_SEQ.length) {
-      const g = pad(KANJI_SEQ[i][2]); lab.textContent = KANJI_SEQ[i][1];
-      tween(cur, g, 50, out, () => { cur = g; setTimeout(next, i === KANJI_SEQ.length - 1 ? 220 : 30); });
-    } else {
-      // 一条から、もう一段「上がって」上ル
-      lab.textContent = "AGARU";
-      tween(cur, KANJI_LOGO, 450, inout, () => {
-        path.style.transition = "none"; path.style.visibility = ""; cv.classList.add("draw");
-        ls.forEach(l => l.remove());
-        requestAnimationFrame(() => { path.style.transition = ""; });
-        setTimeout(() => { box.classList.remove("kanji-on"); setTimeout(() => lab.remove(), 800); }, 700);
-        done();
-      });
-    }
+  const put = g => g.forEach((c, i) => { ls[i].setAttribute("x1", c[0]); ls[i].setAttribute("y1", c[1]); ls[i].setAttribute("x2", c[2]); ls[i].setAttribute("y2", c[3]); });
+  const ease = t => -(Math.cos(Math.PI * t) - 1) / 2;
+  // 九 → 八 → … → 一 → 上ル を、止めずに一続きで
+  const keys = [pad(KANJI_SEQ[0][2])];
+  KANJI_SEQ.slice(1).forEach(([, , g]) => keys.push(match(keys[keys.length - 1], pad(g))));
+  keys.push(match(keys[keys.length - 1], KANJI_LOGO));
+  const step = 140, last = 520, total = step * (keys.length - 2) + last;
+  put(keys[0]);
+  const t0 = performance.now() + 120;
+  const f = now => {
+    const t = Math.max(0, now - t0);
+    let k = Math.min(keys.length - 2, Math.floor(t / step)), u;
+    if (t >= step * (keys.length - 2)) { k = keys.length - 2; u = Math.min(1, (t - step * k) / last); } else u = (t - step * k) / step;
+    const e = ease(u), a = keys[k], b = keys[k + 1];
+    put(a.map((c, i) => c.map((v, j) => v + (b[i][j] - v) * e)));
+    if (t < total) return requestAnimationFrame(f);
+    path.style.transition = "none"; path.style.visibility = ""; cv.classList.add("draw");
+    ls.forEach(l => l.remove());
+    requestAnimationFrame(() => { path.style.transition = ""; });
+    done();
   };
-  setTimeout(next, 150);
+  requestAnimationFrame(f);
 }
 // 表紙の「上ル」を押すと、線の演出をもう一度
 function replayLines() {
