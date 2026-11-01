@@ -793,11 +793,17 @@ body, input, textarea, select, button { font-family: var(--f-body); }
 .g .band:has(> :empty:only-child) { display: none; }
 /* 表紙の名前は一覧のマスの名前と同じ位置どり（左8px・下7px） */
 #cover.rowtrial .cover-cap { left: 8px; max-width: calc(var(--cell) * 2 - 16px); }
-/* 試作 ?dim */
-.dim .pin .ph img { filter: grayscale(1) brightness(.6) contrast(.95); }
-.dim .pin.done .ph img { filter: brightness(.85) contrast(.98); }
-.dim .pin:hover .ph img { filter: grayscale(1) brightness(.78) contrast(1); }
-.dim .pin.done:hover .ph img { filter: none; }
+/* 訪問回数 */
+.pin .times { position: absolute; left: 8px; top: 7px; z-index: 2; font-family: var(--f-disp); font-size: 13px; letter-spacing: .04em; color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, .6); }
+.times-row { display: flex; align-items: center; justify-content: space-between; font-size: 10px; color: var(--muted); letter-spacing: .06em; }
+.stepper { display: flex; align-items: center; border: 1px solid var(--lc); }
+.stepper button { width: 44px; height: 40px; display: grid; place-items: center; font-size: 13px; color: var(--ink); }
+.stepper button:disabled { color: #4A4A48; }
+.stepper b { min-width: 48px; height: 40px; display: grid; place-items: center; border-inline: 1px solid var(--lc); font-family: var(--f-disp); font-weight: 400; font-size: 20px; color: var(--ink); }
+.rank .vlist button { align-items: center; }
+.rank .rn { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.rank .rn small { font-size: 10px; color: var(--muted); letter-spacing: .06em; }
+.rank .rc { font-family: var(--f-disp); font-size: 20px; color: var(--ink); }
 </style>
 
 </head>
@@ -1602,6 +1608,8 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const flag = (id, k) => !!(visits[id] && visits[id][k]);
 const isDone = id => flag(id, "done");
+// 行った回数。印だけで回数を入れていないときは1回
+const visitCount = id => isDone(id) ? Math.max(1, Number(visits[id].n) || 1) : 0;
 const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 
 function customSpots() {
@@ -1721,6 +1729,7 @@ function filtered() {
     yeardesc: (a, b) => (b.year === 9999 ? -1 : b.year) - (a.year === 9999 ? -1 : a.year) || a.kana.localeCompare(b.kana, "ja"),
     name: (a, b) => a.kana.localeCompare(b.kana, "ja"),
     todo: (a, b) => (isDone(a.id) - isDone(b.id)) || byArea(a, b),
+    most: (a, b) => visitCount(b.id) - visitCount(a.id) || byArea(a, b),
     // 現在地から近い順。位置が分からないうちはエリア順
     near: sortPos ? (a, b) => posDist(a) - posDist(b) || byArea(a, b) : byArea,
   };
@@ -1739,6 +1748,7 @@ function pin(s) {
   const st = done ? "行った" : want ? "行きたい" : "まだ";
   return `<div class="pin${p ? " has" : ""}${done ? " done" : ""}" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.name)}（${st}）">
     <div class="ph">${p ? `<img src="${esc(p.thumb || p.url)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">` : ""}</div>
+    ${visitCount(s.id) > 1 ? `<span class="times">×${visitCount(s.id)}</span>` : ""}
     <span class="nm">${esc(shortName(s))}${ui.near && ui.near.dist.has(s.id) ? `<em class="walk">徒歩${walkMin(ui.near.dist.get(s.id))}分</em>` : ui.sort === "near" && sortPos && posDist(s) < 5000 ? `<em class="walk">徒歩${walkMin(posDist(s))}分</em>` : ""}</span>${mk}
   </div>`;
 }
@@ -1821,6 +1831,7 @@ function openSheet(id) {
         </div>
         <div class="fine" id="upmsg"></div>
         <div class="log">
+          <div class="times-row"><span>訪問回数</span><div class="stepper"><button type="button" data-act="cminus" aria-label="1回減らす"${visitCount(s.id) <= 1 ? " disabled" : ""}>−</button><b>${visitCount(s.id)}</b><button type="button" data-act="cplus" aria-label="1回増やす">＋</button></div></div>
           <label for="d-${esc(s.id)}">訪問日<input type="date" id="d-${esc(s.id)}" data-act="date" value="${esc(v.date || "")}"></label>
           <label for="m-${esc(s.id)}">メモ<textarea id="m-${esc(s.id)}" data-act="memo" placeholder="頼んだもの、印象に残ったところなど">${esc(v.memo || "")}</textarea></label>
         </div>
@@ -1950,7 +1961,28 @@ function saveForm(form) {
   persist(true); render(); openSheet(id);
 }
 
-function refreshView() { if (viewKind === "map") renderMap(); else if (viewKind === "cal") renderCal(); }
+function refreshView() { if (viewKind === "map") renderMap(); else if (viewKind === "cal") renderCal(); else if (viewKind === "rank") renderRank(); }
+// 訪問回数のランキング。同じ回数は同じ順位、その中は最後に行った日の新しい順
+function renderRank() {
+  $("#viewTitle").textContent = "RANKING";
+  $("#viewNav").innerHTML = "";
+  const list = visitedSpots().map(s => ({ s, n: visitCount(s.id), d: visits[s.id].date || "" }))
+    .sort((a, b) => b.n - a.n || b.d.localeCompare(a.d));
+  let rank = 0, prev = null;
+  const rows = list.map((x, i) => { if (x.n !== prev) { rank = i + 1; prev = x.n; }
+    return `<li><button type="button" data-open="${esc(x.s.id)}"><span class="d">${String(rank).padStart(2, "0")}</span><span class="rn">${esc(shortName(x.s))}<small>${esc(KIND[x.s.kind] || "")} · ${esc(x.s.area)}</small></span><span class="rc">×${x.n}</span></button></li>`; }).join("");
+  $("#viewBody").innerHTML = `<div class="cal rank"><ul class="vlist">${rows || `<li class="none">行った所に印をつけると、ここに並びます</li>`}</ul></div>`;
+}
+// 訪問回数を増減。増やすと「行った」になる（初めてなら日付も今日に）
+function addVisit(id, d) {
+  const was = isDone(id), v = Object.assign({}, visits[id] || {});
+  const n = Math.max(1, visitCount(id) + d);
+  if (!was) { v.done = true; if (!v.date) v.date = today(); v.n = 1; } else v.n = n;
+  visits[id] = v;
+  persist(true); render(); refreshView();
+  if (openId === id) { const sh = $("#sheetRoot .sheet"), y = sh ? sh.scrollTop : 0; openSheet(id); const s2 = $("#sheetRoot .sheet"); if (s2) s2.scrollTop = y; }
+  if (!was) agaru();
+}
 function setFlag(id, k) {
   const v = Object.assign({}, visits[id] || {});
   v[k] = !v[k];
@@ -2207,8 +2239,6 @@ function mosaicRun(ready, done) {
 let coverW = 0, coverVH = 0, board = null;
 // 表紙の下に訪問数の行を一段はさむ（2026-10-31 ?row 試作から本番へ）
 const ROW_TRIAL = true;
-// 試作 ?dim: 一覧のマスを少し沈めて、線を立たせ、表紙からの明るさの段差を減らす
-if (/[?&]dim\b/.test(location.search)) document.documentElement.classList.add("dim");
 function renderCoverRow(xs, cell, W, top) {
   let row = document.getElementById("coverRow");
   if (!row) { row = document.createElement("div"); row.id = "coverRow"; row.className = "cover-row"; $("#lines").before(row); const f = document.createElement("div"); f.className = "cover-fade"; $("#slides").after(f); }
@@ -2352,6 +2382,7 @@ const TREE = [
   { key: "status", ja: "しるし", en: "STATUS", items: () => [["all", "すべて"], ["want", "行きたい"], ["done", "行った"], ["again", "また行きたい"], ["todo", "まだ"]] },
   { key: "map", en: "MAP", act: true },
   { key: "cal", en: "CALENDAR", act: true },
+  { key: "rank", en: "RANKING", act: true },
   { key: "write", ja: "書く", en: "EDIT", items: () => [["add", "スポットを追加"], ["export", "記録を書き出す"], ["import", "記録を読み込む"], ["sync", "PCとスマホの同期"]] },
 ];
 // メニューの枝の右に添える線だけのアイコン（24×24）
@@ -2368,7 +2399,7 @@ const BR_ICON = {
 function brIcon(k) { return ""; }
 let openBranch = null;
 // 並び順はメニューから出して、ヘッダーの小さなボタンで切り替える
-const SORTS = [["area", "エリア順", "AREA"], ["near", "近い順", "NEAR"], ["year", "古い順", "OLD"], ["yeardesc", "新しい順", "NEW"], ["name", "名前順", "NAME"], ["todo", "まだを先に", "TODO"]];
+const SORTS = [["area", "エリア順", "AREA"], ["near", "近い順", "NEAR"], ["year", "古い順", "OLD"], ["yeardesc", "新しい順", "NEW"], ["name", "名前順", "NAME"], ["todo", "まだを先に", "TODO"], ["most", "よく行く順", "MOST"]];
 function setSortPop(open) {
   const pop = $("#sortPop");
   pop.hidden = !open; $("#sortBtn").setAttribute("aria-expanded", open);
@@ -2395,7 +2426,7 @@ function renderTree() {
   $("#menuReset").hidden = !filtersActive();
   $("#menuNow").textContent = $("#current").textContent;
   // FILTER（絞る）／ ARCHIVE（行った記録を眺める）／ EDIT の3つに分ける
-  const GROUPS = [["FILTER", ["kind", "area", "status"]], ["ARCHIVE", ["map", "cal"]], ["", ["write"]]];
+  const GROUPS = [["FILTER", ["kind", "area", "status"]], ["ARCHIVE", ["map", "cal", "rank"]], ["", ["write"]]];
   const branch = b => b.act ? `<li><button type="button" class="branch" data-act-branch="${b.key}">${b.en}${brIcon(b.key)}</button></li>` : `<li>
     <button type="button" class="branch" data-branch="${b.key}" aria-expanded="${openBranch === b.key}">${b.en}${brIcon(b.key)}</button>
     ${openBranch === b.key ? `<ul class="twigs">${b.items().map(([v, l]) => `<li><button type="button" class="twig" data-key="${b.key}" data-v="${esc(v)}" aria-current="${currentOf(b.key) === v}">${esc(l)}</button></li>`).join("")}</ul>` : ""}
@@ -2438,7 +2469,7 @@ function renderCurrent() {
   const kindLabel = ui.filter === "all" ? "" : (TREE[0].items().find(([v]) => v === ui.filter) || [, ""])[1];
   const st = (TREE[2].items().find(([v]) => v === ui.status) || [, ""])[1];
   const parts = [ui.near ? "現在地の近く" : "", ui.facet ? (ui.facet.k === "by" ? "設計 " : "様式 ") + ui.facet.v : "", kindLabel, ui.area || "", ui.status !== "all" ? st : ""].filter(Boolean);
-  $("#current").textContent = parts.join(" · ") || "ALL";
+  $("#current").textContent = parts.join(" · ");
   const so = SORTS.find(([v]) => v === ui.sort) || SORTS[0];
   $("#sortNow").textContent = ui.near ? "NEAR" : so[2];
   $("#sortBtn").disabled = !!ui.near;
@@ -2463,7 +2494,7 @@ let viewKind = null, mapAll = false;
 function openView(k) {
   viewKind = k;
   $("#view").hidden = false; document.body.classList.add("view-open");
-  if (k === "map") renderMap(); else renderCal();
+  if (k === "map") renderMap(); else if (k === "rank") renderRank(); else renderCal();
 }
 function closeView() { viewKind = null; $("#view").hidden = true; document.body.classList.remove("view-open"); }
 $("#viewClose").addEventListener("click", closeView);
@@ -2865,6 +2896,7 @@ $("#sheetRoot").addEventListener("click", e => {
   if (a === "qnext") { openQuiz(); return; }
   if (a === "qmode") { openQuiz(act.dataset.mode); return; }
   if (a === "qopen") { const id = quiz.cur.s.id; openSheet(id); return; }
+  if (a === "cplus" || a === "cminus") { addVisit(openId, a === "cplus" ? 1 : -1); return; }
   if (a === "toggle") setFlag(openId, "done");
   else if (a === "want") setFlag(openId, "want");
   else if (a === "again") setFlag(openId, "again");
