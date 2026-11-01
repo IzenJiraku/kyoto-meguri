@@ -2201,6 +2201,7 @@ function answerQuiz(i) {
 (function intro() {
   const cv = $("#cover");
   // 試作: ?mosaic を付けたときだけ、毎回モザイク付きの起動演出を見せる
+  // ?kanji を付けると、30分以内でも毎回演出を見せる
   const trial = /[?&]mosaic\b/.test(location.search), kanji = /[?&]kanji\b/.test(location.search);
   // 起動演出は、前に開いてから30分以上たったときに出す（アプリ版は閉じても「同じ回」扱いになりやすいため）
   let seen = false;
@@ -2217,7 +2218,7 @@ function answerQuiz(i) {
     return;
   }
   // 演出のデータは後ろで定義しているので、読み込みが終わってから始める
-  if (kanji) { requestAnimationFrame(() => kanjiIntro(cv, () => { setTimeout(() => cv.classList.add("lit"), 150); setTimeout(() => cv.classList.add("open"), 400); })); return; }
+  if (!trial) { requestAnimationFrame(() => kanjiIntro(cv, () => { setTimeout(() => cv.classList.add("lit"), 150); setTimeout(() => cv.classList.add("open"), 400); })); return; }
   requestAnimationFrame(() => requestAnimationFrame(() => cv.classList.add("draw")));
   // ロゴ → 線が広がる → マスごとに写真がぱらぱら入れ替わる → 全画面の1枚へ
   if (!trial) {
@@ -2229,7 +2230,7 @@ function answerQuiz(i) {
   setTimeout(() => cv.classList.add("open"), 900);
   setTimeout(() => mosaicRun(pre, () => cv.classList.add("lit")), 1300);
 })();
-// 試作 ?kanji: 九条から一条へ、通りの数字を北へ「上がって」いき、7本の線が組み変わり続けて「上ル」に落ち着く
+// 起動演出: 九条から一条へ、通りの数字を北へ「上がって」いき、7本の線が組み変わり続けて「上ル」に落ち着く
 const KANJI_SEQ = [
   ["九", "KUJO", [[6, 4, 15, 4], [15, 4, 15, 10.5], [15, 10.5, 18, 10.5], [10, 0, 7, 11.5]]],
   ["八", "HACHIJO", [[10.5, 1, 7, 11.5], [13.5, 1, 17.5, 11.5]]],
