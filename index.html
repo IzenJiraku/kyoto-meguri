@@ -806,6 +806,17 @@ body, input, textarea, select, button { font-family: var(--f-body); }
 .rank .rc { font-family: var(--f-disp); font-size: 20px; color: var(--ink); }
 .maplink { margin-left: .8em; white-space: nowrap; font-size: 10px; letter-spacing: .08em; color: var(--muted); text-decoration: none; border-bottom: 1px solid rgba(255, 255, 255, .3); }
 .maplink:hover { color: var(--ink); border-bottom-color: var(--ink); }
+/* 試作 ?sec */
+.sec { display: grid; gap: 18px; padding-top: 22px; border-top: 1px solid var(--lc); }
+.sec > * { border-top: 0 !important; padding-top: 0 !important; }
+.sec-h { margin: 0; font-family: var(--f-mono); font-size: 10px; letter-spacing: .32em; color: var(--muted); }
+.sec-sum { margin: -4px 0 0; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; font-size: 10px; letter-spacing: .08em; color: var(--muted); }
+.sec-sum b { font-family: var(--f-disp); font-weight: 400; font-size: 20px; color: var(--ink); }
+.sec-sum .m { flex-basis: 100%; color: #B8B8B4; font-size: 13px; letter-spacing: .02em; }
+.sec .log .times-row { padding-bottom: 4px; }
+.sec .facts { border-bottom: 0 !important; }
+.sec .facts > :last-child, .sec .facts dd:last-of-type, .sec .facts dt:last-of-type { border-bottom: 0 !important; }
+#upmsg:empty { display: none; }
 </style>
 
 </head>
@@ -1842,8 +1853,32 @@ function openSheet(id) {
       </div>
     </div>
   </div>`;
-  if (SHEET_TRIAL) gridSheet(s);
+  if (SHEET_TRIAL) gridSheet(s); else if (SEC_TRIAL) sectionSheet(s);
   setupHero(id);
+}
+// 試作 ?sec: 詳細を INFO / STORY / MY LOG / NEARBY の4段に分け、印の下に自分の記録を1行で
+const SEC_TRIAL = /[?&]sec\b/.test(location.search);
+function sectionSheet(s) {
+  const body = $("#sheetRoot .sheet .body"); if (!body) return;
+  const q = sel => body.querySelector(sel);
+  const head = t => { const h = document.createElement("p"); h.className = "sec-h"; h.textContent = t; return h; };
+  const marks = q(".marks"), v = visits[s.id] || {};
+  // 行った回数と最後に行った日を、印のすぐ下に1行で
+  if (marks && isDone(s.id)) {
+    const sum = document.createElement("p"); sum.className = "sec-sum";
+    sum.innerHTML = `<b>×${visitCount(s.id)}</b>${v.date ? `<span>${esc(v.date.replace(/-/g, "."))}</span>` : ""}${v.memo ? `<span class="m">${esc(v.memo.split("\n")[0])}</span>` : ""}`;
+    marks.after(sum);
+  }
+  const story = [q(":scope > p:not(.sec-sum)"), q(":scope > a.fine"), q(".mame:not(.near)"), q(".note"), [...body.querySelectorAll(":scope > .fine")].find(e => e.id !== "upmsg" && e.textContent.trim())].filter(Boolean);
+  const log = q(".log"), actions = q(".actions"), up = q("#upmsg"), near = q(".mame.near"), credits = [...body.querySelectorAll(".credit")];
+  const facts = q(".facts");
+  const add = (t, els) => { els = els.filter(Boolean); if (!els.length) return; const sec = document.createElement("section"); sec.className = "sec"; sec.append(head(t), ...els); body.appendChild(sec); };
+  add("INFO", [facts]);
+  add("STORY", story);
+  add("MY LOG", [log, actions, up]);
+  if (near) { const h3 = near.querySelector("h3"); if (h3) h3.remove(); }
+  add("NEARBY", [near]);
+  credits.forEach(c => body.appendChild(c));
 }
 // 試作 ?sheet: 詳細も一覧と同じ正方形のマスに割り付ける
 const SHEET_TRIAL = /[?&]sheet\b/.test(location.search);
