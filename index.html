@@ -791,6 +791,8 @@ body, input, textarea, select, button { font-family: var(--f-body); }
 .g .cell .facet { all: unset; cursor: pointer; border-bottom: 1px solid rgba(255, 255, 255, .35); }
 .g .cell .facet:hover, .g .cell .facet:focus-visible { border-bottom-color: #fff; color: #fff; }
 .g .band:has(> :empty:only-child) { display: none; }
+/* 表紙の名前は一覧のマスの名前と同じ位置どり（左8px・下7px） */
+#cover.rowtrial .cover-cap { left: 8px; max-width: calc(var(--cell) * 2 - 16px); }
 </style>
 
 </head>
@@ -2254,7 +2256,8 @@ function layoutBoard() {
   let html = xs.map(x => `<i class="v" style="left:${x.toFixed(2)}px"></i>`).join("");
   // 左下の写真名は線にかからないよう、マスの中に収める
   const lastLine = Math.floor((vh + 1) / cell) * cell - 1, gap = vh - lastLine;
-  cv.style.setProperty("--capb", (H0 - vh) + (ROW_TRIAL ? cell : 0) + (gap >= 84 ? 14 : gap + 14) + "px");
+  // 訪問数の行があるときは、一覧の名前と同じく「暗くなる段の1つ上のマスの左下」に付ける
+  cv.style.setProperty("--capb", (ROW_TRIAL ? 2 * cell + 8 : (H0 - vh) + (gap >= 84 ? 14 : gap + 14)) + "px");
   for (let j = 1; j <= Math.round(H / cell); j++) html += `<i class="h" style="top:${(j * cell - 1).toFixed(2)}px"></i>`;
   $("#lines").innerHTML = html;
 }
