@@ -1895,6 +1895,8 @@ function sectionSheet(s) {
     const lg = q(".log");
     if (lg) { if (editing) { lg.classList.add("inline"); sum.after(lg); } else lg.remove(); }
   }
+  // まだ行っていない所は記録欄を出さない（VISITED を押すと、その場で書く欄が開く）
+  if (!isDone(s.id)) { const lg = q(".log"); if (lg) lg.remove(); }
   if (logEdit && logEdit !== s.id) logEdit = null;
   const story = [q(":scope > p:not(.sec-sum)"), q(":scope > a.fine"), q(".mame:not(.near)"), q(".note"), [...body.querySelectorAll(":scope > .fine")].find(e => e.id !== "upmsg" && e.textContent.trim())].filter(Boolean);
   const log = q(".log:not(.inline)"), actions = q(".actions"), up = q("#upmsg"), near = q(".mame.near"), credits = [...body.querySelectorAll(".credit")];
