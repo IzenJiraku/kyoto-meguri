@@ -829,6 +829,13 @@ body, input, textarea, select, button { font-family: var(--f-body); }
 /* MENU は少し透かして、後ろの写真の色がうっすら残るように（ぼかして文字は読みやすく） */
 #menu { background: rgba(13, 13, 13, .58) !important; -webkit-backdrop-filter: blur(18px) saturate(.8); backdrop-filter: blur(18px) saturate(.8); }
 #menuScrim { background: rgba(0, 0, 0, .35); }
+/* 写真の右下に、写真の追加・外す・マスに使う */
+.hero-acts { position: absolute; right: 10px; bottom: 10px; z-index: 2; display: flex; gap: 6px; }
+.hero-acts > * { display: grid; place-items: center; height: 32px; padding: 0 12px; cursor: pointer; font-size: 10px; letter-spacing: .1em; color: #fff; background: rgba(13, 13, 13, .55); border: 1px solid rgba(255, 255, 255, .45); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.hero-acts > *:hover { border-color: #fff; }
+.hero .count { right: auto !important; left: 12px; }
+/* 本文の書き出しを少し下げる */
+.sheet:not(.gsheet):has(.hero) .body { padding-top: 36px !important; }
 </style>
 
 </head>
@@ -1826,6 +1833,7 @@ function openSheet(id) {
   $("#sheetRoot").innerHTML = `<div class="scrim" data-act="close">
     <div class="sheet ${s.kind}" role="dialog" aria-modal="true" aria-labelledby="sh-title">
       <div class="hero">${gallery.length ? `<div class="track" id="heroTrack">${gallery.map(g => `<div class="slide">${`<img src="${esc(g.url)}" alt="${esc(shortName(s))}" loading="lazy">`}</div>`).join("")}</div>${gallery.length > 1 ? `<div class="count" id="heroCount">1 / ${gallery.length}</div>` : ""}` : `<div class="blank"><svg class="glogo" viewBox="-0.5 -0.5 24 13" aria-hidden="true"><path d="M5 0V11 M5 5H9 M0 11H10 M15.5 1.5V7.5L13.5 11.5 M19.5 1V11.5L22.5 8.5"/></svg></div>`}
+        ${assets ? `<div class="hero-acts">${mineIds.length > 1 ? `<button type="button" data-act="firstphoto" id="firstPhotoBtn" hidden>マスに使う</button>` : ""}${mineIds.length ? `<button type="button" data-act="rmphoto" id="rmPhotoBtn">外す</button>` : ""}<label for="up-${esc(s.id)}">＋ 写真を追加</label><input type="file" id="up-${esc(s.id)}" accept="image/*" multiple data-act="upload" hidden></div>` : ""}
       </div>
       <div class="body">
         <button type="button" class="close" data-act="close" aria-label="閉じる"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5L15 15 M15 5L5 15"/></svg></button>
@@ -1849,9 +1857,6 @@ function openSheet(id) {
         ${s.note ? `<div class="note">${esc(s.note)}</div>` : ""}
         ${s.fest ? `<div class="fine">京都モダン建築祭2026（10/31〜11/8）の公開・特典の対象です。普段は入れない所が公開されることも。<a href="https://kyoto.kenchikusai.jp/program/" target="_blank" rel="noopener">プログラムを見る ↗</a></div>` : ""}
         <div class="actions">
-          ${assets ? `<label class="btn" for="up-${esc(s.id)}">写真を追加</label><input type="file" id="up-${esc(s.id)}" accept="image/*" multiple data-act="upload" hidden>` : ""}
-          ${assets && mineIds.length ? `<button type="button" class="btn" data-act="rmphoto" id="rmPhotoBtn">この写真を外す</button>` : ""}
-          ${assets && mineIds.length > 1 ? `<button type="button" class="btn" data-act="firstphoto" id="firstPhotoBtn" hidden>この写真をマスに使う</button>` : ""}
           ${s.mine ? `<button type="button" class="btn" data-act="edit">編集</button><button type="button" class="btn${confirmDelete ? " danger" : ""}" data-act="del">${confirmDelete ? "もう一度押すと削除" : "削除"}</button>` : ""}
         </div>
         <div class="fine" id="upmsg"></div>
@@ -1890,7 +1895,7 @@ function sectionSheet(s) {
   const story = [q(":scope > p:not(.sec-sum)"), q(":scope > a.fine"), q(".mame:not(.near)"), q(".note"), [...body.querySelectorAll(":scope > .fine")].find(e => e.id !== "upmsg" && e.textContent.trim())].filter(Boolean);
   const log = q(".log:not(.inline)"), actions = q(".actions"), up = q("#upmsg"), near = q(".mame.near"), credits = [...body.querySelectorAll(".credit")];
   const facts = q(".facts");
-  const add = (t, els) => { els = els.filter(Boolean); if (!els.length) return; const sec = document.createElement("section"); sec.className = "sec"; sec.append(head(t), ...els); body.appendChild(sec); };
+  const add = (t, els) => { els = els.filter(e => e && (e.children.length || e.textContent.trim())); if (!els.length) return; const sec = document.createElement("section"); sec.className = "sec"; sec.append(head(t), ...els); body.appendChild(sec); };
   add("INFO", [facts]);
   add("STORY", story);
   add("MY LOG", [log, actions, up]);
