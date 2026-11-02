@@ -826,6 +826,9 @@ body, input, textarea, select, button { font-family: var(--f-body); }
 .sec-sum .logedit:hover, .sec-sum .logedit[aria-pressed="true"] { color: var(--ink); }
 .sec-sum .logedit[aria-pressed="true"] { width: auto; padding: 0 2px 0 10px; }
 .log.inline { border-top: 0 !important; padding-top: 0 !important; margin-top: -6px; }
+/* MENU は少し透かして、後ろの写真の色がうっすら残るように（ぼかして文字は読みやすく） */
+#menu { background: rgba(13, 13, 13, .72) !important; -webkit-backdrop-filter: blur(18px) saturate(.8); backdrop-filter: blur(18px) saturate(.8); }
+#menuScrim { background: rgba(0, 0, 0, .35); }
 </style>
 
 </head>
@@ -2597,7 +2600,7 @@ function resetFilters() {
 $("#clearBtn").addEventListener("click", resetFilters);
 $("#menuResetBtn").addEventListener("click", () => { resetFilters(); renderTree(); });
 // ロゴはホーム: 絞り込みを外して表紙へ
-$("#hdr .hlogo").addEventListener("click", e => { e.preventDefault(); if (filtersActive()) resetFilters(); window.scrollTo({ top: 0, behavior: "smooth" }); });
+$("#hdr .hlogo").addEventListener("click", e => { e.preventDefault(); if (!$("#menu").hidden) setMenu(false); if (filtersActive()) resetFilters(); window.scrollTo({ top: 0, behavior: "smooth" }); });
 
 /* ---- MAP / CALENDAR ---- */
 let viewKind = null, mapAll = false;
