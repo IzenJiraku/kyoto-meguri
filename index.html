@@ -1008,6 +1008,12 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
 .cal-pick .pc-f { display: flex; gap: 24px; padding-top: 10px; }
 .cal-pick .pc-f button { font-family: var(--f-disp); font-size: 10px; letter-spacing: .24em; color: var(--muted); padding: 6px 0; }
 .cal-pick .pc-f button:hover { color: var(--ink); }
+/* 徒歩時間があるマスは、名前を1行にして徒歩時間を必ず見せる */
+.pin .nm:has(.walk) { -webkit-line-clamp: unset !important; line-clamp: none !important; display: block !important; }
+.pin .nm:has(.walk) .nt { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* MAP の名前: 重なる所だけ隠す */
+.vmap .amap-name.hid { visibility: hidden; }
+.vmap .amap-name { font-size: 10px; letter-spacing: .06em; }
 </style>
 
 </head>
@@ -1971,7 +1977,7 @@ function pin(s) {
   return `<div class="pin${p ? " has" : ""}${done ? " done" : ""}" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.name)}（${st}）">
     <div class="ph">${p ? `<img src="${esc(p.thumb || p.url)}" alt="" loading="lazy" decoding="async"${IMG_LD.has(p.thumb || p.url) ? ` class="ld"` : ` style="--fd:${Math.random() * 240 | 0}ms" onload="imgLd(this)"`} onerror="this.style.visibility='hidden'">` : ""}</div>
     ${visitCount(s.id) > 1 ? `<span class="times">×${visitCount(s.id)}</span>` : ""}
-    <span class="nm">${esc(shortName(s))}${ui.near && ui.near.dist.has(s.id) ? `<em class="walk">徒歩${walkMin(ui.near.dist.get(s.id))}分</em>` : ui.sort === "near" && sortPos && posDist(s) < 5000 ? `<em class="walk">徒歩${walkMin(posDist(s))}分</em>` : ""}</span>${mk}
+    <span class="nm"><span class="nt">${esc(shortName(s))}</span>${ui.near && ui.near.dist.has(s.id) ? `<em class="walk">徒歩${walkMin(ui.near.dist.get(s.id))}分</em>` : ui.sort === "near" && sortPos && posDist(s) < 5000 ? `<em class="walk">徒歩${walkMin(posDist(s))}分</em>` : ""}</span>${mk}
   </div>`;
 }
 let tipSpot = null;
@@ -3012,16 +3018,25 @@ function renderMap() {
   L.control.zoom({ position: "bottomright" }).addTo(vmap);
   pins.forEach(({ s, c }) => {
     L.circleMarker(c, { radius: 7, weight: 2, color: "#0D0D0D", fillColor: "#FFFFFF", fillOpacity: 1 })
-      .bindTooltip(esc(shortName(s)), { permanent: true, direction: "right", offset: [6, 0], className: "amap-name" })
+      .bindTooltip(esc(shortName(s)), { permanent: true, direction: "right", offset: [6, 0], className: "amap-name n" + Math.min(9, visitCount(s.id)) })
       .on("click", () => openSheet(s.id))
       .addTo(vmap);
   });
-  // 名前は寄ったときだけ
-  vmap.on("zoomend", () => vb.classList.toggle("far", vmap.getZoom() < 15));
+  // 名前はいつも出す。重なる所だけ、訪問回数の多い順に残して他を隠す（寄るほど全部見える）
+  const declutter = () => {
+    const tips = [...vb.querySelectorAll(".amap-name")];
+    tips.forEach(t => t.classList.remove("hid"));
+    const kept = [];
+    tips.map(t => ({ t, r: t.getBoundingClientRect(), n: Number((t.className.match(/\bn(\d)\b/) || [0, 0])[1]) })).sort((a, b) => b.n - a.n).forEach(o => {
+      const r = o.r, hit = kept.some(k => !(r.right + 4 < k.left || r.left - 4 > k.right || r.bottom + 2 < k.top || r.top - 2 > k.bottom));
+      if (hit) o.t.classList.add("hid"); else kept.push(r);
+    });
+  };
+  vmap.on("zoomend moveend", () => requestAnimationFrame(declutter));
+  vmap.whenReady(() => setTimeout(declutter, 60));
   // CITY は碁盤の目、ALL は行った所すべて
   const b = mapAll && pins.length ? L.latLngBounds(pins.map(p => p.c)).pad(.08) : L.latLngBounds([GRID_BOX.s, GRID_BOX.w], [GRID_BOX.n, GRID_BOX.e]);
   vmap.fitBounds(b, { maxZoom: 16 });
-  vb.classList.toggle("far", vmap.getZoom() < 15);
 }
 $("#viewBody").addEventListener("click", e => {
   const st = e.target.closest(".stone");
