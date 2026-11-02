@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0D0D0D">
+<meta name="description" content="京都を、碁盤の目で巡る。モダン建築・喫茶・寺社・祭りを、行った所から色づけていく記録帳。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AGARU">
+<meta property="og:title" content="AGARU 上ル">
+<meta property="og:description" content="京都を、碁盤の目で巡る。モダン建築・喫茶・寺社・祭りを、行った所から色づけていく記録帳。">
+<meta property="og:url" content="https://izenjiraku.github.io/kyoto-meguri/">
+<meta property="og:image" content="https://izenjiraku.github.io/kyoto-meguri/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -395,7 +405,7 @@ body.menu-open #searchBtn { visibility: hidden; }
 .pin:hover .ph img { filter: grayscale(1) brightness(.95) contrast(1.05); transform: scale(1.03); }
 .pin.done:hover .ph img { filter: none; }
 .pin .ph .blank { display: none; }
-.pin .nm { position: absolute; inset: 0; display: grid; place-items: center; padding: 10px; text-align: center; font-size: 10px; letter-spacing: .08em; line-height: 1.5; color: #6E6E6B; }
+.pin .nm { position: absolute; inset: 0; display: grid; place-items: center; padding: 10px; text-align: center; font-size: 10px; letter-spacing: .08em; line-height: 1.5; color: #8C8C88; }
 .pin.done .nm { color: #EDEDEA; }
 .pin.has .nm { inset: auto 0 0 0; place-items: end start; padding: 22px 8px 7px; text-align: left; color: #F2F2EF; background: linear-gradient(to top, rgba(0, 0, 0, .7), transparent); opacity: 0; transition: opacity .25s; }
 @media (hover: hover) { .pin.has:hover .nm, .pin.has:focus-visible .nm { opacity: 1; } }
@@ -501,7 +511,7 @@ body.menu-open #hdr .current, body.menu-open #hdr .search { visibility: hidden; 
 .day { position: relative; aspect-ratio: 1 / 1; background: #0D0D0D; overflow: hidden; }
 .day.void { background: #080808; }
 .day img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.day .dn { position: absolute; left: 5px; top: 3px; font-family: var(--f-mono); font-size: 10px; color: #6E6E6B; }
+.day .dn { position: absolute; left: 5px; top: 3px; font-family: var(--f-mono); font-size: 10px; color: #8C8C88; }
 .day.hit { cursor: pointer; }
 .day.hit .dn { color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, .7); }
 .day.today .dn { color: #EDEDEA; border-bottom: 1px solid currentColor; }
@@ -621,13 +631,13 @@ body.menu-open #hdr .current, body.menu-open.filtered #hdr .current { visibility
 .mosaic i.on { opacity: .9; }
 
 /* ==== 写真のないスポット：黒地に名前を大きく ==== */
-.pin .ph .tt { position: absolute; left: 0; right: 0; top: 0; padding: 12px 10px 0; font-weight: 400; font-size: clamp(13px, 3.9vw, 19px); line-height: 1.4; letter-spacing: .06em; color: #6E6E6B; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; word-break: auto-phrase; transition: color .3s; }
+.pin .ph .tt { position: absolute; left: 0; right: 0; top: 0; padding: 12px 10px 0; font-weight: 400; font-size: clamp(13px, 3.9vw, 19px); line-height: 1.4; letter-spacing: .06em; color: #8C8C88; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; word-break: auto-phrase; transition: color .3s; }
 .pin .ph .tk { position: absolute; left: 10px; bottom: 9px; font-family: var(--f-mono); font-size: 10px; letter-spacing: .22em; color: #4A4A48; }
 .pin.done .ph .tt { color: #F2F2EF; }
 .pin.done .ph .tk { color: #8C8C88; }
 @media (min-width: 600px) { .pin .ph .tt { font-size: 13px; padding: 16px 14px 0; } .pin .ph .tk { left: 14px; bottom: 12px; } }
 /* 写真のないマスも、名前は写真ありと同じ左下に */
-.pin:not(.has) .nm { inset: auto 0 0 0 !important; display: block !important; padding: 26px 8px 7px !important; font-size: 10px; letter-spacing: .06em; line-height: 1.4; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: none; color: #6E6E6B; }
+.pin:not(.has) .nm { inset: auto 0 0 0 !important; display: block !important; padding: 26px 8px 7px !important; font-size: 10px; letter-spacing: .06em; line-height: 1.4; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: none; color: #8C8C88; }
 .pin.done:not(.has) .nm { color: #EDEDEA; }
 /* ==== メニュー：FILTER / ARCHIVE / EDIT ==== */
 .trees { display: grid; gap: 30px; }
@@ -707,7 +717,7 @@ body, button, input, textarea, select { font-family: var(--f-body); }
 #hdr .search::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
 .pin.void.none { display: grid; place-content: center; justify-items: center; gap: 6px; text-align: center; }
 .pin.void.none span { font-family: var(--f-mono); font-size: 10px; letter-spacing: .28em; color: var(--ink); }
-.pin.void.none small { font-size: 10px; letter-spacing: .1em; color: #6E6E6B; }
+.pin.void.none small { font-size: 10px; letter-spacing: .1em; color: #8C8C88; }
 #grid:has(.none) ~ .fine, #grid:has(.none) ~ .actions { display: none; }
 /* 2 追加フォーム: 欄は下線だけ、チェックは碁石、ボタンは四角 */
 .log input:not([type="checkbox"]):focus, .log textarea:focus, .log select:focus { outline: none; border-bottom-color: var(--ink); box-shadow: 0 1px 0 var(--ink); }
@@ -731,7 +741,7 @@ body.view-open, body.menu-open { scroll-snap-type: none; }
 /* 5 長い名前は「…」にせず2行まで */
 .pin .nm, .pin:not(.has) .nm { white-space: normal !important; text-overflow: clip !important; overflow: hidden; display: -webkit-box !important; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 /* 6 写真のクレジットは本文の最後に小さく */
-.body .credit { position: static; padding: 0; font-size: 10px; line-height: 1.6; color: #6E6E6B; text-shadow: none; }
+.body .credit { position: static; padding: 0; font-size: 10px; line-height: 1.6; color: #8C8C88; text-shadow: none; }
 .body .credit a { color: inherit; }
 /* 7 閉じるは写真の上、右上に線の×。上の黒い帯はなくす */
 .sheet .close { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 4px); right: max(4px, env(safe-area-inset-right, 0px)); z-index: 3; width: 44px; height: 44px; display: grid; place-items: center; color: #fff; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .6)); }
@@ -871,7 +881,7 @@ html { scrollbar-width: thin; scrollbar-color: #3A3A38 #0D0D0D; -webkit-tap-high
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #3A3A38; }
-::-webkit-scrollbar-thumb:hover { background: #6E6E6B; }
+::-webkit-scrollbar-thumb:hover { background: #8C8C88; }
 ::selection { background: #EDEDEA; color: #0D0D0D; }
 :focus-visible { outline: 1px solid #EDEDEA; outline-offset: 3px; }
 :focus:not(:focus-visible) { outline: none; }
@@ -939,6 +949,36 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
   .sheet:not(.gsheet):not(.form) .hero-acts { right: 16px; }
   .sheet:not(.gsheet):not(.form):has(> .hero) .near-grid { margin-left: -24px; }
 }
+/* ==== 足りないことの手直し（v85） ==== */
+/* 4 灰色の文字を一段明るく。注記は13px */
+:root:root:root:root { --muted: #A3A39E; --line: rgba(255, 255, 255, .16); }
+.sheet .body > .fine, .sec .fine:not(#upmsg) { font-size: 13px; line-height: 1.8; }
+/* 3 線は2種類だけ: 碁盤の線（--lc）と、区切りの線（--line） */
+.sec { border-top-color: var(--line) !important; }
+.sheet .hero, .mame, .log, .facts dt, .facts dd, .vlist li, #view .vbar { border-color: var(--line); }
+/* 1 フォーム部品: 線だけの自作アイコン。ブラウザ標準の部品は見せない */
+.log input[type="date"] { position: relative; -webkit-appearance: none; appearance: none; border-radius: 0; min-height: 34px; padding-right: 28px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23EDEDEA' stroke-width='1.1'%3E%3Crect x='3.5' y='4.5' width='13' height='12'/%3E%3Cpath d='M3.5 8.5h13M7 2.5v4M13 2.5v4'/%3E%3C/svg%3E") no-repeat right 2px center / 16px 16px; color-scheme: dark; }
+.log input[type="date"]::-webkit-calendar-picker-indicator { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.log input[type="date"]::-webkit-inner-spin-button, .log input[type="number"]::-webkit-inner-spin-button, .log input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; display: none; }
+.log input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+.log textarea { resize: none; field-sizing: content; min-height: 4.6em; line-height: 1.7; }
+.log input::placeholder, .log textarea::placeholder { color: #5E5E5B; }
+.log label { font-family: var(--f-disp); letter-spacing: .24em; }
+.log .times-row > span { font-family: var(--f-disp); letter-spacing: .24em; font-size: 10px; color: var(--muted); }
+.log label.inline { font-family: var(--f-disp); letter-spacing: .2em; font-size: 10px; }
+/* 2 英字の小見出し */
+.facts dt { font-family: var(--f-disp); font-size: 10px; letter-spacing: .2em; align-self: center; }
+.sec .facts { grid-template-columns: 7.5em minmax(0, 1fr) !important; }
+.mame h3 { font-family: var(--f-disp); letter-spacing: .3em; }
+.maplink, .hero-acts > *, .sheet .actions .btn { font-family: var(--f-disp); letter-spacing: .2em; }
+.sortpop button { font-family: var(--f-disp); letter-spacing: .24em; }
+/* 5 カラー写真もごく弱く色調をそろえる */
+.pin.done .ph img, .pin.done:hover .ph img, .sheet .hero img, .rank .rt img, .day img { filter: saturate(.88) contrast(1.05) sepia(.05); }
+/* 8 VISITED にした所のマスが、閉じたあとゆっくり色づく */
+.pin.predye .ph img { transition: none !important; }
+.pin.dye .ph img { transition: filter 1.8s cubic-bezier(.4, 0, .2, 1) !important; }
+/* 9 OFFLINE */
+#hdr .offline { position: absolute; left: 50%; transform: translateX(-50%); font-family: var(--f-disp); font-size: 10px; letter-spacing: .3em; color: var(--muted); pointer-events: none; }
 </style>
 
 </head>
@@ -953,7 +993,7 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
 </section>
 
 <header id="hdr">
-  <a class="hlogo" href="#cover" aria-label="表紙へ"><svg class="glogo" viewBox="-0.5 -0.5 24 13" role="img" aria-label="上ル AGARU"><path d="M5 0V11 M5 5H9 M0 11H10 M15.5 1.5V7.5L13.5 11.5 M19.5 1V11.5L22.5 8.5"/></svg></a>
+  <span class="offline" id="offline" hidden>OFFLINE</span><a class="hlogo" href="#cover" aria-label="表紙へ"><svg class="glogo" viewBox="-0.5 -0.5 24 13" role="img" aria-label="上ル AGARU"><path d="M5 0V11 M5 5H9 M0 11H10 M15.5 1.5V7.5L13.5 11.5 M19.5 1V11.5L22.5 8.5"/></svg></a>
   <button type="button" class="current" id="current" aria-label="絞り込みを変える"></button>
   <button type="button" class="sortbtn" id="sortBtn" aria-label="並び順を変える" aria-expanded="false" aria-controls="sortPop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16M4 12h11M4 17.5h6"/></svg><span id="sortNow"></span></button>
   <button type="button" class="ic clear" id="clearBtn" aria-label="絞り込みをすべて戻す" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 6L14 14 M14 6L6 14"/></svg></button>
@@ -1878,6 +1918,8 @@ function shortName(s) { return s.name.replace(/（.*?）/g, ""); }
 function ratioFor() { return 1; }
 // 一覧の写真は、読めたマスから白黒のまま静かに浮かぶ（一度読めた写真は描き直しても点滅させない）
 const IMG_LD = new Set();
+// 通信がないときは、ヘッダーに小さく OFFLINE
+{ const upd = () => { const o = $("#offline"); if (o) o.hidden = navigator.onLine !== false; }; window.addEventListener("online", upd); window.addEventListener("offline", upd); setTimeout(upd, 0); }
 // PCでは画面の縦横比から列数を決め、表紙がだいたい3段に収まるマスの大きさにする
 // （ウィンドウ表示でも全画面でも、表紙の見え方がそろう）
 {
@@ -1959,12 +2001,12 @@ function openSheet(id) {
   const done = !!v.done, want = !!v.want, again = !!v.again;
   if (PHOTOS[s.id]) loadPhotoCredit(s.id, PHOTOS[s.id], listedPhoto(s).src);  // クレジットは開いたときだけ取得
   const map = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(shortName(s) + " " + (s.addr || "京都"));
-  const mapLink = ` <a class="maplink" href="${map}" target="_blank" rel="noopener">地図 ↗</a>`;
+  const mapLink = ` <a class="maplink" href="${map}" target="_blank" rel="noopener">MAP ↗</a>`;
   const yl = s.mine || s.year === 9999 ? (s.year !== 9999 ? `${s.year}年` : "") : s.era ? s.era : s.id === "maeda-meirin" ? `${s.year}年 開設（芸術センター）` : `${s.year}年（${wareki(s.year)}）`;
   $("#sheetRoot").innerHTML = `<div class="scrim" data-act="close">
     <div class="sheet ${s.kind}" role="dialog" aria-modal="true" aria-labelledby="sh-title">
       <div class="hero">${gallery.length ? `<div class="track" id="heroTrack">${gallery.map(g => `<div class="slide">${`<img src="${esc(g.url)}" alt="${esc(shortName(s))}" loading="lazy">`}</div>`).join("")}</div>${gallery.length > 1 ? `<div class="count" id="heroCount">1 / ${gallery.length}</div>` : ""}` : `<div class="blank"><svg class="glogo" viewBox="-0.5 -0.5 24 13" aria-hidden="true"><path d="M5 0V11 M5 5H9 M0 11H10 M15.5 1.5V7.5L13.5 11.5 M19.5 1V11.5L22.5 8.5"/></svg></div>`}
-        ${assets ? `<div class="hero-acts">${mineIds.length > 1 ? `<button type="button" data-act="firstphoto" id="firstPhotoBtn" hidden>マスに使う</button>` : ""}${mineIds.length ? `<button type="button" data-act="rmphoto" id="rmPhotoBtn">外す</button>` : ""}<label for="up-${esc(s.id)}">＋ 写真を追加</label><input type="file" id="up-${esc(s.id)}" accept="image/*" multiple data-act="upload" hidden></div>` : ""}
+        ${assets ? `<div class="hero-acts">${mineIds.length > 1 ? `<button type="button" data-act="firstphoto" id="firstPhotoBtn" hidden>SET AS TILE</button>` : ""}${mineIds.length ? `<button type="button" data-act="rmphoto" id="rmPhotoBtn">REMOVE</button>` : ""}<label for="up-${esc(s.id)}">+ ADD PHOTO</label><input type="file" id="up-${esc(s.id)}" accept="image/*" multiple data-act="upload" hidden></div>` : ""}
       </div>
       <div class="body">
         <button type="button" class="close" data-act="close" aria-label="閉じる"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5L15 15 M15 5L5 15"/></svg></button>
@@ -1976,25 +2018,25 @@ function openSheet(id) {
           <button type="button" data-act="again" aria-pressed="${again}" aria-label="また行きたい"><i></i><b>AGAIN</b></button>
         </div>
         <dl class="facts">
-          <dt>エリア</dt><dd>${esc(s.area)}${s.addr ? "" : mapLink}</dd>
-          ${s.addr ? `<dt>住所</dt><dd>${esc(s.addr)}${mapLink}</dd>` : ""}
-          ${yl ? `<dt>${s.kind === "festival" ? "時期" : (s.kind === "cafe" || s.kind === "sweets" || s.kind === "food" || (s.kind === "book" && !s.months)) ? "創業" : s.months ? "時期" : s.kind === "arch" ? "竣工" : "年代"}</dt><dd>${esc(yl)}</dd>` : ""}
-          ${s.style ? `<dt>様式</dt><dd>${facetHtml("style", s.style)}</dd>` : ""}
-          ${s.by ? `<dt>設計</dt><dd>${facetHtml("by", s.by)}</dd>` : ""}
+          <dt>AREA</dt><dd>${esc(s.area)}${s.addr ? "" : mapLink}</dd>
+          ${s.addr ? `<dt>ADDRESS</dt><dd>${esc(s.addr)}${mapLink}</dd>` : ""}
+          ${yl ? `<dt>${s.kind === "festival" ? "SEASON" : (s.kind === "cafe" || s.kind === "sweets" || s.kind === "food" || (s.kind === "book" && !s.months)) ? "SINCE" : s.months ? "SEASON" : s.kind === "arch" ? "BUILT" : "ERA"}</dt><dd>${esc(yl)}</dd>` : ""}
+          ${s.style ? `<dt>STYLE</dt><dd>${facetHtml("style", s.style)}</dd>` : ""}
+          ${s.by ? `<dt>ARCHITECT</dt><dd>${facetHtml("by", s.by)}</dd>` : ""}
         </dl>
         ${s.desc ? `<p>${esc(s.desc)}</p>` : ""}
         ${s.link ? `<a class="fine" href="${esc(s.link)}" target="_blank" rel="noopener">${esc(s.link)}</a>` : ""}
-        ${s.tips && s.tips.length ? `<div class="mame"><h3>豆知識</h3><ul>${s.tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>` : ""}
+        ${s.tips && s.tips.length ? `<div class="mame"><h3>TRIVIA</h3><ul>${s.tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>` : ""}
         ${s.note ? `<div class="note">${esc(s.note)}</div>` : ""}
         ${s.fest ? `<div class="fine">京都モダン建築祭2026（10/31〜11/8）の公開・特典の対象です。普段は入れない所が公開されることも。<a href="https://kyoto.kenchikusai.jp/program/" target="_blank" rel="noopener">プログラムを見る ↗</a></div>` : ""}
         <div class="actions">
-          ${s.mine ? `<button type="button" class="btn" data-act="edit">編集</button><button type="button" class="btn${confirmDelete ? " danger" : ""}" data-act="del">${confirmDelete ? "もう一度押すと削除" : "削除"}</button>` : ""}
+          ${s.mine ? `<button type="button" class="btn" data-act="edit">EDIT</button><button type="button" class="btn${confirmDelete ? " danger" : ""}" data-act="del">${confirmDelete ? "PRESS AGAIN TO DELETE" : "DELETE"}</button>` : ""}
         </div>
         <div class="fine" id="upmsg"></div>
         <div class="log">
-          <div class="times-row"><span>訪問回数</span><div class="stepper"><button type="button" data-act="cminus" aria-label="1回減らす"${visitCount(s.id) <= 1 ? " disabled" : ""}>−</button><b>${visitCount(s.id)}</b><button type="button" data-act="cplus" aria-label="1回増やす">＋</button></div></div>
-          <label for="d-${esc(s.id)}">訪問日<input type="date" id="d-${esc(s.id)}" data-act="date" value="${esc(v.date || "")}"></label>
-          <label for="m-${esc(s.id)}">メモ<textarea id="m-${esc(s.id)}" data-act="memo" placeholder="頼んだもの、印象に残ったところなど">${esc(v.memo || "")}</textarea></label>
+          <div class="times-row"><span>VISITS</span><div class="stepper"><button type="button" data-act="cminus" aria-label="1回減らす"${visitCount(s.id) <= 1 ? " disabled" : ""}>−</button><b>${visitCount(s.id)}</b><button type="button" data-act="cplus" aria-label="1回増やす">＋</button></div></div>
+          <label for="d-${esc(s.id)}">DATE<input type="date" id="d-${esc(s.id)}" data-act="date" value="${esc(v.date || "")}"></label>
+          <label for="m-${esc(s.id)}">MEMO<textarea id="m-${esc(s.id)}" data-act="memo" placeholder="頼んだもの、印象に残ったところなど">${esc(v.memo || "")}</textarea></label>
         </div>
         ${gallery.map(g => g.credit ? `<div class="credit">写真: ${esc(g.credit)} · <a href="${esc(g.src)}" target="_blank" rel="noopener">Wikimedia Commons</a></div>` : "").join("")}
         ${nearbyHtml(s)}
@@ -2087,7 +2129,7 @@ function gridSheet(s) {
   const dl = body.querySelector(".facts"), pairs = [];
   if (dl) dl.querySelectorAll("dt").forEach(dt => pairs.push([dt.textContent, dt.nextElementSibling]));
   const take = k => { const i = pairs.findIndex(p => p[0] === k); return i < 0 ? null : pairs.splice(i, 1)[0][1]; };
-  const area = take("エリア"), addr = take("住所");
+  const area = take("AREA"), addr = take("ADDRESS");
   const where = document.createElement("div"); where.className = "where";
   const ml = (addr || area) && (addr || area).querySelector(".maplink"); if (ml) ml.remove();
   where.textContent = [area && area.textContent.trim(), addr && addr.textContent.trim()].filter(Boolean).join("　");
@@ -2162,7 +2204,15 @@ document.addEventListener("click", e => {
   b.classList.add("spin"); b.dataset.spun = "1";
   setTimeout(() => { b.click(); b.classList.remove("spin"); delete b.dataset.spun; }, 230);
 }, true);
-function closeSheet() { heroIdx = 0; openId = null; confirmDelete = false; $("#sheetRoot").innerHTML = ""; if (progFrom !== null) { const sp = allSpots(); setTimeout(() => setProgress(sp.filter(s => isDone(s.id)).length, sp.length), 120); } }
+function closeSheet() {
+  // その場で VISITED にした所は、閉じたあと一覧のマスが白黒からゆっくり色づく
+  if (justDone && justDone === openId && isDone(justDone)) {
+    const id = justDone;
+    requestAnimationFrame(() => { const t = document.querySelector(`#grid .pin[data-id="${CSS.escape(id)}"]`); if (!t || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      t.classList.add("predye"); t.classList.remove("done"); void t.offsetWidth; t.classList.remove("predye"); t.classList.add("dye", "done"); setTimeout(() => t.classList.remove("dye"), 2200); });
+  }
+  justDone = null;
+  heroIdx = 0; openId = null; confirmDelete = false; $("#sheetRoot").innerHTML = ""; if (progFrom !== null) { const sp = allSpots(); setTimeout(() => setProgress(sp.filter(s => isDone(s.id)).length, sp.length), 120); } }
 
 /* ---- add / edit form ---- */
 function openForm(id) {
@@ -2176,14 +2226,14 @@ function openForm(id) {
         <button type="button" class="close" data-act="close" aria-label="閉じる"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5L15 15 M15 5L5 15"/></svg></button>
         <h2 id="fm-title" class="fm-h">${id ? "EDIT" : "ADD"}<small>${id ? "スポットを編集" : "行きたいところを追加"}</small></h2>
         <div class="log">
-          <label for="f-name">名前（必須）<input id="f-name" name="name" required value="${esc(c.name || "")}" placeholder="例：喫茶〇〇"></label>
-          <label for="f-kind">種類<select id="f-kind" name="kind">${kindOpts}</select></label>
-          <label for="f-area">エリア<select id="f-area" name="area">${areaOpts}</select></label>
-          <label for="f-addr">住所<input id="f-addr" name="addr" value="${esc(c.addr || "")}" placeholder="例：中京区〇〇町"></label>
-          <label for="f-year">年（竣工・創業など、任意）<input id="f-year" name="year" type="number" inputmode="numeric" value="${esc(c.year || "")}"></label>
-          <label for="f-link">参考URL（任意）<input id="f-link" name="link" type="url" value="${esc(c.link || "")}" placeholder="https://"></label>
-          <label for="f-desc">説明・メモ<textarea id="f-desc" name="desc">${esc(c.desc || "")}</textarea></label>
-          <label class="inline"><input type="checkbox" name="want" ${id ? (flag(id, "want") ? "checked" : "") : "checked"}> WANT に入れる</label>
+          <label for="f-name">NAME<input id="f-name" name="name" required value="${esc(c.name || "")}" placeholder="例：喫茶〇〇"></label>
+          <label for="f-kind">CATEGORY<select id="f-kind" name="kind">${kindOpts}</select></label>
+          <label for="f-area">AREA<select id="f-area" name="area">${areaOpts}</select></label>
+          <label for="f-addr">ADDRESS<input id="f-addr" name="addr" value="${esc(c.addr || "")}" placeholder="例：中京区〇〇町"></label>
+          <label for="f-year">YEAR<input id="f-year" name="year" type="number" inputmode="numeric" value="${esc(c.year || "")}"></label>
+          <label for="f-link">LINK<input id="f-link" name="link" type="url" value="${esc(c.link || "")}" placeholder="https://"></label>
+          <label for="f-desc">NOTE<textarea id="f-desc" name="desc">${esc(c.desc || "")}</textarea></label>
+          <label class="inline"><input type="checkbox" name="want" ${id ? (flag(id, "want") ? "checked" : "") : "checked"}> ADD TO WANT</label>
         </div>
         <div class="actions"><button type="submit" class="btn primary">${id ? "SAVE" : "ADD"}</button><button type="button" class="btn" data-act="close">CANCEL</button></div>
       </div>
@@ -2237,7 +2287,9 @@ function setFlag(id, k) {
   if (k === "done" && v.done) agaru();
 }
 // 行った印をつけた瞬間の「上がる」：石から線が上へ伸び、行った数が繰り上がる。ヘッダーのロゴも小さく跳ねる
+let justDone = null;
 function agaru() {
+  justDone = openId;
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const n = allSpots().filter(s => isDone(s.id)).length, pad = x => String(Math.max(0, x)).padStart(3, "0");
   const btn = $('#sheetRoot .marks [data-act="toggle"]');
@@ -2735,7 +2787,7 @@ function setSortPop(open) {
   const pop = $("#sortPop");
   pop.hidden = !open; $("#sortBtn").setAttribute("aria-expanded", open);
   if (!open) return;
-  pop.innerHTML = SORTS.map(([v, l, en]) => `<button type="button" role="menuitemradio" data-sort="${v}" aria-checked="${ui.sort === v}"><i></i>${l}<small>${en}</small></button>`).join("");
+  pop.innerHTML = SORTS.map(([v, l, en]) => `<button type="button" role="menuitemradio" data-sort="${v}" aria-checked="${ui.sort === v}" aria-label="${l}"><i></i>${en}</button>`).join("");
   const r = $("#sortBtn").getBoundingClientRect();
   pop.style.top = r.bottom + 6 + "px";
   pop.style.right = Math.max(8, document.documentElement.clientWidth - r.right) + "px";
@@ -2825,6 +2877,7 @@ let viewKind = null, mapAll = false;
 function openView(k) {
   viewKind = k;
   $("#view").hidden = false; document.body.classList.add("view-open");
+  const vw = $("#view"); if (vw.animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) vw.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 280, easing: "cubic-bezier(.2, .8, .2, 1)" });
   if (k === "map") renderMap(); else if (k === "rank") renderRank(); else renderCal();
 }
 function closeView() { viewKind = null; $("#view").hidden = true; document.body.classList.remove("view-open"); }
