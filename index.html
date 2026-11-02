@@ -1878,9 +1878,9 @@ function shortName(s) { return s.name.replace(/（.*?）/g, ""); }
 function ratioFor() { return 1; }
 // 一覧の写真は、読めたマスから白黒のまま静かに浮かぶ（一度読めた写真は描き直しても点滅させない）
 const IMG_LD = new Set();
-// 試作 ?wide: PCでは画面の縦横比から列数を決め、表紙がだいたい3段に収まるマスの大きさにする
+// PCでは画面の縦横比から列数を決め、表紙がだいたい3段に収まるマスの大きさにする
 // （ウィンドウ表示でも全画面でも、表紙の見え方がそろう）
-if (/[?&]wide\b/.test(location.search)) {
+{
   const root = document.documentElement;
   const wideCols = () => {
     if (innerWidth < 900) { root.style.removeProperty("--cols"); return; }
