@@ -939,9 +939,6 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
   .sheet:not(.gsheet):not(.form) .hero-acts { right: 16px; }
   .sheet:not(.gsheet):not(.form):has(> .hero) .near-grid { margin-left: -24px; }
 }
-/* 試作 ?wide: PCのマスを大きく */
-@media (min-width: 900px) { :root.wide { --cols: 5; } }
-@media (min-width: 1500px) { :root.wide { --cols: 6; } }
 </style>
 
 </head>
@@ -1881,8 +1878,16 @@ function shortName(s) { return s.name.replace(/（.*?）/g, ""); }
 function ratioFor() { return 1; }
 // 一覧の写真は、読めたマスから白黒のまま静かに浮かぶ（一度読めた写真は描き直しても点滅させない）
 const IMG_LD = new Set();
-// 試作 ?wide: PCでは一覧のマスを大きく（列を減らす）
-if (/[?&]wide\b/.test(location.search)) document.documentElement.classList.add("wide");
+// 試作 ?wide: PCでは画面の縦横比から列数を決め、表紙がだいたい3段に収まるマスの大きさにする
+// （ウィンドウ表示でも全画面でも、表紙の見え方がそろう）
+if (/[?&]wide\b/.test(location.search)) {
+  const root = document.documentElement;
+  const wideCols = () => {
+    if (innerWidth < 900) { root.style.removeProperty("--cols"); return; }
+    root.style.setProperty("--cols", String(Math.max(4, Math.min(8, Math.round(innerWidth * 3 / innerHeight)))));
+  };
+  wideCols(); window.addEventListener("resize", wideCols);
+}
 function imgLd(im) { IMG_LD.add(im.getAttribute("src")); im.classList.add("ld"); }
 function pin(s) {
   const p = photoOf(s);
