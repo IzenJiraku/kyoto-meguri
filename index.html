@@ -1858,8 +1858,8 @@ function openSheet(id) {
   if (SHEET_TRIAL) gridSheet(s); else if (SEC_TRIAL) sectionSheet(s);
   setupHero(id);
 }
-// 試作 ?sec: 詳細を INFO / STORY / MY LOG / NEARBY の4段に分け、印の下に自分の記録を1行で
-const SEC_TRIAL = /[?&]sec\b/.test(location.search);
+// 詳細を INFO / STORY / MY LOG / NEARBY の4段に分け、印の下に自分の記録を1行で（2026-11-02 ?sec 試作から本番へ）
+const SEC_TRIAL = true;
 function sectionSheet(s) {
   const body = $("#sheetRoot .sheet .body"); if (!body) return;
   const q = sel => body.querySelector(sel);
