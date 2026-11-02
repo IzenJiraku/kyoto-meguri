@@ -837,6 +837,7 @@ body, input, textarea, select, button { font-family: var(--f-body); }
 .hero .count { right: auto !important; left: 12px; }
 /* 本文の書き出しを少し下げる */
 .sheet:not(.gsheet):has(.hero) .body { padding-top: 36px !important; }
+.bknote { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); transform: translateX(-50%); z-index: 60; margin: 0; padding: 10px 16px; font-size: 13px; color: var(--ink); background: rgba(13, 13, 13, .85); white-space: nowrap; max-width: calc(100% - 32px); }
 </style>
 
 </head>
@@ -877,11 +878,11 @@ body, input, textarea, select, button { font-family: var(--f-body); }
       <div class="pills" id="pills"></div>
       <select id="area" aria-label="エリア"></select>
       <select id="status" aria-label="印">
-        <option value="all">すべて</option>
-        <option value="todo">まだ</option>
-        <option value="done">行った</option>
-        <option value="want">行きたい</option>
-        <option value="again">また行きたい</option>
+        <option value="all">ALL</option>
+        <option value="todo">NOT YET</option>
+        <option value="done">VISITED</option>
+        <option value="want">WANT</option>
+        <option value="again">AGAIN</option>
       </select>
     </div>
     <div class="sub">
@@ -900,8 +901,8 @@ body, input, textarea, select, button { font-family: var(--f-body); }
   </div>
   <div class="grid" id="grid"></div>
   <div class="amap" id="areaMap" hidden></div>
-  <p class="fine" style="margin-top:48px">年は竣工年・創業年・始まりの年です。営業時間や公開日は変わるので、出かける前に公式情報を確かめてください。印・メモ・写真はこのスマホの中に保存されます。機種変更の前などは、下の「記録を書き出す」でバックアップしてください。</p>
-  <div class="actions" style="margin-top:12px"><button type="button" class="btn" id="exportBtn">記録を書き出す</button><label class="btn" for="importFile">記録を読み込む</label><input type="file" id="importFile" accept="application/json,.json" hidden><span class="fine" id="bkmsg"></span></div>
+  <div class="actions" hidden><button type="button" class="btn" id="exportBtn">記録を書き出す</button><label class="btn" for="importFile">記録を読み込む</label><input type="file" id="importFile" accept="application/json,.json" hidden></div>
+  <p id="bkmsg" class="bknote" role="status" aria-live="polite" hidden></p>
 </div>
 <section id="view" hidden aria-labelledby="viewTitle">
   <div class="vbar"><span class="vt" id="viewTitle"></span><span class="vnav" id="viewNav"></span><button type="button" class="ic" id="viewClose" aria-label="閉じる"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4L16 16 M16 4L4 16"/></svg></button></div>
@@ -1778,7 +1779,7 @@ function pin(s) {
   const p = photoOf(s);
   const done = isDone(s.id), want = flag(s.id, "want"), again = flag(s.id, "again");
   const mk = want ? `<span class="mk" aria-hidden="true"></span>` : again ? `<span class="mk again" aria-hidden="true"></span>` : "";
-  const st = done ? "行った" : want ? "行きたい" : "まだ";
+  const st = done ? "VISITED" : want ? "WANT" : "NOT YET";
   return `<div class="pin${p ? " has" : ""}${done ? " done" : ""}" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.name)}（${st}）">
     <div class="ph">${p ? `<img src="${esc(p.thumb || p.url)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">` : ""}</div>
     ${visitCount(s.id) > 1 ? `<span class="times">×${visitCount(s.id)}</span>` : ""}
@@ -1798,7 +1799,7 @@ function render() {
   $("#status").value = ui.status; $("#sort").value = ui.sort;
   const spots = allSpots();
   const done = spots.filter(s => isDone(s.id));
-  $("#progress").textContent = `${String(done.length).padStart(3, "0")} / ${String(spots.length).padStart(3, "0")} 行った`;
+  $("#progress").textContent = `${String(done.length).padStart(3, "0")} / ${String(spots.length).padStart(3, "0")} VISITED`;
   const list = filtered();
   const grid = $("#grid");
   const cols = colCount(), rest = (cols - list.length % cols) % cols;
@@ -2004,7 +2005,7 @@ function openForm(id) {
           <label for="f-year">年（竣工・創業など、任意）<input id="f-year" name="year" type="number" inputmode="numeric" value="${esc(c.year || "")}"></label>
           <label for="f-link">参考URL（任意）<input id="f-link" name="link" type="url" value="${esc(c.link || "")}" placeholder="https://"></label>
           <label for="f-desc">説明・メモ<textarea id="f-desc" name="desc">${esc(c.desc || "")}</textarea></label>
-          <label class="inline"><input type="checkbox" name="want" ${id ? (flag(id, "want") ? "checked" : "") : "checked"}> 行きたいに入れる</label>
+          <label class="inline"><input type="checkbox" name="want" ${id ? (flag(id, "want") ? "checked" : "") : "checked"}> WANT に入れる</label>
         </div>
         <div class="actions"><button type="submit" class="btn primary">${id ? "保存" : "追加"}</button><button type="button" class="btn" data-act="close">やめる</button></div>
       </div>
@@ -2034,7 +2035,7 @@ function renderRank() {
   let rank = 0, prev = null;
   const rows = list.map((x, i) => { if (x.n !== prev) { rank = i + 1; prev = x.n; }
     return `<li><button type="button" data-open="${esc(x.s.id)}"><span class="d">${String(rank).padStart(2, "0")}</span><span class="rn">${esc(shortName(x.s))}<small>${esc(KIND[x.s.kind] || "")} · ${esc(x.s.area)}</small></span><span class="rc">×${x.n}</span></button></li>`; }).join("");
-  $("#viewBody").innerHTML = `<div class="cal rank"><ul class="vlist">${rows || `<li class="none">行った所に印をつけると、ここに並びます</li>`}</ul></div>`;
+  $("#viewBody").innerHTML = `<div class="cal rank"><ul class="vlist">${rows || `<li class="none">VISITED の印をつけると、ここに並びます</li>`}</ul></div>`;
 }
 // 訪問回数を増減。増やすと「行った」になる（初めてなら日付も今日に）
 function addVisit(id, d) {
@@ -2498,7 +2499,7 @@ $("#searchBtn").addEventListener("click", () => {
 const TREE = [
   { key: "kind", ja: "見る", en: "CATEGORY", items: () => [["all", "すべて"], ["month", THIS_MONTH + "月の行事"], ["arch", "建築"], ["classic", "寺社・名所"], ["history", "史跡"], ["festival", "祭り・行事"], ["sweets", "和菓子"], ["food", "食・老舗"], ["cafe", "喫茶"], ["book", "本屋"], ["church", "教会"], ["fest", "建築祭2026"], ["mine", "自分で追加"]] },
   { key: "area", ja: "歩く", en: "AREA", items: () => [["", "全エリア"]].concat(AREAS.concat(["その他"]).map(a => [a, a])) },
-  { key: "status", ja: "しるし", en: "STATUS", items: () => [["all", "すべて"], ["want", "行きたい"], ["done", "行った"], ["again", "また行きたい"], ["todo", "まだ"]] },
+  { key: "status", ja: "しるし", en: "STATUS", items: () => [["all", "ALL"], ["want", "WANT"], ["done", "VISITED"], ["again", "AGAIN"], ["todo", "NOT YET"]] },
   { key: "map", en: "MAP", act: true },
   { key: "cal", en: "CALENDAR", act: true },
   { key: "rank", en: "RANKING", act: true },
@@ -2655,7 +2656,7 @@ function renderMap() {
   spots.filter(s => !coordOf(s)).forEach(geocode);
   const pins = spots.map(s => ({ s, c: coordOf(s) })).filter(x => x.c);
   const missing = spots.length - pins.length;
-  const note = spots.length ? (missing ? `位置が分からない所が${missing}件あります` : "") : "行った所に印をつけると、ここに石が置かれます";
+  const note = spots.length ? (missing ? `位置が分からない所が${missing}件あります` : "") : "VISITED の印をつけると、ここに石が置かれます";
   if (vmap) { vmap.remove(); vmap = null; }
   if (!window.L) { box.innerHTML = `<div class="vnote">${note || "地図を読み込めませんでした"}</div>`; return; }
   // エリア地図と同じ下地に、行った所の石を置く
@@ -3095,6 +3096,9 @@ async function loadPhotos() {
 
 /* ---- バックアップ ---- */
 const blobToDataUrl = b => new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); });
+// 書き出し・読み込みの結果は画面下にしばらくだけ出す（記録の操作は MENU › EDIT から）
+let bkTimer = 0;
+function bkNote(t) { const el = $("#bkmsg"); el.textContent = t; el.hidden = false; clearTimeout(bkTimer); bkTimer = setTimeout(() => { el.hidden = true; }, 3200); }
 $("#exportBtn").addEventListener("click", async () => {
   const photos = {};
   const db = await idb();
@@ -3110,7 +3114,7 @@ $("#exportBtn").addEventListener("click", async () => {
   const a = document.createElement("a");
   a.href = url; a.download = `kyoto-meguri-${today()}.json`; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 5000);
-  $("#bkmsg").textContent = "書き出しました";
+  bkNote("書き出しました");
 });
 $("#importFile").addEventListener("change", async e => {
   const f = e.target.files[0]; if (!f) return;
@@ -3125,10 +3129,10 @@ $("#importFile").addEventListener("change", async e => {
       blobUrls[k] = URL.createObjectURL(blob);
     }
     saveLocal(); render();
-    $("#bkmsg").textContent = "読み込みました";
+    bkNote("読み込みました");
   } catch (err) {
     console.error(err);
-    $("#bkmsg").textContent = "読み込めませんでした。書き出したファイルを選んでください。";
+    bkNote("読み込めませんでした。書き出したファイルを選んでください。");
   }
   e.target.value = "";
 });
