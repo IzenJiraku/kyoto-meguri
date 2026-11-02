@@ -840,6 +840,9 @@ body, input, textarea, select, button { font-family: var(--f-body); }
 .bknote { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); transform: translateX(-50%); z-index: 60; margin: 0; padding: 10px 16px; font-size: 13px; color: var(--ink); background: rgba(13, 13, 13, .85); white-space: nowrap; max-width: calc(100% - 32px); }
 /* 起動中は線を丸く広げず、1本ずつ走らせる */
 #cover.shoot .lines { clip-path: none !important; transition: none !important; }
+/* 閉じる×: 押すと90度回ってから閉じる */
+.sheet .close svg, #viewClose svg { transition: transform .26s cubic-bezier(.65, 0, .25, 1); }
+.sheet .close.spin svg, #viewClose.spin svg { transform: rotate(90deg) !important; }
 </style>
 
 </head>
@@ -1988,6 +1991,14 @@ function nearbyHtml(s) {
   if (!list.length) return "";
   return `<div class="mame near"><h3>近くにあるもの</h3><ul>${list.map(({ x, d }) => `<li><button type="button" data-near="${esc(x.id)}"><span class="nm2">${esc(shortName(x))}</span><span class="nk">${esc(KIND[x.kind] || "")} · 徒歩${Math.max(1, Math.round(d * 1.3 / 80))}分</span></button></li>`).join("")}</ul></div>`;
 }
+// 閉じる×は、少し回ってから閉じる
+document.addEventListener("click", e => {
+  const b = e.target.closest(".sheet .close, #viewClose");
+  if (!b || b.dataset.spun || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  b.classList.add("spin"); b.dataset.spun = "1";
+  setTimeout(() => { b.click(); b.classList.remove("spin"); delete b.dataset.spun; }, 230);
+}, true);
 function closeSheet() { heroIdx = 0; openId = null; confirmDelete = false; $("#sheetRoot").innerHTML = ""; }
 
 /* ---- add / edit form ---- */
@@ -2761,11 +2772,32 @@ function renderCal() {
 $("#viewNav").addEventListener("click", e => {
   const z = e.target.closest("[data-zoom]"); if (z) { mapAll = z.dataset.zoom === "all"; renderMap(); return; }
   const b = e.target.closest("[data-cal]"); if (!b) return;
+  calGo(Number(b.dataset.cal));
+});
+// 月を行き来する。新しい月は進んだ向きから少しすべり込む
+function calGo(n) {
+  if (!calMonth) return;
   const [y, m] = calMonth.split("-").map(Number);
-  const d = new Date(y, m - 1 + Number(b.dataset.cal), 1);
+  const d = new Date(y, m - 1 + n, 1);
   calMonth = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
   renderCal();
-});
+  const c = $("#viewBody .cal");
+  if (c && c.animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) c.animate([{ transform: `translateX(${n > 0 ? 28 : -28}px)`, opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 260, easing: "cubic-bezier(.2, .8, .2, 1)" });
+}
+// スマホは左右にスライド、PCは ← → キーで前後の月へ
+{
+  let sx = 0, sy = 0, st = 0;
+  $("#viewBody").addEventListener("touchstart", e => { if (viewKind !== "cal" || e.touches.length !== 1) return; sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now(); }, { passive: true });
+  $("#viewBody").addEventListener("touchend", e => {
+    if (viewKind !== "cal" || !st) return;
+    const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy; st = 0;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) calGo(dx < 0 ? 1 : -1);
+  }, { passive: true });
+  document.addEventListener("keydown", e => {
+    if (viewKind !== "cal" || $("#sheetRoot").innerHTML || !$("#menu").hidden || e.target.closest("input, textarea, select")) return;
+    if (e.key === "ArrowRight") { e.preventDefault(); calGo(1); } else if (e.key === "ArrowLeft") { e.preventDefault(); calGo(-1); }
+  });
+}
 
 
 /* ---- エリアの地図: 一覧の下に、道や駅名の入った地図とスポット ---- */
