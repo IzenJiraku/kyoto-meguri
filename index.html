@@ -829,10 +829,11 @@ body, input, textarea, select, button { font-family: var(--f-body); }
 /* MENU は少し透かして、後ろの写真の色がうっすら残るように（ぼかして文字は読みやすく） */
 #menu { background: rgba(13, 13, 13, .58) !important; -webkit-backdrop-filter: blur(18px) saturate(.8); backdrop-filter: blur(18px) saturate(.8); }
 #menuScrim { background: rgba(0, 0, 0, .35); }
-/* 写真の右下に、写真の追加・外す・マスに使う */
-.hero-acts { position: absolute; right: 10px; bottom: 10px; z-index: 2; display: flex; gap: 6px; }
-.hero-acts > * { display: grid; place-items: center; height: 32px; padding: 0 12px; cursor: pointer; font-size: 10px; letter-spacing: .1em; color: #fff; background: rgba(13, 13, 13, .55); border: 1px solid rgba(255, 255, 255, .45); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-.hero-acts > *:hover { border-color: #fff; }
+/* 写真のすぐ下、右寄せに文字だけで（枠も背景もなし） */
+.hero-acts { position: absolute; right: 24px; top: 100%; z-index: 2; display: flex; gap: 18px; height: 36px; align-items: center; }
+.hero-acts > * { cursor: pointer; font-size: 10px; letter-spacing: .14em; color: var(--muted); background: none; border: 0; padding: 6px 0; transition: color .2s; }
+.hero-acts > *:hover, .hero-acts > *:focus-visible { color: var(--ink); }
+.hero-acts > button { opacity: .75; }
 .hero .count { right: auto !important; left: 12px; }
 /* 本文の書き出しを少し下げる */
 .sheet:not(.gsheet):has(.hero) .body { padding-top: 36px !important; }
