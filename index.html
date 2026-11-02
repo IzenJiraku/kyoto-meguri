@@ -1968,7 +1968,7 @@ function openSheet(id) {
       </div>
       <div class="body">
         <button type="button" class="close" data-act="close" aria-label="閉じる"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5L15 15 M15 5L5 15"/></svg></button>
-        <div class="kind">${esc(KIND[s.kind] || "")}${s.year && s.year !== 9999 ? `<span class="yr">${s.year}</span>` : ""}</div>
+        <div class="kind">${esc(KIND[s.kind] || "")}</div>
         <h2 id="sh-title">${esc(s.name)}</h2>
         <div class="marks" role="group" aria-label="印">
           <button type="button" data-act="toggle" aria-pressed="${done}" aria-label="${s.kind === "festival" ? "見た" : "行った"}"><i></i><b>${s.kind === "festival" ? "SEEN" : "VISITED"}</b></button>
