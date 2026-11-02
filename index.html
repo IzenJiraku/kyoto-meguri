@@ -819,6 +819,13 @@ body, input, textarea, select, button { font-family: var(--f-body); }
 #upmsg:empty { display: none; }
 /* 試作 ?kanji */
 .cover-logo .kl { stroke: currentColor; stroke-width: var(--sw, .55); stroke-linecap: square; }
+/* 記録の要約と鉛筆 */
+.sec-sum { align-items: center; }
+.sec-sum .logedit { margin-left: auto; width: 40px; height: 32px; display: grid; place-items: center; color: var(--muted); font-family: var(--f-mono); font-size: 10px; letter-spacing: .2em; }
+.sec-sum .logedit svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.1; }
+.sec-sum .logedit:hover, .sec-sum .logedit[aria-pressed="true"] { color: var(--ink); }
+.sec-sum .logedit[aria-pressed="true"] { width: auto; padding: 0 2px 0 10px; }
+.log.inline { border-top: 0 !important; padding-top: 0 !important; margin-top: -6px; }
 </style>
 
 </head>
@@ -1858,6 +1865,7 @@ function openSheet(id) {
   if (SHEET_TRIAL) gridSheet(s); else if (SEC_TRIAL) sectionSheet(s);
   setupHero(id);
 }
+let logEdit = null;
 // 詳細を INFO / STORY / MY LOG / NEARBY の4段に分け、印の下に自分の記録を1行で（2026-11-02 ?sec 試作から本番へ）
 const SEC_TRIAL = true;
 function sectionSheet(s) {
@@ -1868,11 +1876,16 @@ function sectionSheet(s) {
   // 行った回数と最後に行った日を、印のすぐ下に1行で
   if (marks && isDone(s.id)) {
     const sum = document.createElement("p"); sum.className = "sec-sum";
-    sum.innerHTML = `<b>×${visitCount(s.id)}</b>${v.date ? `<span>${esc(v.date.replace(/-/g, "."))}</span>` : ""}${v.memo ? `<span class="m">${esc(v.memo.split("\n")[0])}</span>` : ""}`;
+    const editing = logEdit === s.id;
+    sum.innerHTML = `<b>×${visitCount(s.id)}</b>${v.date ? `<span>${esc(v.date.replace(/-/g, "."))}</span>` : ""}<button type="button" class="logedit" data-act="logedit" aria-pressed="${editing}" aria-label="${editing ? "記録の編集を閉じる" : "記録を編集"}">${editing ? "DONE" : '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 16L5 12L13 4L16 7L8 15Z M11.5 5.5L14.5 8.5"/></svg>'}</button>${v.memo && !editing ? `<span class="m">${esc(v.memo.split("\n")[0])}</span>` : ""}`;
     marks.after(sum);
+    // 記録があるときは要約だけ。鉛筆を押したときだけ、要約のすぐ下で書き直せる
+    const lg = q(".log");
+    if (lg) { if (editing) { lg.classList.add("inline"); sum.after(lg); } else lg.remove(); }
   }
+  if (logEdit && logEdit !== s.id) logEdit = null;
   const story = [q(":scope > p:not(.sec-sum)"), q(":scope > a.fine"), q(".mame:not(.near)"), q(".note"), [...body.querySelectorAll(":scope > .fine")].find(e => e.id !== "upmsg" && e.textContent.trim())].filter(Boolean);
-  const log = q(".log"), actions = q(".actions"), up = q("#upmsg"), near = q(".mame.near"), credits = [...body.querySelectorAll(".credit")];
+  const log = q(".log:not(.inline)"), actions = q(".actions"), up = q("#upmsg"), near = q(".mame.near"), credits = [...body.querySelectorAll(".credit")];
   const facts = q(".facts");
   const add = (t, els) => { els = els.filter(Boolean); if (!els.length) return; const sec = document.createElement("section"); sec.className = "sec"; sec.append(head(t), ...els); body.appendChild(sec); };
   add("INFO", [facts]);
@@ -2018,7 +2031,7 @@ function renderRank() {
 function addVisit(id, d) {
   const was = isDone(id), v = Object.assign({}, visits[id] || {});
   const n = Math.max(1, visitCount(id) + d);
-  if (!was) { v.done = true; if (!v.date) v.date = today(); v.n = 1; } else v.n = n;
+  if (!was) { v.done = true; if (!v.date) v.date = today(); v.n = 1; logEdit = id; } else v.n = n;
   visits[id] = v;
   persist(true); render(); refreshView();
   if (openId === id) { const sh = $("#sheetRoot .sheet"), y = sh ? sh.scrollTop : 0; openSheet(id); const s2 = $("#sheetRoot .sheet"); if (s2) s2.scrollTop = y; }
@@ -2028,6 +2041,7 @@ function setFlag(id, k) {
   const v = Object.assign({}, visits[id] || {});
   v[k] = !v[k];
   if (k === "done" && v.done && !v.date) v.date = today();
+  if (k === "done" && v.done) logEdit = id;
   visits[id] = v;
   persist(true); render(); refreshView();
   if (openId === id) openSheet(id);
@@ -2992,6 +3006,7 @@ $("#sheetRoot").addEventListener("click", e => {
   if (a === "qnext") { openQuiz(); return; }
   if (a === "qmode") { openQuiz(act.dataset.mode); return; }
   if (a === "qopen") { const id = quiz.cur.s.id; openSheet(id); return; }
+  if (a === "logedit") { logEdit = logEdit === openId ? null : openId; const sh = $("#sheetRoot .sheet"), y = sh ? sh.scrollTop : 0; openSheet(openId); const s2 = $("#sheetRoot .sheet"); if (s2) s2.scrollTop = y; if (logEdit) { const ta = $("#sheetRoot .log.inline textarea"); if (ta) ta.focus({ preventScroll: true }); } return; }
   if (a === "cplus" || a === "cminus") { addVisit(openId, a === "cplus" ? 1 : -1); return; }
   if (a === "toggle") setFlag(openId, "done");
   else if (a === "want") setFlag(openId, "want");
