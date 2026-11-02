@@ -1014,6 +1014,16 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
 /* MAP の名前: 重なる所だけ隠す */
 .vmap .amap-name.hid { visibility: hidden; }
 .vmap .amap-name { font-size: 10px; letter-spacing: .06em; }
+/* PCの見開き: 写真は上から下まで。写真の操作は写真の右下に重ねる（v88） */
+@media (min-width: 1000px) {
+  .sheet:not(.gsheet):not(.form):has(> .hero) { width: min(100%, calc(100vh + 540px)); grid-template-columns: min(100vh, 58%) minmax(0, 1fr); }
+  .sheet:not(.gsheet):not(.form) > .hero { height: 100vh; aspect-ratio: auto; border-bottom: 0; }
+  .sheet:not(.gsheet):not(.form) .hero-acts { top: auto; bottom: 12px; right: 16px; height: auto; }
+  .sheet:not(.gsheet):not(.form) .hero-acts > * { color: #fff; opacity: .85; text-shadow: 0 1px 3px rgba(0, 0, 0, .7); }
+  .sheet:not(.gsheet):not(.form) .hero-acts > *:hover { opacity: 1; }
+  .sheet:not(.gsheet):not(.form) .hero .count { bottom: 14px; }
+}
+.pin .nm:has(.walk) .walk { text-align: inherit !important; justify-self: auto; }
 </style>
 
 </head>
