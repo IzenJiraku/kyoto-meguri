@@ -1942,7 +1942,7 @@ function openSheet(id) {
 let logEdit = null;
 // 詳細を INFO / STORY / MY LOG / NEARBY の4段に分け、印の下に自分の記録を1行で（2026-11-02 ?sec 試作から本番へ）
 const SEC_TRIAL = true;
-// マスの写真がそのまま広がって、詳細の写真になる
+// （v78で試し、v79で外した）マスの写真が広がって詳細の写真になる。今は使っていない
 function openFromTile(card) {
   const id = card.dataset.id, img = card.querySelector(".ph img.ld");
   if (!img || !img.naturalWidth || !document.body.animate || matchMedia("(prefers-reduced-motion: reduce)").matches) return openSheet(id);
@@ -3142,7 +3142,7 @@ $("#grid").addEventListener("click", e => {
   const b = e.target.closest("[data-act]");
   if (b && b.dataset.act === "toggle") { e.stopPropagation(); setFlag(card.dataset.id, "done"); return; }
   if (b && b.dataset.act === "want") { e.stopPropagation(); setFlag(card.dataset.id, "want"); return; }
-  openFromTile(card);
+  openSheet(card.dataset.id);
 });
 $("#grid").addEventListener("keydown", e => {
   if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("pin")) { e.preventDefault(); openSheet(e.target.dataset.id); }
