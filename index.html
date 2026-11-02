@@ -979,6 +979,35 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
 .pin.dye .ph img { transition: filter 1.8s cubic-bezier(.4, 0, .2, 1) !important; }
 /* 9 OFFLINE */
 #hdr .offline { position: absolute; left: 50%; transform: translateX(-50%); font-family: var(--f-disp); font-size: 10px; letter-spacing: .3em; color: var(--muted); pointer-events: none; }
+/* ==== 自作の選択と日付（v86） ==== */
+.log .fld { display: grid; gap: 4px; }
+.log .fl { font-family: var(--f-disp); font-size: 10px; letter-spacing: .24em; color: var(--muted); }
+.pick { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 36px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--ink); text-align: left; }
+.pick svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.1; flex: none; transition: transform .25s; }
+.pick[data-pick="select"][aria-expanded="true"] svg { transform: rotate(180deg); }
+.pick[aria-expanded="true"] { border-bottom-color: var(--ink); }
+.pick-list { position: relative; display: grid; padding: 8px 0 6px 6px; margin-left: 4px; border-left: 1px solid var(--lc); }
+.pick-list > button[data-val] { position: relative; display: flex; align-items: center; gap: 14px; padding: 9px 0 9px 18px; font-size: 13px; color: var(--muted); text-align: left; letter-spacing: .06em; }
+.pick-list > button[data-val]::before { content: ""; position: absolute; left: -6px; top: 50%; width: 14px; height: 1px; background: var(--lc); }
+.pick-list > button[data-val] i { position: absolute; left: -10px; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; border: 1px solid #EDEDEA; background: #0D0D0D; }
+.pick-list > button[data-val][aria-pressed="true"] { color: var(--ink); }
+.pick-list > button[data-val][aria-pressed="true"] i { background: #EDEDEA; }
+.pick-list > button[data-val]:hover { color: var(--ink); }
+.cal-pick { border-left: 0; margin: 0; padding: 10px 0 4px; }
+.cal-pick .pc-h { display: flex; align-items: center; justify-content: space-between; padding-bottom: 8px; }
+.cal-pick .pc-h b { font-family: var(--f-disp); font-weight: 400; font-size: 13px; letter-spacing: .2em; }
+.cal-pick .pc-h button { width: 36px; height: 32px; display: grid; place-items: center; color: var(--muted); }
+.cal-pick .pc-h svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.1; }
+.cal-pick .pc-w, .cal-pick .pc-d { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.cal-pick .pc-w span { text-align: center; font-family: var(--f-disp); font-size: 10px; letter-spacing: .2em; color: var(--muted); padding: 4px 0 6px; }
+.cal-pick .pc-d { gap: 1px; background: var(--line); border-block: 1px solid var(--line); }
+.cal-pick .pc-d > * { background: #0D0D0D; aspect-ratio: 1 / 1; display: grid; place-items: center; font-family: var(--f-disp); font-size: 13px; color: var(--ink); }
+.cal-pick .pc-d button.td { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.cal-pick .pc-d button.on { background: #EDEDEA; color: #0D0D0D; }
+.cal-pick .pc-d button:hover:not(.on) { background: #1A1A1A; }
+.cal-pick .pc-f { display: flex; gap: 24px; padding-top: 10px; }
+.cal-pick .pc-f button { font-family: var(--f-disp); font-size: 10px; letter-spacing: .24em; color: var(--muted); padding: 6px 0; }
+.cal-pick .pc-f button:hover { color: var(--ink); }
 </style>
 
 </head>
@@ -1024,6 +1053,7 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
         <option value="done">VISITED</option>
         <option value="want">WANT</option>
         <option value="again">AGAIN</option>
+        <option value="mine">MINE</option>
       </select>
     </div>
     <div class="sub">
@@ -1759,6 +1789,7 @@ try { custom = JSON.parse(localStorage.getItem(LS_KEY + "-custom") || "{}") || {
 const ui = { filter: "all", status: "all", sort: "area", q: "", area: "", near: null, facet: null };
 try { const s = JSON.parse(localStorage.getItem(LS_KEY + "-ui2") || "null"); if (s) Object.assign(ui, { filter: s.filter || "all", status: s.status || "all", sort: s.sort || "area" }); } catch (e) {}
 if (ui.filter.startsWith("area:")) ui.filter = "all";
+if (ui.filter === "mine") { ui.filter = "all"; ui.status = "mine"; }
 let openId = null, confirmDelete = false;
 let remote = null, assets = null;
 let writeChain = Promise.resolve(), pendingTimer = null;
@@ -1830,7 +1861,7 @@ const yearText = s => s.mine ? (s.year !== 9999 ? s.year : "") : (s.era ? s.era.
 
 /* ---- filters ---- */
 function pills() {
-  const list = [["all", "すべて"], ["month", THIS_MONTH + "月の行事"], ["arch", "建築"], ["classic", "寺社・名所"], ["history", "史跡"], ["festival", "祭り・行事"], ["sweets", "和菓子"], ["food", "食・老舗"], ["cafe", "喫茶"], ["book", "本屋"], ["church", "教会"], ["fest", "建築祭2026"], ["mine", "自分で追加"]];
+  const list = [["all", "すべて"], ["month", THIS_MONTH + "月の行事"], ["arch", "建築"], ["classic", "寺社・名所"], ["history", "史跡"], ["festival", "祭り・行事"], ["sweets", "和菓子"], ["food", "食・老舗"], ["cafe", "喫茶"], ["book", "本屋"], ["church", "教会"], ["fest", "建築祭2026"]];
   const ar = $("#area");
   if (!ar.options.length) ar.innerHTML = `<option value="">全エリア</option>` + AREAS.concat(["その他"]).map(a => `<option>${esc(a)}</option>`).join("");
   ar.value = ui.area;
@@ -1838,6 +1869,7 @@ function pills() {
 }
 function statusOk(id) {
   switch (ui.status) {
+    case "mine": return String(id).startsWith("u-");
     case "todo": return !isDone(id);
     case "done": return isDone(id);
     case "want": return flag(id, "want");
@@ -2035,7 +2067,7 @@ function openSheet(id) {
         <div class="fine" id="upmsg"></div>
         <div class="log">
           <div class="times-row"><span>VISITS</span><div class="stepper"><button type="button" data-act="cminus" aria-label="1回減らす"${visitCount(s.id) <= 1 ? " disabled" : ""}>−</button><b>${visitCount(s.id)}</b><button type="button" data-act="cplus" aria-label="1回増やす">＋</button></div></div>
-          <label for="d-${esc(s.id)}">DATE<input type="date" id="d-${esc(s.id)}" data-act="date" value="${esc(v.date || "")}"></label>
+          <div class="fld"><span class="fl">DATE</span><input type="hidden" id="d-${esc(s.id)}" data-act="date" value="${esc(v.date || "")}"><button type="button" class="pick" data-pick="date" data-for="d-${esc(s.id)}" aria-expanded="false"><span>${v.date ? esc(v.date.replace(/-/g, ".")) : "—"}</span><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3.5" y="4.5" width="13" height="12"/><path d="M3.5 8.5h13M7 2.5v4M13 2.5v4"/></svg></button></div>
           <label for="m-${esc(s.id)}">MEMO<textarea id="m-${esc(s.id)}" data-act="memo" placeholder="頼んだもの、印象に残ったところなど">${esc(v.memo || "")}</textarea></label>
         </div>
         ${gallery.map(g => g.credit ? `<div class="credit">写真: ${esc(g.credit)} · <a href="${esc(g.src)}" target="_blank" rel="noopener">Wikimedia Commons</a></div>` : "").join("")}
@@ -2239,8 +2271,57 @@ function openForm(id) {
       </div>
     </form>
   </div>`;
+  pickerize($("#spotForm"));
   $("#f-name").focus();
 }
+// ---- 自作の選択（スマホ標準の選択画面を出さない）----
+// select はフォームの値として隠して残し、その下に、MENU と同じ石と線の一覧を開く
+function pickerize(root) {
+  root.querySelectorAll(".log select").forEach(sel => {
+    if (sel.dataset.pk) return; sel.dataset.pk = "1"; sel.hidden = true;
+    const b = document.createElement("button"); b.type = "button"; b.className = "pick"; b.dataset.pick = "select"; b.dataset.for = sel.id; b.setAttribute("aria-expanded", "false");
+    b.innerHTML = `<span>${esc(sel.options[sel.selectedIndex]?.text || "")}</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>`;
+    sel.after(b);
+  });
+}
+function closePicks(except) { document.querySelectorAll(".pick-list").forEach(l => { if (l !== except) { const b = l.previousElementSibling; if (b) b.setAttribute("aria-expanded", "false"); l.remove(); } }); }
+let pickMonth = null;
+function pickCal(b, inp) {
+  const cur = inp.value || today();
+  if (!pickMonth) pickMonth = cur.slice(0, 7);
+  const [y, m] = pickMonth.split("-").map(Number);
+  const first = (new Date(y, m - 1, 1).getDay() + 6) % 7, days = new Date(y, m, 0).getDate();
+  let cells = "";
+  for (let i = 0; i < first; i++) cells += `<span></span>`;
+  for (let d = 1; d <= days; d++) { const k = `${pickMonth}-${String(d).padStart(2, "0")}`; cells += `<button type="button" data-day="${k}" class="${k === inp.value ? "on" : ""}${k === today() ? " td" : ""}">${d}</button>`; }
+  return `<div class="pc-h"><button type="button" data-pm="-1" aria-label="前の月"><svg viewBox="0 0 20 20"><path d="M12 4L6 10L12 16"/></svg></button><b>${y}.${String(m).padStart(2, "0")}</b><button type="button" data-pm="1" aria-label="次の月"><svg viewBox="0 0 20 20"><path d="M8 4L14 10L8 16"/></svg></button></div><div class="pc-w">${["M", "T", "W", "T", "F", "S", "S"].map(d => `<span>${d}</span>`).join("")}</div><div class="pc-d">${cells}</div><div class="pc-f"><button type="button" data-day="${today()}">TODAY</button>${inp.value ? `<button type="button" data-day="">CLEAR</button>` : ""}</div>`;
+}
+function openPick(b) {
+  const inp = document.getElementById(b.dataset.for); if (!inp) return;
+  const open = b.getAttribute("aria-expanded") === "true";
+  closePicks(); if (open) return;
+  const l = document.createElement("div"); l.className = "pick-list" + (b.dataset.pick === "date" ? " cal-pick" : "");
+  if (b.dataset.pick === "date") { pickMonth = null; l.innerHTML = pickCal(b, inp); }
+  else l.innerHTML = [...inp.options].map(o => `<button type="button" data-val="${esc(o.value)}" aria-pressed="${o.selected}"><i></i>${esc(o.text)}</button>`).join("");
+  b.after(l); b.setAttribute("aria-expanded", "true");
+  if (l.animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) l.animate([{ opacity: 0, transform: "translateY(-6px)" }, { opacity: 1, transform: "none" }], { duration: 220, easing: "cubic-bezier(.2, .8, .2, 1)" });
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest(".pick"); if (b) { e.preventDefault(); openPick(b); return; }
+  const l = e.target.closest(".pick-list");
+  if (!l) { if (!e.target.closest(".pick-list")) closePicks(); return; }
+  const btn = l.previousElementSibling, inp = btn && document.getElementById(btn.dataset.for); if (!inp) return;
+  const pm = e.target.closest("[data-pm]");
+  if (pm) { const [y, m] = pickMonth.split("-").map(Number); const d = new Date(y, m - 1 + Number(pm.dataset.pm), 1); pickMonth = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); l.innerHTML = pickCal(btn, inp); return; }
+  const dy = e.target.closest("[data-day]");
+  const vl = e.target.closest("[data-val]");
+  if (!dy && !vl) return;
+  const v = dy ? dy.dataset.day : vl.dataset.val;
+  inp.value = v;
+  btn.querySelector("span").textContent = dy ? (v ? v.replace(/-/g, ".") : "—") : (inp.options[inp.selectedIndex]?.text || "");
+  closePicks();
+  inp.dispatchEvent(new Event("change", { bubbles: true }));
+}, true);
 function saveForm(form) {
   const fd = new FormData(form);
   const name = String(fd.get("name") || "").trim();
@@ -2760,9 +2841,9 @@ $("#searchBtn").addEventListener("click", () => {
 });
 
 const TREE = [
-  { key: "kind", ja: "見る", en: "CATEGORY", items: () => [["all", "すべて"], ["month", THIS_MONTH + "月の行事"], ["arch", "建築"], ["classic", "寺社・名所"], ["history", "史跡"], ["festival", "祭り・行事"], ["sweets", "和菓子"], ["food", "食・老舗"], ["cafe", "喫茶"], ["book", "本屋"], ["church", "教会"], ["fest", "建築祭2026"], ["mine", "自分で追加"]] },
+  { key: "kind", ja: "見る", en: "CATEGORY", items: () => [["all", "すべて"], ["month", THIS_MONTH + "月の行事"], ["arch", "建築"], ["classic", "寺社・名所"], ["history", "史跡"], ["festival", "祭り・行事"], ["sweets", "和菓子"], ["food", "食・老舗"], ["cafe", "喫茶"], ["book", "本屋"], ["church", "教会"], ["fest", "建築祭2026"]] },
   { key: "area", ja: "歩く", en: "AREA", items: () => [["", "全エリア"]].concat(AREAS.concat(["その他"]).map(a => [a, a])) },
-  { key: "status", ja: "しるし", en: "STATUS", items: () => [["all", "ALL"], ["want", "WANT"], ["done", "VISITED"], ["again", "AGAIN"], ["todo", "NOT YET"]] },
+  { key: "status", ja: "しるし", en: "STATUS", items: () => [["all", "ALL"], ["want", "WANT"], ["done", "VISITED"], ["again", "AGAIN"], ["todo", "NOT YET"]].concat(Object.keys(custom).length || ui.status === "mine" ? [["mine", "MINE"]] : []) },
   { key: "map", en: "MAP", act: true },
   { key: "cal", en: "CALENDAR", act: true },
   { key: "rank", en: "RANKING", act: true },
