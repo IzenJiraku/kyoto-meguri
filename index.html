@@ -843,6 +843,49 @@ body, input, textarea, select, button { font-family: var(--f-body); }
 /* 閉じる×: 押すと90度回ってから閉じる */
 .sheet .close svg, #viewClose svg { transition: transform .26s cubic-bezier(.65, 0, .25, 1); }
 .sheet .close.spin svg, #viewClose.spin svg { transform: rotate(90deg) !important; }
+/* ==== 細部の仕上げ（v78） ==== */
+/* 起動中は、線と「上ル」が組み上がるまでヘッダーを出さない */
+#hdr { transition: background-color .3s, opacity .6s; }
+body:has(#cover:not(.lit)) #hdr { opacity: 0; pointer-events: none; }
+/* マスから詳細へ */
+.sheet.zoomin { animation: none !important; }
+.zoomghost { position: fixed; z-index: 40; overflow: hidden; pointer-events: none; }
+.zoomghost img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* 写真はマスごとに静かに浮かぶ */
+.pin .ph img:not(.ld) { opacity: 0; }
+.pin .ph img { transition: opacity .7s ease var(--fd, 0ms), filter .4s, transform .5s ease; }
+/* 数字が繰り上がる */
+#progress .roll { display: inline-block; height: 1.2em; line-height: 1.2em; overflow: hidden; vertical-align: bottom; }
+#progress .roll b { display: block; font-weight: 400; animation: agaruRoll .55s cubic-bezier(.3, 1.4, .5, 1) .15s both; }
+#progress .roll.down { display: inline-flex; flex-direction: column-reverse; }
+#progress .roll.down b { animation-name: rollDown; }
+@keyframes rollDown { from { transform: translateY(0); } to { transform: translateY(100%); } }
+.sec-sum b.vc { display: inline-block; }
+.sec-sum b.vc.up { animation: vcUp .45s cubic-bezier(.3, 1.4, .5, 1); }
+.sec-sum b.vc.down { animation: vcDown .45s cubic-bezier(.3, 1.4, .5, 1); }
+@keyframes vcUp { from { transform: translateY(60%); opacity: 0; } }
+@keyframes vcDown { from { transform: translateY(-60%); opacity: 0; } }
+/* PC: スクロールバー・文字を選んだ色・キーボードの枠を、黒と白の細い線に */
+html { scrollbar-width: thin; scrollbar-color: #3A3A38 #0D0D0D; -webkit-tap-highlight-color: transparent; }
+* { scrollbar-width: thin; scrollbar-color: #3A3A38 transparent; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #3A3A38; }
+::-webkit-scrollbar-thumb:hover { background: #6E6E6B; }
+::selection { background: #EDEDEA; color: #0D0D0D; }
+:focus-visible { outline: 1px solid #EDEDEA; outline-offset: 3px; }
+:focus:not(:focus-visible) { outline: none; }
+/* お知らせと空の状態: 英字の見出し＋小さな日本語 */
+.bknote { display: grid; justify-items: center; gap: 4px; padding: 14px 22px 12px; background: rgba(13, 13, 13, .88); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); text-align: center; }
+.bknote::before { content: ""; width: 20px; height: 1px; background: #EDEDEA; margin-bottom: 6px; }
+.bknote b { font-family: var(--f-disp); font-weight: 400; font-size: 13px; letter-spacing: .28em; }
+.bknote small { font-size: 10px; letter-spacing: .1em; color: var(--muted); }
+.bknote:not([hidden]) { animation: noteIn .35s cubic-bezier(.2, .8, .2, 1); }
+@keyframes noteIn { from { opacity: 0; transform: translate(-50%, 8px); } }
+.vlist .none { display: grid; justify-items: start; gap: 6px; padding: 28px 0; }
+.vlist .none b { font-family: var(--f-disp); font-weight: 400; font-size: 13px; letter-spacing: .28em; color: var(--ink); }
+.vlist .none small { font-size: 10px; letter-spacing: .1em; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .pin .ph img:not(.ld) { opacity: 1; } }
 </style>
 
 </head>
@@ -1780,13 +1823,16 @@ function filtered() {
 function colCount() { return parseInt(getComputedStyle(document.documentElement).getPropertyValue("--cols"), 10) || 3; }
 function shortName(s) { return s.name.replace(/（.*?）/g, ""); }
 function ratioFor() { return 1; }
+// 一覧の写真は、読めたマスから白黒のまま静かに浮かぶ（一度読めた写真は描き直しても点滅させない）
+const IMG_LD = new Set();
+function imgLd(im) { IMG_LD.add(im.getAttribute("src")); im.classList.add("ld"); }
 function pin(s) {
   const p = photoOf(s);
   const done = isDone(s.id), want = flag(s.id, "want"), again = flag(s.id, "again");
   const mk = want ? `<span class="mk" aria-hidden="true"></span>` : again ? `<span class="mk again" aria-hidden="true"></span>` : "";
   const st = done ? "VISITED" : want ? "WANT" : "NOT YET";
   return `<div class="pin${p ? " has" : ""}${done ? " done" : ""}" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.name)}（${st}）">
-    <div class="ph">${p ? `<img src="${esc(p.thumb || p.url)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">` : ""}</div>
+    <div class="ph">${p ? `<img src="${esc(p.thumb || p.url)}" alt="" loading="lazy" decoding="async"${IMG_LD.has(p.thumb || p.url) ? ` class="ld"` : ` style="--fd:${Math.random() * 240 | 0}ms" onload="imgLd(this)"`} onerror="this.style.visibility='hidden'">` : ""}</div>
     ${visitCount(s.id) > 1 ? `<span class="times">×${visitCount(s.id)}</span>` : ""}
     <span class="nm">${esc(shortName(s))}${ui.near && ui.near.dist.has(s.id) ? `<em class="walk">徒歩${walkMin(ui.near.dist.get(s.id))}分</em>` : ui.sort === "near" && sortPos && posDist(s) < 5000 ? `<em class="walk">徒歩${walkMin(posDist(s))}分</em>` : ""}</span>${mk}
   </div>`;
@@ -1799,12 +1845,25 @@ function renderTip() {
   tipSpot = s.id;
   $("#tip").innerHTML = `<b>${esc(shortName(s))}</b>　${esc(s.tips[Math.floor(Math.random() * s.tips.length)])}`;
 }
+// VISITED の数が変わったら、数字が1つ繰り上がる（詳細を開いている間に変わったら、閉じたときに）
+let progN = null, progFrom = null;
+function setProgress(n, total) {
+  const pad = x => String(x).padStart(3, "0"), el = $("#progress"), tail = ` / ${pad(total)} VISITED`;
+  if (progN !== null && n !== progN && progFrom === null) progFrom = progN;
+  progN = n;
+  if (progFrom === null || progFrom === n || $("#sheetRoot").innerHTML || matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (!$("#sheetRoot").innerHTML || progFrom === n) progFrom = null;
+    el.textContent = pad(n) + tail; return;
+  }
+  el.innerHTML = `<span class="roll ${n > progFrom ? "up" : "down"}"><b>${pad(progFrom)}</b><b>${pad(n)}</b></span>${tail}`;
+  progFrom = null;
+}
 function render() {
   pills();
   $("#status").value = ui.status; $("#sort").value = ui.sort;
   const spots = allSpots();
   const done = spots.filter(s => isDone(s.id));
-  $("#progress").textContent = `${String(done.length).padStart(3, "0")} / ${String(spots.length).padStart(3, "0")} VISITED`;
+  setProgress(done.length, spots.length);
   const list = filtered();
   const grid = $("#grid");
   const cols = colCount(), rest = (cols - list.length % cols) % cols;
@@ -1883,6 +1942,29 @@ function openSheet(id) {
 let logEdit = null;
 // 詳細を INFO / STORY / MY LOG / NEARBY の4段に分け、印の下に自分の記録を1行で（2026-11-02 ?sec 試作から本番へ）
 const SEC_TRIAL = true;
+// マスの写真がそのまま広がって、詳細の写真になる
+function openFromTile(card) {
+  const id = card.dataset.id, img = card.querySelector(".ph img.ld");
+  if (!img || !img.naturalWidth || !document.body.animate || matchMedia("(prefers-reduced-motion: reduce)").matches) return openSheet(id);
+  const r = card.querySelector(".ph").getBoundingClientRect();
+  openSheet(id);
+  const sheet = $("#sheetRoot .sheet"), hero = sheet && sheet.querySelector(".hero");
+  if (!hero || !hero.querySelector("img")) return;
+  const h = hero.getBoundingClientRect(), dur = 420, ease = "cubic-bezier(.65, 0, .2, 1)";
+  sheet.classList.add("zoomin");
+  hero.style.visibility = "hidden";
+  const g = document.createElement("div"); g.className = "zoomghost";
+  const gi = img.cloneNode(); gi.removeAttribute("style"); gi.removeAttribute("onload"); gi.className = ""; g.appendChild(gi);
+  document.body.appendChild(g);
+  const box = x => ({ left: x.left + "px", top: x.top + "px", width: x.width + "px", height: x.height + "px" });
+  const gray = card.classList.contains("done") ? "none" : "grayscale(1) brightness(.82)";
+  g.animate([box(r), box(h)], { duration: dur, easing: ease, fill: "forwards" });
+  gi.animate([{ filter: gray }, { filter: gray, offset: .4 }, { filter: "none" }], { duration: dur, easing: "ease", fill: "forwards" });
+  sheet.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur * .7, easing: "ease" });
+  const sc = sheet.closest(".scrim"); if (sc) sc.animate([{ backgroundColor: "rgba(0,0,0,0)" }, {}], { duration: dur, easing: "ease" });
+  setTimeout(() => { hero.style.visibility = ""; g.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160 }).onfinish = () => g.remove(); }, dur);
+}
+let sumPrev = {};
 function sectionSheet(s) {
   const body = $("#sheetRoot .sheet .body"); if (!body) return;
   const q = sel => body.querySelector(sel);
@@ -1892,7 +1974,9 @@ function sectionSheet(s) {
   if (marks && isDone(s.id)) {
     const sum = document.createElement("p"); sum.className = "sec-sum";
     const editing = logEdit === s.id;
-    sum.innerHTML = `<b>×${visitCount(s.id)}</b>${v.date ? `<span>${esc(v.date.replace(/-/g, "."))}</span>` : ""}<button type="button" class="logedit" data-act="logedit" aria-pressed="${editing}" aria-label="${editing ? "記録の編集を閉じる" : "記録を編集"}">${editing ? "DONE" : '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 16L5 12L13 4L16 7L8 15Z M11.5 5.5L14.5 8.5"/></svg>'}</button>${v.memo && !editing ? `<span class="m">${esc(v.memo.split("\n")[0])}</span>` : ""}`;
+    const vc = visitCount(s.id), bump = sumPrev.id === s.id && sumPrev.n !== vc ? (vc > sumPrev.n ? " up" : " down") : "";
+    sumPrev = { id: s.id, n: vc };
+    sum.innerHTML = `<b class="vc${bump}">×${vc}</b>${v.date ? `<span>${esc(v.date.replace(/-/g, "."))}</span>` : ""}<button type="button" class="logedit" data-act="logedit" aria-pressed="${editing}" aria-label="${editing ? "記録の編集を閉じる" : "記録を編集"}">${editing ? "DONE" : '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 16L5 12L13 4L16 7L8 15Z M11.5 5.5L14.5 8.5"/></svg>'}</button>${v.memo && !editing ? `<span class="m">${esc(v.memo.split("\n")[0])}</span>` : ""}`;
     marks.after(sum);
     // 記録があるときは要約だけ。鉛筆を押したときだけ、要約のすぐ下で書き直せる
     const lg = q(".log");
@@ -1999,7 +2083,7 @@ document.addEventListener("click", e => {
   b.classList.add("spin"); b.dataset.spun = "1";
   setTimeout(() => { b.click(); b.classList.remove("spin"); delete b.dataset.spun; }, 230);
 }, true);
-function closeSheet() { heroIdx = 0; openId = null; confirmDelete = false; $("#sheetRoot").innerHTML = ""; }
+function closeSheet() { heroIdx = 0; openId = null; confirmDelete = false; $("#sheetRoot").innerHTML = ""; if (progFrom !== null) { const sp = allSpots(); setTimeout(() => setProgress(sp.filter(s => isDone(s.id)).length, sp.length), 120); } }
 
 /* ---- add / edit form ---- */
 function openForm(id) {
@@ -2050,7 +2134,7 @@ function renderRank() {
   let rank = 0, prev = null;
   const rows = list.map((x, i) => { if (x.n !== prev) { rank = i + 1; prev = x.n; }
     return `<li><button type="button" data-open="${esc(x.s.id)}"><span class="d">${String(rank).padStart(2, "0")}</span><span class="rn">${esc(shortName(x.s))}<small>${esc(KIND[x.s.kind] || "")} · ${esc(x.s.area)}</small></span><span class="rc">×${x.n}</span></button></li>`; }).join("");
-  $("#viewBody").innerHTML = `<div class="cal rank"><ul class="vlist">${rows || `<li class="none">VISITED の印をつけると、ここに並びます</li>`}</ul></div>`;
+  $("#viewBody").innerHTML = `<div class="cal rank"><ul class="vlist">${rows || `<li class="none"><b>NO RECORD</b><small>VISITED の印をつけると、ここに並びます</small></li>`}</ul></div>`;
 }
 // 訪問回数を増減。増やすと「行った」になる（初めてなら日付も今日に）
 function addVisit(id, d) {
@@ -2766,7 +2850,7 @@ function renderCal() {
   $("#viewBody").innerHTML = `<div class="cal">
     <div class="dow">${["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(d => `<span>${d}</span>`).join("")}</div>
     <div class="days">${cells}</div>
-    <ul class="vlist">${inMonth.map(x => `<li><button type="button" data-open="${esc(x.s.id)}"><span class="d">${x.d.slice(5).replace("-", ".")}</span>${esc(shortName(x.s))}</button></li>`).join("") || `<li class="none">この月の記録はありません</li>`}</ul>
+    <ul class="vlist">${inMonth.map(x => `<li><button type="button" data-open="${esc(x.s.id)}"><span class="d">${x.d.slice(5).replace("-", ".")}</span>${esc(shortName(x.s))}</button></li>`).join("") || `<li class="none"><b>NO RECORD</b><small>この月の記録はありません</small></li>`}</ul>
   </div>`;
 }
 $("#viewNav").addEventListener("click", e => {
@@ -3058,7 +3142,7 @@ $("#grid").addEventListener("click", e => {
   const b = e.target.closest("[data-act]");
   if (b && b.dataset.act === "toggle") { e.stopPropagation(); setFlag(card.dataset.id, "done"); return; }
   if (b && b.dataset.act === "want") { e.stopPropagation(); setFlag(card.dataset.id, "want"); return; }
-  openSheet(card.dataset.id);
+  openFromTile(card);
 });
 $("#grid").addEventListener("keydown", e => {
   if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("pin")) { e.preventDefault(); openSheet(e.target.dataset.id); }
@@ -3166,7 +3250,7 @@ async function loadPhotos() {
 const blobToDataUrl = b => new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); });
 // 書き出し・読み込みの結果は画面下にしばらくだけ出す（記録の操作は MENU › EDIT から）
 let bkTimer = 0;
-function bkNote(t) { const el = $("#bkmsg"); el.textContent = t; el.hidden = false; clearTimeout(bkTimer); bkTimer = setTimeout(() => { el.hidden = true; }, 3200); }
+function bkNote(t, ja) { const el = $("#bkmsg"); el.innerHTML = `<b>${esc(t)}</b>${ja ? `<small>${esc(ja)}</small>` : ""}`; el.hidden = false; clearTimeout(bkTimer); bkTimer = setTimeout(() => { el.hidden = true; }, 3200); }
 $("#exportBtn").addEventListener("click", async () => {
   const photos = {};
   const db = await idb();
@@ -3182,7 +3266,7 @@ $("#exportBtn").addEventListener("click", async () => {
   const a = document.createElement("a");
   a.href = url; a.download = `kyoto-meguri-${today()}.json`; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 5000);
-  bkNote("書き出しました");
+  bkNote("EXPORTED", "記録を書き出しました");
 });
 $("#importFile").addEventListener("change", async e => {
   const f = e.target.files[0]; if (!f) return;
@@ -3197,10 +3281,10 @@ $("#importFile").addEventListener("change", async e => {
       blobUrls[k] = URL.createObjectURL(blob);
     }
     saveLocal(); render();
-    bkNote("読み込みました");
+    bkNote("IMPORTED", "記録を読み込みました");
   } catch (err) {
     console.error(err);
-    bkNote("読み込めませんでした。書き出したファイルを選んでください。");
+    bkNote("NOT IMPORTED", "書き出したファイルを選んでください");
   }
   e.target.value = "";
 });
