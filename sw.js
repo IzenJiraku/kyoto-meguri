@@ -1,7 +1,7 @@
 // AGARU service worker: アプリ本体とフォントだけをキャッシュする
 // 掲載写真（Wikimedia）と地図（国土地理院）はキャッシュしない。他サイトの画像を入れると、
 // ブラウザが1枚あたり数MBとして容量を数えてしまい、端末の保存容量を大きく使うため
-const VERSION = "v92";
+const VERSION = "v93";
 const CORE = ["./", "index.html", "manifest.webmanifest", "vendor/leaflet.js", "vendor/leaflet.css", "icons/icon-192-v4.png", "icons/icon-512-v4.png", "icons/apple-touch-icon-v4.png", "icons/icon-v4.svg"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
@@ -14,6 +14,11 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   const isFont = url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com";
+  // アイコンと manifest は入れ替えたときにすぐ反映されるよう、通信できるときは新しい方を使う
+  if (url.origin === location.origin && (url.pathname.endsWith(".webmanifest") || url.pathname.includes("/icons/"))) {
+    e.respondWith(fetch(req).catch(() => caches.match(req, { ignoreSearch: true })));
+    return;
+  }
   if (req.mode === "navigate") {
     // ページは新しい版を優先し、オフラインならキャッシュ
     e.respondWith(fetch(req).then(r => { const copy = r.clone(); caches.open(VERSION).then(c => c.put("index.html", copy)); return r; }).catch(() => caches.match("index.html")));

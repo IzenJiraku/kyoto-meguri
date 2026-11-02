@@ -1,6 +1,7 @@
 {
   "name": "AGARU",
   "short_name": "AGARU",
+  "id": "./",
   "description": "碁盤の目の町を歩いて、建物・寺社・史跡・祭り・和菓子・ごはんを記録する自分用の帖",
   "lang": "ja",
   "start_url": "./",
