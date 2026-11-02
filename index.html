@@ -838,6 +838,8 @@ body, input, textarea, select, button { font-family: var(--f-body); }
 /* 本文の書き出しを少し下げる */
 .sheet:not(.gsheet):has(.hero) .body { padding-top: 36px !important; }
 .bknote { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); transform: translateX(-50%); z-index: 60; margin: 0; padding: 10px 16px; font-size: 13px; color: var(--ink); background: rgba(13, 13, 13, .85); white-space: nowrap; max-width: calc(100% - 32px); }
+/* 起動中は線を丸く広げず、1本ずつ走らせる */
+#cover.shoot .lines { clip-path: none !important; transition: none !important; }
 </style>
 
 </head>
@@ -2292,6 +2294,7 @@ function kanjiIntro(cv, done) {
   const step = 140, last = 520, total = step * (keys.length - 2) + last;
   put(keys[0]);
   const t0 = performance.now() + 120;
+  shootLines(cv, 120, step * (keys.length - 2));
   const f = now => {
     const t = Math.max(0, now - t0);
     let k = Math.min(keys.length - 2, Math.floor(t / step)), u;
@@ -2305,6 +2308,37 @@ function kanjiIntro(cv, done) {
     done();
   };
   requestAnimationFrame(f);
+}
+// 数字が九から一へ上がっていくあいだに、碁盤の線が1本ずつ画面を切り裂くように走る。
+// 横の線（条）は下から上へ、縦の線は上下交互に。走った直後は白く光り、いつもの線の色に落ち着く
+function shootLines(cv, delay, span) {
+  const box = $("#lines"); if (!box || !box.animate) return;
+  cv.classList.add("shoot");
+  const start = performance.now() + delay, sharp = "cubic-bezier(.85, 0, .15, 1)";
+  const run = (el, axis, from, at, dur, lc) => {
+    el.style.transformOrigin = from;
+    el.animate([
+      { transform: `scale${axis}(0)`, backgroundColor: "#fff" },
+      { transform: `scale${axis}(1)`, backgroundColor: "#fff", offset: .6 },
+      { transform: `scale${axis}(1)`, backgroundColor: lc },
+    ], { duration: dur, delay: start + at - performance.now(), easing: sharp, fill: "backwards" });
+  };
+  // 表紙は起動直後に測り直して線を引き直すことがあるので、引き直されたら同じ時刻の続きから走らせる
+  const apply = () => {
+    const hs = [...box.querySelectorAll(".h")].sort((a, b) => parseFloat(b.style.top) - parseFloat(a.style.top));
+    const vs = [...box.querySelectorAll(".v")];
+    if (!hs.length && !vs.length) return;
+    const lc = getComputedStyle(hs[0] || vs[0]).backgroundColor;
+    // 画面に入っている横線だけを、下から順に
+    const vis = hs.filter(h => parseFloat(h.style.top) < innerHeight);
+    hs.filter(h => !vis.includes(h)).forEach(h => run(h, "X", "left", 0, 1, lc));
+    vis.forEach((h, i) => run(h, "X", i % 2 ? "right" : "left", span * i / vis.length, 520, lc));
+    vs.forEach((v, i) => run(v, "Y", i % 2 ? "bottom" : "top", span * .8 * (i + .5) / vs.length, 640, lc));
+  };
+  apply();
+  const mo = new MutationObserver(apply); mo.observe(box, { childList: true });
+  const end = () => cv.classList.contains("open") ? cv.classList.remove("shoot") : setTimeout(end, 200);
+  setTimeout(() => { mo.disconnect(); end(); }, delay + span + 900);
 }
 // 表紙の「上ル」を押すと、線の演出をもう一度
 function replayLines() {
