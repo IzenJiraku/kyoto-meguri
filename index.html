@@ -1025,6 +1025,9 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
   .sheet:not(.gsheet):not(.form) .hero .count { bottom: 14px; }
 }
 .pin .nm:has(.walk) .walk { text-align: inherit !important; justify-self: auto; }
+/* 写真のないマスも、近い順のとき名前と徒歩は左ぞろえ */
+.pin:not(.has) .nm:has(.walk) { left: 0 !important; right: 0 !important; width: auto !important; }
+.pin:not(.has) .nm:has(.walk), .pin:not(.has) .nm:has(.walk) > * { text-align: left !important; margin-left: 0 !important; margin-right: 0 !important; justify-self: start !important; }
 </style>
 
 </head>
