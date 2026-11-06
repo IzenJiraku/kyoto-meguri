@@ -2999,7 +2999,7 @@ function openView(k) {
   viewKind = k;
   $("#view").hidden = false; document.body.classList.add("view-open");
   const vw = $("#view"); if (vw.animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) vw.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 280, easing: "cubic-bezier(.2, .8, .2, 1)" });
-  if (k === "map") renderMap(); else if (k === "rank") renderRank(); else if (k === "kentei") renderKentei(); else renderCal();
+  if (k === "map") renderMap(); else if (k === "rank") renderRank(); else if (k === "kentei") { if (kq && !kInRound()) kq = null; kView = "home"; renderKentei(); } else renderCal();
 }
 function closeView() { viewKind = null; $("#view").hidden = true; document.body.classList.remove("view-open"); }
 $("#viewClose").addEventListener("click", closeView);
@@ -3710,7 +3710,24 @@ function kPoolOf(src) {
   if (src.startsWith("spot:")) { const id = src.slice(5); return all.filter(q => kSpots(q).includes(id)); }
   return all.filter(q => q.f === src);
 }
-let kq = null;
+let kq = null, kView = "home", kLoaded = false;
+// 解いている途中の10問も端末に残す。アプリを閉じても「続きから」で戻れる
+const KR_KEY = LS_KEY + "-kentei-round";
+function kSaveRound() {
+  try {
+    if (!kq || kq.i >= kq.list.length) localStorage.removeItem(KR_KEY);
+    else localStorage.setItem(KR_KEY, JSON.stringify({ src: kq.src, i: kq.i, pick: kq.pick, res: kq.res, list: kq.list.map(x => ({ id: x.q.id, right: x.right, ch: x.ch })) }));
+  } catch (e) {}
+}
+function kLoadRound() {
+  try {
+    const r = JSON.parse(localStorage.getItem(KR_KEY) || "null"); if (!r || !r.list) return;
+    const list = r.list.map(x => { const q = kAll().find(y => y.id === x.id); return q && { q, right: x.right, ch: x.ch }; });
+    if (list.some(x => !x)) return;
+    kq = { src: r.src, i: r.i, pick: r.pick, res: r.res || [], list };
+  } catch (e) {}
+}
+const kInRound = () => kq && kq.i < kq.list.length;
 // 間違えた問題 → まだ解いていない問題 → 覚えた問題 の順に優先して10問
 function kStart(src) {
   const pool = kShuffle(kPoolOf(src)).sort((a, b) => (kMissed(a) ? 0 : kst[a.id] ? 2 : 1) - (kMissed(b) ? 0 : kst[b.id] ? 2 : 1));
@@ -3720,7 +3737,7 @@ function kStart(src) {
     return { q, right, ch: kShuffle([right].concat(wrong)) };
   });
   if (!list.length) return;
-  kq = { src, list, i: 0, pick: null, res: [] };
+  kq = { src, list, i: 0, pick: null, res: [] }; kView = "quiz"; kSaveRound();
   renderKentei();
   $("#viewBody").scrollTop = 0;
 }
@@ -3738,13 +3755,15 @@ function kRow(src, n, d) {
 function renderKentei() {
   $("#viewTitle").textContent = "KENTEI";
   const body = $("#viewBody");
-  if (!kq) {
+  if (!kLoaded) { kLoaded = true; if (!kq) kLoadRound(); }
+  if (!kq || kView === "home") {
     $("#viewNav").innerHTML = "";
     const all = kAll(), got = all.filter(kLearned).length;
     const frac = p => { const l = p.filter(kLearned).length; return `${l}<i>/</i>${p.length}`; };
     const vis = kPoolOf("visited"), miss = kPoolOf("missed");
     body.innerHTML = `<div class="kt">
       <div class="kt-head"><p class="kt-big">${got}<span> / ${all.length}</span></p><p class="kt-sub">覚えた問題 · LEARNED</p><div class="kt-bar"><i style="width:${all.length ? got / all.length * 100 : 0}%"></i></div></div>
+      ${kInRound() ? `<p class="grp-h">CONTINUE</p><ul class="vlist kt-rows"><li><button type="button" data-kresume><span class="kn">${esc(kLabel(kq.src)[0])}<small>${kLabel(kq.src)[1]}</small></span><span class="kp">${String(kq.i + 1).padStart(2, "0")}<i>/</i>${String(kq.list.length).padStart(2, "0")} →</span></button></li></ul>` : ""}
       <p class="grp-h">FIELD</p>
       <ul class="vlist kt-rows">${kRow("all", all.length, frac(all))}${KF.map(([k]) => { const p = kPoolOf(k); return kRow(k, p.length, frac(p)); }).join("")}</ul>
       <p class="grp-h">REVIEW</p>
@@ -3784,18 +3803,19 @@ function renderKentei() {
 $("#viewBody").addEventListener("click", e => {
   if (viewKind !== "kentei") return;
   const st = e.target.closest("[data-kstart]"); if (st) { kStart(st.dataset.kstart); return; }
-  if (e.target.closest("[data-khome]")) { kq = null; renderKentei(); $("#viewBody").scrollTop = 0; return; }
+  if (e.target.closest("[data-khome]")) { kq = null; kView = "home"; kSaveRound(); renderKentei(); $("#viewBody").scrollTop = 0; return; }
+  if (e.target.closest("[data-kresume]")) { kView = "quiz"; renderKentei(); $("#viewBody").scrollTop = 0; return; }
   const pk = e.target.closest("[data-kpick]");
   if (pk && kq && kq.pick === null) {
     const x = kq.list[kq.i], j = +pk.dataset.kpick, ok = x.ch[j] === x.right;
-    kq.pick = j; kq.res[kq.i] = ok;
+    kq.pick = j; kq.res[kq.i] = ok; kSaveRound();
     const r = kst[x.q.id] || { n: 0, ok: 0 };
     r.n++; if (ok) r.ok++; r.last = ok ? 1 : 0; kst[x.q.id] = r; kSave();
     renderKentei();
     const a = $(".kq-ans"); if (a && a.scrollIntoView) a.scrollIntoView({ block: "nearest", behavior: "smooth" });
     return;
   }
-  if (e.target.closest("[data-knext]")) { kq.i++; kq.pick = null; renderKentei(); $("#viewBody").scrollTop = 0; }
+  if (e.target.closest("[data-knext]")) { kq.i++; kq.pick = null; kSaveRound(); renderKentei(); $("#viewBody").scrollTop = 0; }
 });
 // 詳細の中：この場所に問題があれば、そこから解き始められる
 function kenteiSecEl(s) {
