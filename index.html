@@ -4208,8 +4208,19 @@ function kStart(src) {
 function kOpen() {
   kHomeOpen = false;
   if (!kcur || !kById(kcur.id)) { const { q } = kPick(null); if (q) kServe(q, null); }
+  // 答え終わった問題のまま開いたときは、次の問題から始める
+  else if (kcur.pick !== null) {
+    const from = kById(kcur.id), n = kcur.next && kById(kcur.next) ? { q: kById(kcur.next), via: kcur.nextVia } : kPick(from);
+    if (n && n.q) kServe(n.q, n.via);
+  }
   renderKentei();
 }
+// アプリに戻ってきたとき（1分以上離れていたら）、答え終わった画面は次の問題へ
+let kHiddenAt = 0;
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { kHiddenAt = Date.now(); return; }
+  if (viewKind === "kentei" && !kHomeOpen && kcur && kcur.pick !== null && kHiddenAt && Date.now() - kHiddenAt > 60000) { kOpen(); $("#viewBody").scrollTop = 0; }
+});
 function kLabel(src) {
   if (src === "all") return ["すべて", "ALL"];
   if (src === "missed") return ["間違えた問題", "MISSED"];
@@ -4276,7 +4287,7 @@ function renderKentei() {
     // ほかのつながりは、NEXTの下に小さな文字リンクで（NEXTと同じつながりは除く）
     tags = tags.filter(t => !nx || t !== nx.via);
     if (tags.length) chips = `<p class="kq-follow"><span>ほかのつながり</span>${tags.map(t => `<button type="button" data-knext="${esc(t)}">${esc(kTagLabel(t))}</button>`).join("")}</p>`;
-    kcur.next = nx.q.id; kcur.nextVia = nx.via;
+    kcur.next = nx.q.id; kcur.nextVia = nx.via; kSaveNow();
   }
   body.innerHTML = `<div class="kt kq">
     ${kph && !kph.after ? kPhotoHtml(kph, pick !== null) : ""}
