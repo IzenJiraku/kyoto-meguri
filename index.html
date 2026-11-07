@@ -1107,6 +1107,26 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
 .kq-follow span { margin-right: 2px; }
 .kq-follow button { padding: 6px 0; font-size: 10px; letter-spacing: .08em; color: rgba(237, 237, 234, .8); text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(237, 237, 234, .35); }
 .kq-follow button:hover { color: #EDEDEA; }
+
+/* 正解・不正解をひと目で（2026-11-07） */
+.kq-res { display: flex; align-items: center; gap: 12px; letter-spacing: .24em; }
+.kq-res svg { width: 40px; height: 40px; flex: none; fill: none; stroke: #EDEDEA; stroke-width: 2; stroke-linecap: square; }
+.kq-res.ok circle { stroke-dasharray: 95; stroke-dashoffset: 95; animation: kDraw .5s cubic-bezier(.3, .8, .3, 1) forwards; transform: rotate(-90deg); transform-origin: 20px 20px; }
+.kq-res.ng path { stroke-dasharray: 34; stroke-dashoffset: 34; animation: kDraw .25s ease-out forwards; }
+.kq-res.ng path + path { animation-delay: .18s; }
+.kq-res.ng svg { stroke: #8C8C88; }
+.kq-res.ng span { color: #8C8C88; }
+.kq-res small { font-family: var(--f-body); font-size: 13px; letter-spacing: .04em; color: #EDEDEA; }
+@keyframes kDraw { to { stroke-dashoffset: 0; } }
+.kq-ch .kmk { margin-left: auto; font-style: normal; font-size: 20px; line-height: 1; }
+.kq-ch button.ng { text-decoration: none; }
+.kq-ch button.ng > span:nth-child(2) { text-decoration: line-through; text-decoration-thickness: 1px; }
+.kq-ch button.ng { border-color: rgba(237, 237, 234, .62); }
+.kq-spotlink { justify-self: start; padding: 4px 0; font-size: 10px; letter-spacing: .08em; color: rgba(237, 237, 234, .8); text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(237, 237, 234, .35); }
+.kq-ans { gap: 18px; }
+.kq-links ul { border-top: 0; }
+.kq-links li:last-child { border-bottom: 0; }
+.kq-foot { padding-top: 6px; border-top: 1px solid var(--line); }
 </style>
 
 </head>
@@ -4106,11 +4126,11 @@ function renderKentei() {
   let links = "", chips = "", nx = null;
   if (pick !== null) {
     const rel = kAll().filter(x => x.id !== q.id && kst[x.id]).map(x => ({ x, s: kShared(q, x) })).filter(o => o.s.length)
-      .sort((a, b) => kTagCount(a.s[0]) - kTagCount(b.s[0])).slice(0, 4);
+      .sort((a, b) => kTagCount(a.s[0]) - kTagCount(b.s[0])).slice(0, 2);
     if (rel.length) links = `<div class="kq-links"><p class="grp-h">LINKED</p><ul>${rel.map(o => `<li><small>${esc(kTagLabel(o.s[0]))}</small><span>${esc(o.x.q.replace(/[？?]$/, ""))}</span><b>${esc(kRight(o.x))}</b></li>`).join("")}</ul></div>`;
     let tags = kTags(q).filter(t => kTagCount(t) > 1 && kTagLabel(t)).sort((a, b) => kTagCount(a) - kTagCount(b));
     // 「葵祭」（場所）と「葵祭と賀茂社」（トピック）のように重なるものは、トピックの方だけ残す
-    tags = tags.filter(t => !t.startsWith("spot:") || !tags.some(u => !u.startsWith("spot:") && u.includes(kTagLabel(t)))).slice(0, 5);
+    tags = tags.filter(t => !t.startsWith("spot:") || !tags.some(u => !u.startsWith("spot:") && u.includes(kTagLabel(t)))).slice(0, 3);
     nx = kPick(q);
     // ほかのつながりは、NEXTの下に小さな文字リンクで（NEXTと同じつながりは除く）
     tags = tags.filter(t => !nx || t !== nx.via);
@@ -4120,11 +4140,11 @@ function renderKentei() {
   body.innerHTML = `<div class="kt kq">
     <p class="grp-h">${kcur.via ? `<span class="kvia">${esc(kTagLabel(kcur.via))} から</span>` : ""}${f ? f[2] : ""}${ksrc !== "all" ? ` · ${esc(kLabel(ksrc)[0])}` : ""}</p>
     <h2 class="kq-q">${esc(q.q)}</h2>
-    <ol class="kq-ch">${kcur.ch.map((c, j) => `<li><button type="button" data-kpick="${j}"${pick !== null ? ` disabled class="${c === right ? "ok" : j === pick ? "ng" : "off"}"` : ""}><span class="kno">${j + 1}</span><span>${esc(c)}</span></button></li>`).join("")}</ol>
+    <ol class="kq-ch">${kcur.ch.map((c, j) => `<li><button type="button" data-kpick="${j}"${pick !== null ? ` disabled class="${c === right ? "ok" : j === pick ? "ng" : "off"}"` : ""}><span class="kno">${j + 1}</span><span>${esc(c)}</span>${pick !== null && (c === right || j === pick) ? `<i class="kmk" aria-hidden="true">${c === right ? "○" : "×"}</i>` : ""}</button></li>`).join("")}</ol>
     ${pick !== null ? `<div class="kq-ans">
-      <p class="kq-res">${kcur.ch[pick] === right ? "CORRECT" : "NOT QUITE"}</p>
+      ${kcur.ch[pick] === right ? `<p class="kq-res ok"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="15"/></svg><span>CORRECT</span><small>正解</small></p>` : `<p class="kq-res ng"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 8L32 32"/><path d="M32 8L8 32"/></svg><span>MISS</span><small>正解は「${esc(right)}」</small></p>`}
       ${q.e ? `<p class="kq-e">${esc(q.e)}</p>` : ""}
-      ${sp ? `<button type="button" class="kq-spot" data-open="${esc(sp.id)}"><span class="rt">${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : ""}</span><span class="rn">${esc(shortName(sp))}<small>${esc(KIND[sp.kind] || "")} · ${esc(sp.area)}</small></span><span class="kgo">→</span></button>` : ""}
+      ${sp ? `<button type="button" class="kq-spotlink" data-open="${esc(sp.id)}">${esc(shortName(sp))}を見る →</button>` : ""}
       ${links}
       <div class="kq-foot">${chips || "<span></span>"}<button type="button" class="kbtn kq-next" data-knext>NEXT${nx && nx.via ? `<small>${esc(kTagLabel(nx.via))}</small>` : ""}</button></div>
     </div>` : ""}
