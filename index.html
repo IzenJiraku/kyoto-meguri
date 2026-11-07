@@ -3274,6 +3274,8 @@ function snapshot() {
   const m = {};
   for (const [id, v] of Object.entries(visits)) m["v:" + id] = JSON.stringify(v);
   for (const [id, c] of Object.entries(custom)) m["c:" + id] = JSON.stringify(c);
+  // 検定の回答記録（kst は後で読み込むので、まだ無いときは飛ばす）
+  try { for (const [id, r] of Object.entries(kst)) m["q:" + id] = JSON.stringify(r); } catch (e) {}
   return m;
 }
 var snap = snapshot();
@@ -3305,12 +3307,12 @@ async function pullData() {
   return { data: JSON.parse(b64dec(j.content)), sha: j.sha };
 }
 function mergeRemote(rd) {
-  const rs = rd.stamps || {}, rv = rd.visits || {}, rc = rd.custom || {};
-  const keys = new Set(Object.keys(stamps).concat(Object.keys(rs), Object.keys(rv).map(k => "v:" + k), Object.keys(rc).map(k => "c:" + k), Object.keys(visits).map(k => "v:" + k), Object.keys(custom).map(k => "c:" + k)));
+  const rs = rd.stamps || {}, rv = rd.visits || {}, rc = rd.custom || {}, rq = rd.kentei || {};
+  const keys = new Set(Object.keys(stamps).concat(Object.keys(rs), Object.keys(rv).map(k => "v:" + k), Object.keys(rc).map(k => "c:" + k), Object.keys(rq).map(k => "q:" + k), Object.keys(visits).map(k => "v:" + k), Object.keys(custom).map(k => "c:" + k), Object.keys(kst).map(k => "q:" + k)));
   let changed = false;
   for (const k of keys) {
     const [kind, id] = [k.slice(0, 1), k.slice(2)];
-    const map = kind === "v" ? visits : custom, rmap = kind === "v" ? rv : rc;
+    const map = kind === "v" ? visits : kind === "q" ? kst : custom, rmap = kind === "v" ? rv : kind === "q" ? rq : rc;
     const lt = (stamps[k] && stamps[k].t) || 0, rt = (rs[k] && rs[k].t) || 0;
     if (rt > lt || (rt === lt && !(id in map) && (id in rmap))) {
       if (id in rmap) { if (JSON.stringify(map[id]) !== JSON.stringify(rmap[id])) { map[id] = rmap[id]; changed = true; } }
@@ -3319,7 +3321,7 @@ function mergeRemote(rd) {
     }
   }
   snap = snapshot();
-  try { localStorage.setItem(LS_KEY, JSON.stringify(visits)); localStorage.setItem(LS_KEY + "-custom", JSON.stringify(custom)); localStorage.setItem(STAMP_KEY, JSON.stringify(stamps)); } catch (e) {}
+  try { localStorage.setItem(LS_KEY, JSON.stringify(visits)); localStorage.setItem(LS_KEY + "-custom", JSON.stringify(custom)); localStorage.setItem(KS_KEY, JSON.stringify(kst)); localStorage.setItem(STAMP_KEY, JSON.stringify(stamps)); } catch (e) {}
   return changed;
 }
 function referencedPhotos() { return new Set(Object.keys(visits).flatMap(id => myPhotos(id))); }
@@ -3350,8 +3352,8 @@ async function syncNow() {
     for (let attempt = 0; attempt < 3; attempt++) {
       const { data, sha } = await pullData();
       const changed = mergeRemote(data);
-      const body = { app: "goban", visits, custom, stamps, updatedAt: new Date().toISOString() };
-      const same = JSON.stringify({ v: data.visits, c: data.custom, s: data.stamps }) === JSON.stringify({ v: visits, c: custom, s: stamps });
+      const body = { app: "goban", visits, custom, kentei: kst, stamps, updatedAt: new Date().toISOString() };
+      const same = JSON.stringify({ v: data.visits, c: data.custom, q: data.kentei || {}, s: data.stamps }) === JSON.stringify({ v: visits, c: custom, q: kst, s: stamps });
       if (changed) { render(); renderCover(); if (openId && !document.activeElement.closest(".log")) openSheet(openId); refreshView(); }
       if (same) break;
       const put = await gh("data.json", { method: "PUT", body: JSON.stringify(Object.assign({ message: "sync " + body.updatedAt, content: b64enc(JSON.stringify(body)) }, sha ? { sha } : {})) });
@@ -3975,7 +3977,8 @@ let KALL = null;
 function kAll() { return KALL || (KALL = KQ.concat(kenteiAuto())); }
 const KS_KEY = LS_KEY + "-kentei";
 let kst = {}; try { kst = JSON.parse(localStorage.getItem(KS_KEY) || "{}") || {}; } catch (e) {}
-function kSave() { try { localStorage.setItem(KS_KEY, JSON.stringify(kst)); } catch (e) {} }
+function kSave() { try { localStorage.setItem(KS_KEY, JSON.stringify(kst)); } catch (e) {} if (typeof stampChanges === "function") stampChanges(); }
+snap = snapshot();   // 回答記録を読み込んだので、同期の比較の基準を取り直す
 const kLearned = q => kst[q.id] && kst[q.id].last === 1;
 const kMissed = q => kst[q.id] && kst[q.id].last === 0;
 const kSpots = q => q.s ? [].concat(q.s) : [];
