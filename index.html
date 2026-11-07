@@ -1078,6 +1078,23 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
 .kt-log .km.ng { color: var(--muted); }
 .kt-log .kl { display: grid; gap: 4px; line-height: 1.6; }
 .kt-log .kl small { font-family: var(--f-body); letter-spacing: .06em; }
+
+/* KENTEI：1問ずつ・つながり（2026-11-07） */
+.kt-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.ktag { display: inline-flex; align-items: baseline; gap: 8px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 0; font-size: 13px; letter-spacing: .04em; color: #EDEDEA; background: none; }
+.ktag small { font-family: var(--f-disp); font-size: 10px; letter-spacing: .08em; color: var(--muted); }
+.ktag:hover, .ktag[aria-current="true"] { border-color: rgba(237, 237, 234, .62); }
+.kt-rows button[aria-current="true"] .kn { text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 1px; }
+.kvia { margin-right: 12px; color: #EDEDEA; }
+.kvia::before { content: "— "; color: var(--muted); }
+.kq-links ul { list-style: none; margin: 10px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.kq-links li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 14px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13px; line-height: 1.6; }
+.kq-links li small { grid-column: 1 / -1; font-size: 10px; letter-spacing: .1em; color: var(--muted); }
+.kq-links li span { color: var(--muted); }
+.kq-links li b { font-weight: 400; color: #EDEDEA; text-align: right; }
+.kq-next { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
+.kq-next small { font-family: var(--f-body); font-size: 10px; letter-spacing: .08em; color: var(--muted); }
+.kq-next:hover small { color: #0D0D0D; }
 </style>
 
 </head>
@@ -2999,7 +3016,7 @@ function openView(k) {
   viewKind = k;
   $("#view").hidden = false; document.body.classList.add("view-open");
   const vw = $("#view"); if (vw.animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) vw.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 280, easing: "cubic-bezier(.2, .8, .2, 1)" });
-  if (k === "map") renderMap(); else if (k === "rank") renderRank(); else if (k === "kentei") { if (kq && !kInRound()) kq = null; kView = "home"; renderKentei(); } else renderCal();
+  if (k === "map") renderMap(); else if (k === "rank") renderRank(); else if (k === "kentei") kOpen(); else renderCal();
 }
 function closeView() { viewKind = null; $("#view").hidden = true; document.body.classList.remove("view-open"); }
 $("#viewClose").addEventListener("click", closeView);
@@ -3680,7 +3697,7 @@ const KQ = [
   { id: "g-tako", f: "street", q: "「姉三六角蛸錦」の「蛸」は何通？", c: ["蛸薬師通", "高辻通", "高倉通", "竹屋町通"], e: "姉小路・三条・六角・蛸薬師・錦小路と続き、次が「四綾仏高松万五条」。" },
   { id: "g-teramachi", f: "street", q: "「寺御幸麩屋富柳堺」で歌われるのは？", c: ["南北の通り", "東西の通り", "鴨川の橋", "京都の山"], e: "寺町・御幸町・麩屋町・富小路・柳馬場・堺町。東から西へ歌う。" },
   { id: "g-demachi", f: "street", s: "futaba", q: "賀茂川と高野川が合流して鴨川になるのは？", c: ["出町", "三条", "四条", "丸太町"], e: "合流点の三角州は「鴨川デルタ」と呼ばれる。" },
-  { id: "g-hamaguri", f: "street", s: "hamaguri", q: "蛤御門の正式な名前は？", c: ["新在家御門", "堺町御門", "乾御門", "今出川御門"], e: "天明の大火で開かずの門が初めて開き、「焼けて口開く蛤」になぞらえて呼ばれた。" },
+  { id: "g-hamaguri", f: "street", s: "hamaguri", q: "蛤御門の正式な名前は？", c: ["新在家御門", "堺町御門", "乾御門", "今出川御門"], e: "宝永の大火（1708年）で開かずの門が初めて開き、「焼けて口開く蛤」になぞらえて呼ばれた。" },
   { id: "g-ku", f: "street", q: "京都市の行政区の数は？", c: ["11", "9", "13", "7"], e: "北・上京・左京・中京・東山・下京・南・右京・伏見・山科・西京。" },
   { id: "g-higashiyama", f: "street", q: "鴨川の東に連なる山並みは何と呼ばれる？", c: ["東山三十六峰", "北山十六峰", "東山七峰", "比叡三十六峰"], e: "比叡山から稲荷山まで。「ふとん着て寝たる姿や東山」の句でも知られる。" },
 ];
@@ -3809,6 +3826,106 @@ KQ.push(
   { id: "g-takase", f: "street", s: "rissei", q: "高瀬川を開いた江戸初期の豪商は？", c: ["角倉了以", "茶屋四郎次郎", "淀屋常安", "河村瑞賢"], e: "伏見と京都の中心を結ぶ舟運の運河。起点に「一之船入」が残る。" },
   { id: "g-ponto", f: "street", s: "pontocho", q: "「先斗町（ぽんとちょう）」の名の由来として有力な説は？", c: ["ポルトガル語の「先」", "鴨川の鼓の音", "酒を量る単位", "開いた人の名"], e: "鴨川と高瀬川にはさまれた、細長い「先」の土地だから、という説。" }
 );
+// 2026-11-07 追加：京都検定2級の土台づくり。人物・寺社・時代のつながりを解説に入れる
+KQ.push(
+  // ---- 歴史（2級） ----
+  { id: "h2-ukyo", f: "history", q: "慶滋保胤が『池亭記』で「人家がまばらで荒れている」と記したのは、平安京のどちら側？", c: ["右京（西側）", "左京（東側）", "北辺", "九条の南"], e: "右京は低湿地が多く早くに衰え、都の中心は左京から鴨川の東へ広がっていった。" },
+  { id: "h2-raku", f: "history", q: "京都を「洛」と呼ぶのは、中国のどの都になぞらえたから？", c: ["洛陽", "長安", "開封", "南京"], e: "平安京の左京を洛陽、右京を長安と呼んだ。右京が廃れたため、都＝洛となった。「洛中」「上洛」もここから。" },
+  { id: "h2-sanpitsu", f: "history", q: "平安時代初めの「三筆」は、空海・橘逸勢ともう1人は？", c: ["嵯峨天皇", "小野道風", "藤原行成", "藤原佐理"], e: "小野道風・藤原佐理・藤原行成は、平安中期の「三蹟」。嵯峨天皇は空海に東寺を与えた天皇でもある。" },
+  { id: "h2-kitano-why", f: "history", s: "kitano", q: "北野天満宮が創建された目的は？", c: ["菅原道真の怨霊を鎮める", "疫病を退ける", "洪水を防ぐ", "火事を防ぐ"], e: "大宰府で亡くなった道真のたたりと恐れられた。怨霊を祀って鎮める「御霊信仰」は、祇園御霊会（祇園祭）とも根が同じ。" },
+  { id: "h2-insei", f: "history", q: "1086年、上皇が政治を行う「院政」を始めたのは？", c: ["白河上皇", "後白河上皇", "鳥羽上皇", "後鳥羽上皇"], e: "白河の地（今の岡崎）に法勝寺など六勝寺を建てた。白河は鴨川の東、岡崎一帯の古い地名。" },
+  { id: "h2-funyoi", f: "history", q: "白河法皇が「思いどおりにならないもの」として挙げたのは、双六の賽、山法師と何？", c: ["賀茂川の水", "比叡の風", "都の火事", "南都の僧"], e: "「天下三不如意」。山法師は比叡山延暦寺の僧兵のこと。賀茂川はたびたび氾濫した。" },
+  { id: "h2-ryojin", f: "history", q: "後白河法皇が今様（当時の流行歌）を集めて編んだ書物は？", c: ["梁塵秘抄", "閑吟集", "古今和歌集", "新古今和歌集"], e: "「遊びをせんとや生まれけむ」の歌が有名。後白河は三十三間堂を建てさせた法皇でもある。" },
+  { id: "h2-kiyomori-33", f: "history", s: "sanjusangendo", q: "三十三間堂を後白河上皇のために造営したのは？", c: ["平清盛", "源頼朝", "藤原頼通", "足利義満"], e: "1164年の創建。今の本堂は1266年の再建。上皇の御所「法住寺殿」の一角だった。" },
+  { id: "h2-rokuhara", f: "history", q: "平家一門の屋敷が集まり、のちに六波羅探題が置かれた鴨川東岸の地は？", c: ["六波羅", "鹿ケ谷", "嵯峨", "岡崎"], e: "平家滅亡後、鎌倉幕府はこの地に六波羅探題を置いた。地名は六波羅蜜寺に由来するともいわれる。" },
+  { id: "h2-shishigatani", f: "history", q: "1177年、平家打倒の密議が発覚した事件は？", c: ["鹿ケ谷の陰謀", "保元の乱", "平治の乱", "承久の乱"], e: "東山の鹿ケ谷にあった俊寛の山荘での謀議とされる。後白河法皇の近臣が処罰された。" },
+  { id: "h2-tenbun", f: "history", q: "1536年、比叡山の僧兵が京都の法華宗の寺々を焼き払った事件は？", c: ["天文法華の乱", "応仁の乱", "嘉吉の乱", "山城国一揆"], e: "町衆に広まっていた法華宗の21本山がすべて焼かれ、一時京都を追われた。" },
+  { id: "h2-machishu", f: "history", s: "gion-matsuri", q: "応仁の乱で途絶えた祇園祭を、1500年に復興させたのは？", c: ["町衆", "室町幕府", "延暦寺", "公家"], e: "33年ぶりの再開。以来、山鉾は各町が受け継いで今に至る。祇園祭が「町衆の祭り」と呼ばれる理由。" },
+  { id: "h2-tensho", f: "history", q: "豊臣秀吉が南北の通りを新しく通し、町を細長い区画に作り替えた都市改造は？", c: ["天正の地割", "条坊制", "太閤検地", "楽市楽座"], e: "平安京以来の正方形の区画の中央に通りを通した。御土居や寺町の整備も同じ時期の秀吉の京都改造。" },
+  { id: "h2-tenmei", f: "history", q: "1788年、京都の大半を焼き、御所や二条城の本丸御殿も焼けた大火は？", c: ["天明の大火", "宝永の大火", "どんどん焼け", "明暦の大火"], e: "京都史上最大の火事とされる。御所はこのあと、平安時代の様式を取り入れて再建された。" },
+  { id: "h2-dondon", f: "history", s: "hamaguri", q: "禁門の変（1864年）の戦火で京都の町が焼けた火事は、俗に何と呼ばれる？", c: ["どんどん焼け", "天明の大火", "宝永の大火", "鉄砲焼け"], e: "「鉄砲焼け」とも。約2万8千戸が焼け、祇園祭の山鉾の多くも失われた。" },
+  { id: "h2-seimi", f: "history", q: "明治初め、理化学の研究と教育のため京都に置かれた施設は？", c: ["舎密局", "蕃書調所", "開成所", "勧業博覧会"], e: "舎密（せいみ）はオランダ語で化学のこと。東京遷都で沈んだ京都を産業で立て直す試みの一つ。島津製作所の創業者・島津源蔵も出入りした。" },
+  { id: "h2-teidai", f: "history", s: "kyodai-clock", q: "1897年に創立された、京都大学のもとになった大学は？", c: ["京都帝国大学", "第三高等学校", "同志社英学校", "京都府医学校"], e: "東京に次ぐ2番目の帝国大学。第三高等学校（三高）は今の京大総合人間学部につながる。" },
+  { id: "h2-niijima", f: "history", s: "doshisha", q: "1875年、京都に同志社英学校を開いたのは？", c: ["新島襄", "福沢諭吉", "大隈重信", "津田梅子"], e: "妻の八重は会津出身で、兄・山本覚馬は京都府の近代化を支えた人物。" },
+  { id: "h2-sandai", f: "history", s: "incline", q: "明治末の京都市の「三大事業」に入らないのは？", c: ["地下鉄の建設", "第二琵琶湖疏水", "上水道の整備", "道路の拡幅と市電の敷設"], e: "1912年ごろに完成。烏丸通や四条通が広げられ、市電が走った。地下鉄の開業は1981年。" },
+  { id: "h2-sokui", f: "history", s: "gosho", q: "大正天皇と昭和天皇の即位礼が行われたのは？", c: ["京都御所", "皇居（宮城）", "平安神宮", "二条城"], e: "明治の皇室典範で、即位礼と大嘗祭は京都で行うと定められていた。" },
+  { id: "h2-uesugi", f: "history", q: "織田信長が上杉謙信に贈ったと伝わる、狩野永徳筆の「洛中洛外図屏風」は通称何本？", c: ["上杉本", "舟木本", "町田本", "歴博甲本"], e: "国宝。戦国時代の京都の町並みや祇園祭の山鉾巡行が細かく描かれている。" },
+  { id: "h2-uji10", f: "history", s: "byodoin", q: "『源氏物語』の最後の10帖は、その舞台から何と呼ばれる？", c: ["宇治十帖", "須磨十帖", "嵯峨十帖", "大原十帖"], e: "平等院のある宇治は、平安貴族の別荘地だった。宇治橋のたもとに紫式部の像がある。" },
+  // ---- 寺社（2級） ----
+  { id: "t2-mandala", f: "temple", s: "toji", q: "東寺の講堂で、21体の仏像を並べて密教の世界を表したものを何という？", c: ["立体曼荼羅", "両界曼荼羅", "千体仏", "五百羅漢"], e: "空海が構想した。両界曼荼羅は絵で描いた曼荼羅のこと。" },
+  { id: "t2-kawarake", f: "temple", q: "高雄の神護寺で、厄除けに素焼きの小皿を谷へ投げる風習は？", c: ["かわらけ投げ", "炮烙割り", "石投げ", "皿流し"], e: "神護寺は空海が一時住んだ寺。和気清麻呂ゆかりでもある。" },
+  { id: "t2-sanbi", f: "temple", s: "kozanji", q: "紅葉の名所「三尾（さんび）」に入らないのは？", c: ["嵐山", "高雄", "槇尾", "栂尾"], e: "高雄の神護寺、槇尾の西明寺、栂尾の高山寺。鳥獣人物戯画の高山寺は栂尾にある。" },
+  { id: "t2-tamuramaro", f: "temple", s: "kiyomizu", q: "延鎮とともに清水寺を創建したと伝わる武将は？", c: ["坂上田村麻呂", "源頼朝", "足利尊氏", "大伴弟麻呂"], e: "清水寺の境内には、田村麻呂と戦った蝦夷の阿弖流為と母禮の碑も建つ。" },
+  { id: "t2-hosso", f: "temple", s: "kiyomizu", q: "清水寺の宗派は？", c: ["北法相宗", "天台宗", "真言宗", "浄土宗"], e: "もとは奈良の興福寺と同じ法相宗。戦後に独立して北法相宗を名乗った。" },
+  { id: "t2-hiunkaku", f: "temple", s: "nishihonganji", q: "金閣・銀閣とともに「京の三閣」と呼ばれる、西本願寺の建物は？", c: ["飛雲閣", "呑湖閣", "臨春閣", "傘亭"], e: "国宝。聚楽第から移したという伝えがある。" },
+  { id: "t2-daito", f: "temple", s: "daitokuji", q: "大徳寺を開いた僧は？", c: ["宗峰妙超（大燈国師）", "夢窓疎石", "一休宗純", "関山慧玄"], e: "関山慧玄は宗峰妙超の弟子で、妙心寺を開いた。大徳寺と妙心寺は同じ流れ（応燈関）に属する。" },
+  { id: "t2-hanazono", f: "temple", s: "myoshinji", q: "妙心寺は、どの上皇の離宮を禅寺に改めた寺？", c: ["花園上皇", "後醍醐天皇", "亀山上皇", "後宇多上皇"], e: "開山は関山慧玄。今も「花園」という地名と、花園大学が近くに残る。" },
+  { id: "t2-kameyama", f: "temple", s: "nanzenji", q: "南禅寺は、もとはどの上皇の離宮だった？", c: ["亀山上皇", "花園上皇", "後醍醐天皇", "嵯峨天皇"], e: "1291年に禅寺とした。亀山上皇は嵐山の「渡月橋」を名付けたとされる人でもある。" },
+  { id: "t2-tora", f: "temple", s: "nanzenji", q: "南禅寺方丈の枯山水「虎の子渡し」の作者と伝わるのは？", c: ["小堀遠州", "夢窓疎石", "相阿弥", "重森三玲"], e: "遠州は茶人で作事奉行。南禅寺塔頭・金地院の「鶴亀の庭」も遠州の作とされる。" },
+  { id: "t2-suden", f: "temple", s: "nanzenji", q: "「黒衣の宰相」と呼ばれ、南禅寺金地院に住した徳川家康の側近の僧は？", c: ["以心崇伝", "南光坊天海", "沢庵宗彭", "隠元隆琦"], e: "武家諸法度や禁中並公家諸法度の起草に関わった。" },
+  { id: "t2-tofuku-name", f: "temple", s: "tofukuji", q: "東福寺の名は、奈良のどの2つの寺から一字ずつ取った？", c: ["東大寺と興福寺", "東大寺と福智院", "東寺と興福寺", "唐招提寺と福寿寺"], e: "九条道家が大きな伽藍を願って名付けた。開山は円爾（聖一国師）。" },
+  { id: "t2-fucha", f: "temple", q: "宇治の萬福寺に伝わる、中国風の精進料理は？", c: ["普茶料理", "卓袱料理", "懐石料理", "本膳料理"], e: "大皿を皆で取り分けて食べる。萬福寺は隠元が開いた黄檗宗の本山。" },
+  { id: "t2-shobo", f: "temple", s: "daigoji", q: "醍醐寺を開いた僧は？", c: ["聖宝（理源大師）", "空海", "円珍", "良源"], e: "874年、山上に草庵を結んだのが始まり。醍醐天皇の帰依を受けて栄えた。" },
+  { id: "t2-joruri", f: "temple", q: "9体の阿弥陀如来像が並ぶ、木津川市の寺は？", c: ["浄瑠璃寺", "岩船寺", "平等院", "法界寺"], e: "九体阿弥陀堂は平安時代のものが残る唯一の例。池をはさんで浄土の世界を表す配置は平等院と通じる。" },
+  { id: "t2-shomyo", f: "temple", q: "大原の「魚山（ぎょざん）」で伝えられてきた、仏教の儀式音楽は？", c: ["声明", "雅楽", "今様", "謡曲"], e: "経文に節をつけて唱える。三千院や来迎院のあたりを中国の声明の聖地になぞらえて魚山と呼ぶ。" },
+  { id: "t2-hoto", f: "temple", q: "延暦寺の根本中堂で、開創以来灯り続けるとされる灯は？", c: ["不滅の法灯", "常夜灯", "をけら火", "献灯"], e: "最澄が灯したと伝わる。信長の焼き討ちで一度消えたが、分けてあった立石寺（山形）の灯から戻された。" },
+  { id: "t2-monzeki", f: "temple", q: "天台宗の「三門跡」に入らないのは？", c: ["仁和寺", "青蓮院", "三千院", "妙法院"], e: "門跡は皇族や貴族が住職を務めた寺。仁和寺は真言宗の門跡寺院。" },
+  { id: "t2-uda", f: "temple", s: "ninnaji", q: "仁和寺を完成させ、出家後に住んで「御室」の名の由来になったのは？", c: ["宇多天皇（法皇）", "光孝天皇", "嵯峨天皇", "醍醐天皇"], e: "父・光孝天皇が着工し、宇多天皇が888年に完成させた。御室桜・御室焼（仁清）の「御室」もここから。" },
+  { id: "t2-hata", f: "temple", s: "fushimiinari", q: "伏見稲荷大社の創建に関わったとされる渡来系の氏族は？", c: ["秦氏", "東漢氏", "蘇我氏", "物部氏"], e: "711年の創建と伝わる。太秦の広隆寺、嵐山の松尾大社も秦氏ゆかり。桂川の治水も秦氏の仕事とされる。" },
+  { id: "t2-gionzukuri", f: "temple", s: "yasaka", q: "本殿と拝殿を一つの屋根で覆う、八坂神社独特の建築様式は？", c: ["祇園造", "流造", "権現造", "八幡造"], e: "本殿は国宝。上賀茂・下鴨の本殿は流造、北野天満宮は権現造。" },
+  { id: "t2-nagare", f: "temple", s: "shimogamo", q: "上賀茂神社・下鴨神社の本殿の様式は？", c: ["流造", "祇園造", "権現造", "春日造"], e: "前の屋根が長く伸びて流れるような形。全国の神社でもっとも多い様式。" },
+  { id: "t2-hideyori", f: "temple", s: "kitano", q: "1607年に北野天満宮の今の社殿を造営したのは？", c: ["豊臣秀頼", "豊臣秀吉", "徳川家康", "徳川家光"], e: "権現造（八棟造）の国宝。秀頼は方広寺の大仏殿や東寺金堂など、多くの社寺を再建した。" },
+  { id: "t2-ueji", f: "temple", s: "heianjingu", q: "平安神宮の神苑や無鄰菴の庭をつくった庭師は？", c: ["七代目小川治兵衛（植治）", "小堀遠州", "重森三玲", "中根金作"], e: "琵琶湖疏水の水を引いた近代の庭を多く手がけた。" },
+  { id: "t2-murinan", f: "temple", s: "incline", q: "疏水の水を引いた庭で知られる「無鄰菴」は、誰の別荘？", c: ["山縣有朋", "伊藤博文", "西園寺公望", "大隈重信"], e: "1903年、日露戦争前の方針を話し合った「無鄰菴会議」の舞台。庭は小川治兵衛。" },
+  { id: "t2-mirei", f: "temple", s: "tofukuji", q: "東福寺方丈の、市松模様の苔と敷石の庭を昭和に作庭したのは？", c: ["重森三玲", "小川治兵衛", "小堀遠州", "中根金作"], e: "1939年作の「八相の庭」。古い建材を再利用して模様をつくった。" },
+  { id: "t2-tojiin", f: "temple", q: "足利歴代将軍の木像を安置する、足利家の菩提寺は？", c: ["等持院", "相国寺", "天龍寺", "鹿苑寺"], e: "足利尊氏の墓がある。開山は夢窓疎石。" },
+  { id: "t2-nakiryu", f: "temple", q: "手を打つと龍が鳴くように響く「鳴き龍」の天井画がある寺は？", c: ["相国寺", "妙心寺", "天龍寺", "建仁寺"], e: "法堂の「蟠龍図」、狩野光信の作。相国寺は足利義満が建てた寺で、金閣・銀閣はその山外塔頭。" },
+  { id: "t2-uguisu", f: "temple", s: "nijojo", q: "二条城二の丸御殿の、歩くと鳥の鳴き声のような音がする廊下を何という？", c: ["鶯張り", "檜張り", "竹張り", "鳴き龍"], e: "床板を留める金具がこすれて鳴る。侵入者に気づくための仕掛けという説もある。" },
+  { id: "t2-kenreimon", f: "temple", s: "gosho", q: "京都御所の正門で、天皇や国賓だけが通るとされる門は？", c: ["建礼門", "建春門", "宜秋門", "朔平門"], e: "南側の正面にある。葵祭や時代祭の行列はこの門の前から出発する。" },
+  // ---- 祭り・行事（2級） ----
+  { id: "f2-kujitori", f: "festival", s: "gion-matsuri", q: "祇園祭の山鉾巡行の順番を決める「くじ取式」が行われる場所は？", c: ["京都市役所の市会議場", "八坂神社", "四条烏丸の会所", "京都御所"], e: "7月2日。くじを引かずに順番が決まっている山鉾は「くじ取らず」と呼ばれ、長刀鉾が先頭。" },
+  { id: "f2-shingi", f: "festival", s: "gion-matsuri", q: "祇園祭の鉾の屋根の上に高くそびえる柱を何という？", c: ["真木", "心柱", "御幣", "竿"], e: "鉾頭（長刀鉾なら長刀）がその先に付く。山には真木がなく、松を立てるものが多い。" },
+  { id: "f2-tsujimawashi", f: "festival", s: "gion-matsuri", q: "山鉾巡行で、鉾が交差点で向きを90度変えることを何という？", c: ["辻回し", "鉾立て", "曳初め", "くじ改め"], e: "車輪の下に割竹を敷き、水をかけて滑らせる。四条河原町などが見どころ。" },
+  { id: "f2-yabusame", f: "festival", s: "shimogamo", q: "葵祭の前儀として、5月3日に下鴨神社の糺の森で行われる神事は？", c: ["流鏑馬神事", "賀茂競馬", "御蔭祭", "斎王代禊の儀"], e: "馬上から的を射る。5日には上賀茂神社で賀茂競馬が行われる。" },
+  { id: "f2-kurabeuma", f: "festival", s: "kamigamo", q: "5月5日、上賀茂神社で2頭の馬が速さを競う神事は？", c: ["賀茂競馬", "流鏑馬", "駈馬神事", "御蔭祭"], e: "平安時代に宮中で行われた競馬を移したもの。「くらべうま」と読む。" },
+  { id: "f2-heiankosha", f: "festival", s: "jidai", q: "時代祭の行列を担う、京都市民の組織は？", c: ["平安講社", "山鉾連合会", "町衆会", "京都講"], e: "平安神宮の創建とともにつくられた。学区ごとに担当する列が決まっている。" },
+  { id: "f2-ishin", f: "festival", s: "jidai", q: "時代祭の行列の先頭を行き、笛と太鼓の行進で知られる列は？", c: ["維新勤王隊列", "延暦文官参朝列", "神幸列", "江戸時代婦人列"], e: "戊辰戦争に加わった丹波の山国隊がモデル。行列は明治から平安へとさかのぼる。" },
+  { id: "f2-torii", f: "festival", s: "okuribi", q: "五山送り火で、最後に点火されるのは？", c: ["鳥居形", "左大文字", "舟形", "妙法"], e: "20時の大文字から、妙法・舟形・左大文字・鳥居形と、東から西へ順に灯る。" },
+  { id: "f2-myoho", f: "festival", s: "okuribi", q: "送り火の「妙法」が灯るのは、どの地域の山？", c: ["松ヶ崎", "西賀茂", "嵯峨鳥居本", "金閣寺の北"], e: "松ヶ崎の西山に「妙」、東山に「法」。西賀茂は舟形、金閣寺の北は左大文字、鳥居本は鳥居形。" },
+  { id: "f2-otaimatsu", f: "festival", q: "3月15日、嵯峨の清凉寺で大きな松明を燃やし、その燃え方で米の豊凶を占う行事は？", c: ["お松明式", "鞍馬の火祭", "柱松", "左義長"], e: "釈迦の涅槃会の行事。嵯峨大念仏狂言も清凉寺に伝わる。" },
+  { id: "f2-hanezu", f: "festival", q: "小野小町ゆかりで、3月末に「はねず踊り」が奉納される山科の寺は？", c: ["随心院", "勧修寺", "醍醐寺", "毘沙門堂"], e: "はねずは薄紅色の梅のこと。深草少将の百夜通いの伝説を歌う。" },
+  { id: "f2-hatsukobo", f: "festival", s: "kobo-ichi", q: "その年最初の21日に開かれる東寺の市を何と呼ぶ？", c: ["初弘法", "終い弘法", "初天神", "初午"], e: "12月21日は「終い弘法」。北野天満宮の25日は初天神・終い天神。" },
+  { id: "f2-shirushi", f: "festival", s: "fushimiinari", q: "2月最初の午の日の初午大祭で授かる、伏見稲荷大社の縁起物は？", c: ["しるしの杉", "粽", "破魔矢", "熊手"], e: "稲荷の神が初めて稲荷山に降りた日が、和銅4年（711年）の2月初午とされる。" },
+  { id: "f2-ebisu", f: "festival", q: "1月の「十日ゑびす」で福笹を授かる、建仁寺の近くの神社は？", c: ["京都ゑびす神社", "八坂神社", "安井金比羅宮", "六波羅蜜寺"], e: "建仁寺を開いた栄西が、宋からの帰りに嵐の海で守られたゑびす神を祀ったと伝わる。" },
+  { id: "f2-horoku", f: "festival", s: "mibu", q: "節分に壬生寺へ奉納し、4月の壬生狂言「炮烙割」で割られるものは？", c: ["炮烙（素焼きの皿）", "鏡餅", "瓦", "竹筒"], e: "名前と願いを書いた皿を割ることで厄が落ちるとされる。" },
+  { id: "f2-inoue", f: "festival", s: "miyako-odori", q: "祇園甲部の芸舞妓が習う京舞の流派は？", c: ["井上流", "花柳流", "若柳流", "尾上流"], e: "都をどりも井上流の振付。先斗町は尾上流、宮川町は若柳流、上七軒は花柳流。" },
+  { id: "f2-onoe", f: "festival", s: "pontocho", q: "先斗町の芸舞妓が習う舞の流派は？", c: ["尾上流", "井上流", "花柳流", "若柳流"], e: "鴨川をどりは尾上流。" },
+  // ---- 食（2級） ----
+  { id: "k2-yusoku", f: "food", q: "平安時代の宮中や公家の儀式料理に由来する京料理を何という？", c: ["有職料理", "本膳料理", "懐石料理", "普茶料理"], e: "京料理は有職料理・精進料理・懐石料理・おばんざいなどが重なってできたといわれる。" },
+  { id: "k2-saikyo", f: "food", q: "魚の切り身を漬けた「西京漬」の「西京」が指すのは？", c: ["京都（西の京）", "西京区", "西本願寺", "西陣"], e: "明治に東京ができてから、京都を西京とも呼んだ。甘い白味噌の西京味噌に漬ける。" },
+  { id: "k2-karaita", f: "food", q: "上御霊神社の門前で売られる、疫病除けの由来をもつ素朴な煎餅は？", c: ["唐板", "八ッ橋", "阿闍梨餅", "五色豆"], e: "平安時代の御霊会で供えた煎餅が始まりとされる。上御霊神社は応仁の乱が始まった場所。" },
+  { id: "k2-sabakaido", f: "food", s: "izuu", q: "若狭からの「鯖街道」の京都側の終点とされる場所は？", c: ["出町", "三条大橋", "大原", "鞍馬"], e: "出町の商店街の入口に「鯖街道口」の碑が立つ。大原を通る若狭街道が主な道。" },
+  { id: "k2-soen", f: "food", s: "ippodo", q: "宇治田原で「青製煎茶製法」を生み、煎茶を広めたのは？", c: ["永谷宗円", "明恵", "栄西", "隠元"], e: "1738年。蒸して揉み乾かす、今の煎茶のつくり方の元になった。" },
+  { id: "k2-baisao", f: "food", q: "江戸時代に京都で茶を売り歩き、煎茶の普及に努めた黄檗僧は？", c: ["売茶翁（高遊外）", "隠元", "永谷宗円", "一休宗純"], e: "伊藤若冲とも親交があり、若冲は売茶翁の肖像を描いている。" },
+  // ---- 工芸・芸能（2級） ----
+  { id: "c2-korin", f: "craft", q: "「琳派」の名の由来になった絵師は？", c: ["尾形光琳", "本阿弥光悦", "俵屋宗達", "酒井抱一"], e: "光悦・宗達が始め、約100年後に光琳が受け継ぎ、江戸の抱一へとつながった。直接の師弟関係ではなく「私淑」でつながるのが琳派の特徴。" },
+  { id: "c2-kenzan", f: "craft", q: "尾形光琳の弟で、野々村仁清に学んだ陶工は？", c: ["尾形乾山", "野々村仁清", "青木木米", "楽道入"], e: "鳴滝に窯を開いた。兄の光琳が絵付けをした器も残る。" },
+  { id: "c2-tohaku", f: "craft", q: "東山七条の智積院に残る国宝「楓図」を描いた絵師は？", c: ["長谷川等伯", "狩野永徳", "海北友松", "狩野山楽"], e: "秀吉が息子・鶴松のために建てた祥雲寺の障壁画。「桜図」は等伯の子・久蔵の作。" },
+  { id: "c2-yusho", f: "craft", s: "kenninji", q: "建仁寺方丈の「雲龍図」を描いた桃山時代の絵師は？", c: ["海北友松", "長谷川等伯", "狩野永徳", "俵屋宗達"], e: "武家の出身の絵師。原本は京都国立博物館に寄託され、建仁寺では複製を見られる。" },
+  { id: "c2-taian", f: "craft", q: "千利休作と伝わる現存唯一の茶室、国宝「待庵」がある寺は？", c: ["妙喜庵（大山崎）", "大徳寺", "高台寺", "南禅寺"], e: "わずか二畳の茶室。にじり口を設けた草庵茶室の原点とされる。" },
+  { id: "c2-gosho-ningyo", f: "craft", q: "白い肌の幼児の姿で、宮中から大名への返礼品とされた人形は？", c: ["御所人形", "嵯峨人形", "伏見人形", "市松人形"], e: "三頭身のふくよかな姿が特徴。" },
+  { id: "c2-fushimi-ningyo", f: "craft", s: "fushimiinari", q: "全国の土人形のもとになったといわれる、伏見稲荷の門前で作られてきた人形は？", c: ["伏見人形", "御所人形", "嵯峨人形", "賀茂人形"], e: "稲荷山の土を使った素焼きに彩色する。初午の土産として各地へ広まった。" },
+  { id: "c2-kongo", f: "craft", q: "能のシテ方五流のうち、宗家が京都にあるのは？", c: ["金剛流", "観世流", "宝生流", "喜多流"], e: "烏丸通に金剛能楽堂がある。能は足利義満の保護を受けた観阿弥・世阿弥が大成した。" },
+  { id: "c2-shigeyama", f: "craft", q: "京都を拠点に活動する、大蔵流の狂言の家は？", c: ["茂山家", "野村家", "山本家", "善竹家"], e: "「お豆腐狂言」と呼ばれ、どこにでも出向いて演じる親しみやすさで知られる。" },
+  { id: "c2-hiogi", f: "craft", q: "扇は平安時代、どんなものから始まったとされる？", c: ["木の薄板を綴った檜扇", "竹の骨に紙を張った傘", "鳥の羽を束ねたもの", "絹を張った団扇"], e: "記録用の木簡を綴ったのが始まりともいわれる。紙の扇は少し遅れて生まれた。" },
+  { id: "c2-mian", f: "craft", s: "daitokuji", q: "国宝の茶室「密庵」がある寺は？", c: ["大徳寺龍光院", "妙喜庵", "高台寺", "建仁寺"], e: "国宝の茶室は待庵（妙喜庵）・如庵（愛知）・密庵の3つ。大徳寺は茶の湯と縁の深い寺。" },
+  // ---- 暮らし・ことば（2級） ----
+  { id: "l2-yoroshi", f: "life", q: "京ことばの「よろしおあがり」は、どんなときの言葉？", c: ["「ごちそうさま」への返し", "客を迎えるとき", "別れ際", "謝るとき"], e: "「よくお上がりになりました」の意味。食べ終えた人へのあいさつ。" },
+  { id: "l2-shimatsu", f: "life", q: "京都の暮らしでいう「始末」の意味は？", c: ["無駄なく使いきること", "片付けること", "終わり", "叱ること"], e: "おばんざいの残り物を工夫して使う知恵も「始末」の心。" },
+  { id: "l2-nanakuchi", f: "life", q: "京へ入る街道の出入口を総称して何という？", c: ["京の七口", "京の五口", "洛中九門", "三関"], e: "鞍馬口・大原口・粟田口・丹波口などの地名に残る。数は7つに限らない。御土居に開けられた口とされる。" },
+  { id: "l2-kumon", f: "life", s: "gosho", q: "京都御苑を囲む主な門の総称は？", c: ["九門", "七口", "五門", "十二門"], e: "蛤御門（新在家御門）や堺町御門、今出川御門など。御所そのものの門（建礼門など）とは別。" },
+  { id: "l2-jizo-ishi", f: "life", s: "nishiki", q: "錦市場の東の端にある、学問・商売の神様を祀る神社は？", c: ["錦天満宮", "北野天満宮", "菅大臣神社", "八坂神社"], e: "新京極通に面し、鳥居の両端が隣のビルに食い込んでいることで知られる。" }
+);
 // 建築は、各スポットの設計者から問題を作る（データにある設計者がそのまま答え）
 function kenteiAuto() {
   const arch = SPOTS.filter(s => s.kind === "arch" && s.by && !/営繕|宮家|上皇|改修|協会|ほか|新館|デザイン/.test(s.by));
@@ -3835,112 +3952,196 @@ function kPoolOf(src) {
   if (src.startsWith("spot:")) { const id = src.slice(5); return all.filter(q => kSpots(q).includes(id)); }
   return all.filter(q => q.f === src);
 }
-let kq = null, kView = "home", kLoaded = false;
-// 解いている途中の10問も端末に残す。アプリを閉じても「続きから」で戻れる
-const KR_KEY = LS_KEY + "-kentei-round";
-function kSaveRound() {
-  try {
-    if (!kq || kq.i >= kq.list.length) localStorage.removeItem(KR_KEY);
-    else localStorage.setItem(KR_KEY, JSON.stringify({ src: kq.src, i: kq.i, pick: kq.pick, res: kq.res, list: kq.list.map(x => ({ id: x.q.id, right: x.right, ch: x.ch })) }));
-  } catch (e) {}
+// ---- つながり：問題を人物・寺社・時代のタグで結ぶ（問題文・正解・解説の文字から自動で付ける） ----
+const KTOP = [
+  ["平安京", "平安京|平安宮|朱雀|羅城門|大極殿|桓武|遷都|長岡京|条坊|右京|左京|西寺"], ["桓武天皇", "桓武"], ["嵯峨天皇", "嵯峨天皇|大覚寺|三筆"],
+  ["院政と平家", "白河上皇|白河法皇|後白河|院政|平清盛|平家|六波羅|鹿ケ谷|建礼門院|祇王"], ["源氏物語・平安文学", "源氏物語|紫式部|清少納言|枕草子|方丈記|鴨長明|徒然草|宇治十帖|梁塵秘抄|池亭記"],
+  ["藤原氏", "藤原道長|藤原頼通|平等院|鳳凰堂|彰子"], ["菅原道真", "菅原道真|道真|北野天満宮|天神|天満宮|上七軒"], ["御霊信仰", "御霊|怨霊|疫病|やすらい|上御霊"],
+  ["足利義満", "足利義満|義満|金閣|鹿苑寺|北山|花の御所|相国寺|世阿弥|観阿弥"], ["足利義政", "足利義政|義政|銀閣|慈照寺|東山殿|東山文化|向月台"], ["足利尊氏", "足利尊氏|尊氏|天龍寺|等持院|後醍醐"],
+  ["応仁の乱", "応仁|山名宗全|細川勝元|西陣|上御霊"], ["町衆", "町衆|法華|天文"], ["豊臣秀吉", "秀吉|聚楽第|御土居|北野大茶湯|醍醐の花見|方広寺|高台寺|北政所|天正の地割|伏見城|秀頼|堀川ごぼう"],
+  ["徳川家康", "家康|二条城|大政奉還|崇伝|東本願寺|本願寺が東西|徳川家光|家光"], ["織田信長", "信長|本能寺|洛中洛外図"], ["幕末", "新選組|壬生|池田屋|近江屋|坂本龍馬|龍馬|寺田屋|禁門|蛤御門|大政奉還|松平容保|守護職|鳥羽・伏見|どんどん焼け|霊山|土方"],
+  ["明治の京都", "明治|疏水|インクライン|蹴上|田辺朔郎|北垣|路面電車|内国勧業博覧会|番組小学校|舎密局|三大事業|帝国大学|新島襄|同志社|無鄰菴|山縣"], ["琵琶湖疏水", "疏水|インクライン|蹴上|水路閣|田辺朔郎|北垣|無鄰菴|小川治兵衛|植治|哲学の道"],
+  ["空海・真言宗", "空海|弘法|東寺|真言|曼荼羅|神護寺|仁和寺|醍醐寺|聖宝"], ["最澄・天台宗", "最澄|延暦寺|比叡|天台|三千院|山法師|法灯|門跡|声明|大原"],
+  ["禅宗", "禅|臨済|曹洞|黄檗|栄西|道元|夢窓|一休|五山|建仁寺|南禅寺|東福寺|大徳寺|妙心寺|天龍寺|相国寺|萬福寺|隠元|龍安寺|宗峰|関山|崇伝|枯山水"],
+  ["浄土の教え", "浄土|法然|親鸞|阿弥陀|知恩院|本願寺|空也|念仏|永観"], ["秦氏と太秦", "秦氏|太秦|広隆寺|松尾大社|伏見稲荷|牛祭"],
+  ["夢窓疎石", "夢窓"], ["千利休・茶の湯", "利休|茶の湯|茶道|千家|待庵|密庵|わび茶|楽焼|長次郎|炉開き|初釜|茶室|野点|北野大茶湯"], ["お茶", "茶葉|碾茶|宇治茶|抹茶|茶園|茶を|煎茶|玉露|明恵|売茶翁|永谷宗円|一保堂"],
+  ["小堀遠州と庭", "小堀遠州|遠州|作庭|庭園|の庭|小川治兵衛|重森三玲|石庭|枯山水|神苑"], ["琳派", "琳派|光琳|光悦|宗達|乾山|風神雷神|燕子花|鷹峯"], ["京の絵師", "狩野|等伯|海北友松|若冲|応挙|円山|探幽|永徳|雲龍図|蟠龍|障壁画|琳派"],
+  ["能・狂言・歌舞伎", "能楽|能を|能の|シテ方|狂言|世阿弥|観阿弥|阿国|歌舞伎|南座|顔見世|まねき|勘亭流|金剛|茂山"], ["花街と京舞", "花街|舞妓|芸妓|芸舞妓|祇園甲部|先斗町|上七軒|宮川町|祇園東|をどり|井上流|尾上流|八朔|事始め|襟替え|だらり"],
+  ["祇園祭", "祇園祭|山鉾|長刀鉾|鉾|粽|祇園囃子|御霊会|神幸祭|くじ取|辻回し|真木"], ["八坂神社", "八坂神社|祇園さん|素戔嗚|をけら|祇園造"], ["葵祭と賀茂社", "葵祭|賀茂祭|賀茂別雷|賀茂御祖|賀茂競馬|斎王|上賀茂|下鴨|糺の森|御手洗|みたらし|流鏑馬|競馬|フタバアオイ|立砂"],
+  ["時代祭と平安神宮", "時代祭|平安神宮|平安講社|維新勤王"], ["お盆と送り火", "送り火|大文字|妙法|舟形|鳥居形|お盆|精霊|六道|迎え鐘|地蔵盆"], ["火の祭り", "火祭|松明|をけら|千日詣り|愛宕|火伏"],
+  ["嵐山・嵯峨野", "嵐山|嵯峨|渡月橋|天龍寺|野宮|祇王寺|化野|大覚寺|清凉寺|桂川|十三まいり|法輪寺"], ["宇治", "宇治|平等院|萬福寺|宇治上|瀬田川"], ["伏見", "伏見|酒|月桂冠|寺田屋|伏見稲荷|伏水"],
+  ["鞍馬・貴船・洛北", "鞍馬|貴船|牛若|洛北|鷹峯|修学院|詩仙堂|大原|高雄|栂尾|槇尾"], ["東山", "東山|清水寺|八坂|高台寺|知恩院|南禅寺|永観堂|銀閣|六波羅|六道|霊山|東福寺"],
+  ["御所と天皇", "御所|紫宸殿|左近|右近|猿が辻|建礼門|御苑|九門|即位"], ["鴨川と川", "鴨川|賀茂川|高野川|出町|白川|高瀬川|桂川|宇治川|堀川|友禅流し"],
+  ["通り名と町", "上ル|下ル|東入|丸竹夷|姉三六角|四綾仏|寺御幸|図子|七口|地割|町家|うなぎの寝床|犬矢来|虫籠窓|通り庭|錦小路|蛸薬師|竹屋町|仏光寺"], ["京ことば", "京ことば|はんなり|ほかす|いけず|おこしやす|よろしおあがり|始末|着倒れ"],
+  ["京野菜と漬物", "京野菜|なす|大根|かぶ|ごぼう|かぼちゃ|海老芋|漬|すぐき|千枚|しば漬"], ["和菓子", "餅|菓子|八ッ橋|団子|水無月|亥の子|花びら|唐板|金平糖|くずきり|粟餅"], ["京料理", "料理|鱧|ぐじ|湯葉|鯖|にしん|いもぼう|雑煮|西京|有職|普茶"],
+  ["染織と工芸", "西陣織|友禅|織物|染め|楽焼|清水焼|京焼|陶工|窯|仁清|乾山|人形|扇"], ["近代建築", "設計|ヴォーリズ|武田五一|辰野|ガーディナー|片山東熊|伊東忠太|藤井厚二|前川國男|山田守|村野藤吾|松室重光|吉田鉄郎|本野精吾|原広司|磯崎新|大谷幸夫"],
+].map(([l, re]) => [l, new RegExp(re)]);
+const kRight = q => q.auto ? q.ans : q.c[0];
+const kText = q => q.q + " " + kRight(q) + " " + (q.e || "");
+const KTAGS = {};  // id -> [tag]
+function kTags(q) {
+  if (KTAGS[q.id]) return KTAGS[q.id];
+  const t = KTOP.filter(([, re]) => re.test(kText(q))).map(([l]) => l);
+  kSpots(q).forEach(id => t.push("spot:" + id));
+  return (KTAGS[q.id] = t);
 }
-function kLoadRound() {
-  try {
-    const r = JSON.parse(localStorage.getItem(KR_KEY) || "null"); if (!r || !r.list) return;
-    const list = r.list.map(x => { const q = kAll().find(y => y.id === x.id); return q && { q, right: x.right, ch: x.ch }; });
-    if (list.some(x => !x)) return;
-    kq = { src: r.src, i: r.i, pick: r.pick, res: r.res || [], list };
-  } catch (e) {}
+let KTAGN = null;  // tag -> 問題数
+function kTagCount(t) {
+  if (!KTAGN) { KTAGN = {}; kAll().forEach(q => kTags(q).forEach(x => KTAGN[x] = (KTAGN[x] || 0) + 1)); }
+  return KTAGN[t] || 0;
 }
-const kInRound = () => kq && kq.i < kq.list.length;
-// 間違えた問題 → まだ解いていない問題 → 覚えた問題 の順に優先して10問
+const kTagLabel = t => t.startsWith("spot:") ? (findSpot(t.slice(5)) ? shortName(findSpot(t.slice(5))) : "") : t;
+// 2問に共通するタグのうち、いちばん絞り込まれたもの（問題数の少ないもの）
+function kShared(a, b) {
+  const tb = kTags(b);
+  return kTags(a).filter(t => tb.includes(t) && kTagCount(t) > 1).sort((x, y) => kTagCount(x) - kTagCount(y));
+}
+
+// ---- 1問ずつ続けて解く。今の問題と、どこから来たかを端末に残す ----
+const KN_KEY = LS_KEY + "-kentei-now", KD_KEY = LS_KEY + "-kentei-day";
+let kcur = null;      // { id, ch, pick, via, src }
+let ksrc = "all";
+let khist = [];       // 最近出した問題（すぐ同じものを出さない）
+let kHomeOpen = false;
+let kday = { d: "", n: 0 };
+try { const d = JSON.parse(localStorage.getItem(KD_KEY) || "null"); if (d) kday = d; } catch (e) {}
+function kToday() { const t = today(); if (kday.d !== t) kday = { d: t, n: 0 }; return kday; }
+function kSaveNow() { try { localStorage.setItem(KN_KEY, JSON.stringify({ cur: kcur, src: ksrc, hist: khist.slice(-30) })); localStorage.setItem(KD_KEY, JSON.stringify(kday)); } catch (e) {} }
+(function kLoadNow() {
+  try { const r = JSON.parse(localStorage.getItem(KN_KEY) || "null"); if (r) { kcur = r.cur || null; ksrc = r.src || "all"; khist = r.hist || []; } } catch (e) {}
+  try { localStorage.removeItem(LS_KEY + "-kentei-round"); } catch (e) {}
+})();
+const kById = id => kAll().find(q => q.id === id);
+const kRank = q => kMissed(q) ? 0 : kst[q.id] ? 2 : 1;   // 間違えた → まだ → 覚えた
+function kPoolOf2(src) { return src.startsWith("tag:") ? kAll().filter(q => kTags(q).includes(src.slice(4))) : kPoolOf(src); }
+// 次の問題を選ぶ。今の問題とつながる問題を優先し、つながりの名前（via）を添える
+function kPick(from, prefer) {
+  const recent = new Set(khist.slice(-20));
+  let pool = kPoolOf2(ksrc).filter(q => !from || q.id !== from.id);
+  if (!pool.length) pool = kAll();
+  const fresh = pool.filter(q => !recent.has(q.id));
+  const cand = fresh.length ? fresh : pool;
+  const best = list => { const m = Math.min(...list.map(kRank)); return kShuffle(list.filter(q => kRank(q) === m))[0]; };
+  if (from) {
+    const rel = cand.filter(q => prefer ? kTags(q).includes(prefer) : kShared(from, q).length);
+    let r = rel.filter(q => kRank(q) < 2);
+    // 同じつながりばかりが続かないよう、直前とは別のタグでつながる問題があればそちらへ
+    const last = kcur && kcur.via;
+    if (!prefer && last) { const d = r.filter(q => kShared(from, q)[0] !== last); if (d.length) r = d; }
+    if (r.length) { const q = best(r); const sh = kShared(from, q); return { q, via: prefer || (sh.find(t => t !== last) || sh[0]) }; }
+  }
+  return { q: best(cand), via: null };
+}
+function kServe(q, via) {
+  const right = kRight(q);
+  const wrong = q.auto ? kShuffle(q.pool).slice(0, 3) : q.c.slice(1);
+  kcur = { id: q.id, ch: kShuffle([right].concat(wrong)), pick: null, via: via || null };
+  khist.push(q.id); if (khist.length > 40) khist = khist.slice(-40);
+  kSaveNow();
+}
 function kStart(src) {
-  const pool = kShuffle(kPoolOf(src)).sort((a, b) => (kMissed(a) ? 0 : kst[a.id] ? 2 : 1) - (kMissed(b) ? 0 : kst[b.id] ? 2 : 1));
-  const list = kShuffle(pool.slice(0, 10)).map(q => {
-    const right = q.auto ? q.ans : q.c[0];
-    const wrong = q.auto ? kShuffle(q.pool).slice(0, 3) : q.c.slice(1);
-    return { q, right, ch: kShuffle([right].concat(wrong)) };
-  });
-  if (!list.length) return;
-  kq = { src, list, i: 0, pick: null, res: [] }; kView = "quiz"; kSaveRound();
+  ksrc = src; kHomeOpen = false;
+  const { q } = kPick(null);
+  if (!q) return;
+  kServe(q, null);
+  renderKentei(); $("#viewBody").scrollTop = 0;
+}
+function kOpen() {
+  kHomeOpen = false;
+  if (!kcur || !kById(kcur.id)) { const { q } = kPick(null); if (q) kServe(q, null); }
   renderKentei();
-  $("#viewBody").scrollTop = 0;
 }
 function kLabel(src) {
   if (src === "all") return ["すべて", "ALL"];
   if (src === "missed") return ["間違えた問題", "MISSED"];
   if (src === "visited") return ["行った所から", "VISITED"];
+  if (src.startsWith("tag:")) return [kTagLabel(src.slice(4)), "TOPIC"];
   if (src.startsWith("spot:")) { const s = findSpot(src.slice(5)); return [s ? shortName(s) : "", "SPOT"]; }
   const f = KF.find(x => x[0] === src) || []; return [f[1], f[2]];
 }
 function kRow(src, n, d) {
   const [ja, en] = kLabel(src);
-  return `<li><button type="button" data-kstart="${esc(src)}"${n ? "" : " disabled"}><span class="kn">${esc(ja)}<small>${en}</small></span><span class="kp">${d}</span></button></li>`;
+  return `<li><button type="button" data-kstart="${esc(src)}"${n ? "" : " disabled"}${ksrc === src ? ' aria-current="true"' : ""}><span class="kn">${esc(ja)}<small>${en}</small></span><span class="kp">${d}</span></button></li>`;
 }
 function renderKentei() {
   $("#viewTitle").textContent = "KENTEI";
   const body = $("#viewBody");
-  if (!kLoaded) { kLoaded = true; if (!kq) kLoadRound(); }
-  if (!kq || kView === "home") {
-    $("#viewNav").innerHTML = "";
+  const td = kToday();
+  if (kHomeOpen || !kcur) {
+    $("#viewNav").innerHTML = kcur ? `<button type="button" class="seg" data-kback>BACK</button>` : "";
     const all = kAll(), got = all.filter(kLearned).length;
     const frac = p => { const l = p.filter(kLearned).length; return `${l}<i>/</i>${p.length}`; };
     const vis = kPoolOf("visited"), miss = kPoolOf("missed");
+    const tops = KTOP.map(([l]) => l).filter(l => kTagCount(l) >= 4).sort((a, b) => kTagCount(b) - kTagCount(a));
     body.innerHTML = `<div class="kt">
-      <div class="kt-head"><p class="kt-big">${got}<span> / ${all.length}</span></p><p class="kt-sub">覚えた問題 · LEARNED</p><div class="kt-bar"><i style="width:${all.length ? got / all.length * 100 : 0}%"></i></div></div>
-      ${kInRound() ? `<p class="grp-h">CONTINUE</p><ul class="vlist kt-rows"><li><button type="button" data-kresume><span class="kn">${esc(kLabel(kq.src)[0])}<small>${kLabel(kq.src)[1]}</small></span><span class="kp">${String(kq.i + 1).padStart(2, "0")}<i>/</i>${String(kq.list.length).padStart(2, "0")} →</span></button></li></ul>` : ""}
+      <div class="kt-head"><p class="kt-big">${got}<span> / ${all.length}</span></p><p class="kt-sub">覚えた問題 · LEARNED　　今日 ${td.n}問 · TODAY</p><div class="kt-bar"><i style="width:${all.length ? got / all.length * 100 : 0}%"></i></div></div>
       <p class="grp-h">FIELD</p>
       <ul class="vlist kt-rows">${kRow("all", all.length, frac(all))}${KF.map(([k]) => { const p = kPoolOf(k); return kRow(k, p.length, frac(p)); }).join("")}</ul>
       <p class="grp-h">REVIEW</p>
       <ul class="vlist kt-rows">${kRow("visited", vis.length, vis.length ? vis.length + "問" : "—")}${kRow("missed", miss.length, miss.length ? miss.length + "問" : "—")}</ul>
-      <p class="kt-note">10問ずつ出ます。京都検定3級〜2級でよく問われる範囲から作っています。スポットに結び付いた問題は、答えるとその場所が開けます。</p>
+      <p class="grp-h">TOPIC</p>
+      <div class="kt-tags">${tops.map(t => { const p = kPoolOf2("tag:" + t); return `<button type="button" class="ktag" data-kstart="tag:${esc(t)}"${ksrc === "tag:" + t ? ' aria-current="true"' : ""}>${esc(t)}<small>${p.filter(kLearned).length}/${p.length}</small></button>`; }).join("")}</div>
+      <p class="kt-note">京都検定2級の土台づくりを目標に、3級〜2級でよく問われる歴史・寺社・祭り・食・工芸・ことばから作っています。1問ずつ、答えた問題とつながる問題が続けて出ます。選んだ分野やトピックの中で出題し、間違えた問題・まだの問題を先に出します。</p>
     </div>`;
     return;
   }
-  const { list, i, pick } = kq;
-  if (i >= list.length) {
-    const ok = kq.res.filter(Boolean).length;
-    $("#viewNav").innerHTML = "";
-    body.innerHTML = `<div class="kt">
-      <div class="kt-head"><p class="kt-big">${ok}<span> / ${list.length}</span></p><p class="kt-sub">${esc(kLabel(kq.src)[0])} · SCORE</p></div>
-      <ul class="vlist kt-log">${list.map((x, j) => { const sp = kSpots(x.q)[0]; return `<li><button type="button"${sp ? ` data-open="${esc(sp)}"` : ""}><span class="km${kq.res[j] ? "" : " ng"}">${kq.res[j] ? "○" : "×"}</span><span class="kl">${esc(x.q.q)}<small>${esc(x.right)}</small></span></button></li>`; }).join("")}</ul>
-      <div class="kt-acts">${kq.res.some(r => !r) ? `<button type="button" class="kbtn" data-kstart="missed">MISSED</button>` : ""}<button type="button" class="kbtn" data-kstart="${esc(kq.src)}">AGAIN</button><button type="button" class="kbtn" data-khome>BACK</button></div>
-    </div>`;
-    return;
-  }
-  const x = list[i], f = KF.find(k => k[0] === x.q.f);
-  $("#viewNav").innerHTML = `<span class="kq-n">${String(i + 1).padStart(2, "0")} / ${String(list.length).padStart(2, "0")}</span>`;
-  const sp = pick !== null && kSpots(x.q).map(findSpot).find(Boolean);
+  const q = kById(kcur.id); if (!q) { kcur = null; return renderKentei(); }
+  const f = KF.find(k => k[0] === q.f), pick = kcur.pick, right = kRight(q);
+  $("#viewNav").innerHTML = `<span class="kq-n">TODAY ${td.n}</span><button type="button" class="seg" data-khome>INDEX</button>`;
+  const sp = pick !== null && kSpots(q).map(findSpot).find(Boolean);
   const ph = sp && photoOf(sp), src = ph && (ph.thumb || ph.url);
+  // つながる知識：同じタグを持つ、もう答えたことのある問題の答えを並べる
+  let links = "", chips = "", nx = null;
+  if (pick !== null) {
+    const rel = kAll().filter(x => x.id !== q.id && kst[x.id]).map(x => ({ x, s: kShared(q, x) })).filter(o => o.s.length)
+      .sort((a, b) => kTagCount(a.s[0]) - kTagCount(b.s[0])).slice(0, 4);
+    if (rel.length) links = `<div class="kq-links"><p class="grp-h">LINKED</p><ul>${rel.map(o => `<li><small>${esc(kTagLabel(o.s[0]))}</small><span>${esc(o.x.q.replace(/[？?]$/, ""))}</span><b>${esc(kRight(o.x))}</b></li>`).join("")}</ul></div>`;
+    let tags = kTags(q).filter(t => kTagCount(t) > 1 && kTagLabel(t)).sort((a, b) => kTagCount(a) - kTagCount(b));
+    // 「葵祭」（場所）と「葵祭と賀茂社」（トピック）のように重なるものは、トピックの方だけ残す
+    tags = tags.filter(t => !t.startsWith("spot:") || !tags.some(u => !u.startsWith("spot:") && u.includes(kTagLabel(t)))).slice(0, 5);
+    if (tags.length) chips = `<div class="kt-tags kq-chips">${tags.map(t => `<button type="button" class="ktag" data-knext="${esc(t)}">${esc(kTagLabel(t))} →</button>`).join("")}</div>`;
+    nx = kPick(q);
+    kcur.next = nx.q.id; kcur.nextVia = nx.via;
+  }
   body.innerHTML = `<div class="kt kq">
-    <div class="kt-bar"><i style="width:${(i + (pick !== null ? 1 : 0)) / list.length * 100}%"></i></div>
-    <p class="grp-h">${f ? f[2] : ""}</p>
-    <h2 class="kq-q">${esc(x.q.q)}</h2>
-    <ol class="kq-ch">${x.ch.map((c, j) => `<li><button type="button" data-kpick="${j}"${pick !== null ? ` disabled class="${c === x.right ? "ok" : j === pick ? "ng" : "off"}"` : ""}><span class="kno">${j + 1}</span><span>${esc(c)}</span></button></li>`).join("")}</ol>
+    <p class="grp-h">${kcur.via ? `<span class="kvia">${esc(kTagLabel(kcur.via))} から</span>` : ""}${f ? f[2] : ""}${ksrc !== "all" ? ` · ${esc(kLabel(ksrc)[0])}` : ""}</p>
+    <h2 class="kq-q">${esc(q.q)}</h2>
+    <ol class="kq-ch">${kcur.ch.map((c, j) => `<li><button type="button" data-kpick="${j}"${pick !== null ? ` disabled class="${c === right ? "ok" : j === pick ? "ng" : "off"}"` : ""}><span class="kno">${j + 1}</span><span>${esc(c)}</span></button></li>`).join("")}</ol>
     ${pick !== null ? `<div class="kq-ans">
-      <p class="kq-res">${x.ch[pick] === x.right ? "CORRECT" : "NOT QUITE"}</p>
-      ${x.q.e ? `<p class="kq-e">${esc(x.q.e)}</p>` : ""}
+      <p class="kq-res">${kcur.ch[pick] === right ? "CORRECT" : "NOT QUITE"}</p>
+      ${q.e ? `<p class="kq-e">${esc(q.e)}</p>` : ""}
       ${sp ? `<button type="button" class="kq-spot" data-open="${esc(sp.id)}"><span class="rt">${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : ""}</span><span class="rn">${esc(shortName(sp))}<small>${esc(KIND[sp.kind] || "")} · ${esc(sp.area)}</small></span><span class="kgo">→</span></button>` : ""}
-      <button type="button" class="kbtn kq-next" data-knext>${i + 1 < list.length ? "NEXT" : "RESULT"}</button>
+      ${links}
+      <button type="button" class="kbtn kq-next" data-knext>NEXT${nx && nx.via ? `<small>${esc(kTagLabel(nx.via))}</small>` : ""}</button>
+      ${chips ? `<p class="grp-h">FOLLOW</p>${chips}` : ""}
     </div>` : ""}
   </div>`;
 }
 $("#viewBody").addEventListener("click", e => {
   if (viewKind !== "kentei") return;
   const st = e.target.closest("[data-kstart]"); if (st) { kStart(st.dataset.kstart); return; }
-  if (e.target.closest("[data-khome]")) { kq = null; kView = "home"; kSaveRound(); renderKentei(); $("#viewBody").scrollTop = 0; return; }
-  if (e.target.closest("[data-kresume]")) { kView = "quiz"; renderKentei(); $("#viewBody").scrollTop = 0; return; }
   const pk = e.target.closest("[data-kpick]");
-  if (pk && kq && kq.pick === null) {
-    const x = kq.list[kq.i], j = +pk.dataset.kpick, ok = x.ch[j] === x.right;
-    kq.pick = j; kq.res[kq.i] = ok; kSaveRound();
-    const r = kst[x.q.id] || { n: 0, ok: 0 };
-    r.n++; if (ok) r.ok++; r.last = ok ? 1 : 0; kst[x.q.id] = r; kSave();
+  if (pk && kcur && kcur.pick === null) {
+    const q = kById(kcur.id), j = +pk.dataset.kpick, ok = kcur.ch[j] === kRight(q);
+    kcur.pick = j;
+    const r = kst[q.id] || { n: 0, ok: 0 };
+    r.n++; if (ok) r.ok++; r.last = ok ? 1 : 0; kst[q.id] = r; kSave();
+    kToday().n++; kSaveNow();
     renderKentei();
     const a = $(".kq-ans"); if (a && a.scrollIntoView) a.scrollIntoView({ block: "nearest", behavior: "smooth" });
     return;
   }
-  if (e.target.closest("[data-knext]")) { kq.i++; kq.pick = null; kSaveRound(); renderKentei(); $("#viewBody").scrollTop = 0; }
+  const nb = e.target.closest("[data-knext]");
+  if (nb && kcur) {
+    const t = nb.dataset.knext, from = kById(kcur.id);
+    const n = t ? kPick(from, t) : (kcur.next && kById(kcur.next) ? { q: kById(kcur.next), via: kcur.nextVia } : kPick(from));
+    kServe(n.q, n.via); renderKentei(); $("#viewBody").scrollTop = 0; return;
+  }
+});
+$("#viewNav").addEventListener("click", e => {
+  if (viewKind !== "kentei") return;
+  if (e.target.closest("[data-khome]")) { kHomeOpen = true; renderKentei(); $("#viewBody").scrollTop = 0; }
+  if (e.target.closest("[data-kback]")) { kHomeOpen = false; renderKentei(); $("#viewBody").scrollTop = 0; }
 });
 // 詳細の中：この場所に問題があれば、そこから解き始められる
 function kenteiSecEl(s) {
