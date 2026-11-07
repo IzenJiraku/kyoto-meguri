@@ -1097,9 +1097,12 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
 .kq-next:hover small { color: #0D0D0D; }
 
 /* NEXT を主役に、ほかのつながりは控えめな文字リンクに（2026-11-07） */
-.kq .kq-next { justify-self: stretch; width: 100%; padding: 16px 18px; background: #EDEDEA; border-color: #EDEDEA; color: #0D0D0D; }
-.kq .kq-next small { color: #4A4A48; }
-.kq .kq-next:hover { background: #fff; }
+.kq-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.kq-foot .kq-follow { margin: 0; flex: 1; min-width: 0; }
+.kq .kq-next { flex: none; flex-direction: row; align-items: baseline; gap: 10px; justify-self: end; width: auto; min-width: 0; padding: 9px 14px; font-size: 13px; letter-spacing: .24em; background: none; border: 1px solid rgba(237, 237, 234, .62); color: #EDEDEA; transition: background .15s, color .15s; }
+.kq .kq-next small { color: var(--muted); }
+.kq .kq-next:hover, .kq .kq-next:active { background: #EDEDEA; color: #0D0D0D; }
+.kq .kq-next:hover small, .kq .kq-next:active small { color: #4A4A48; }
 .kq-follow { margin: -4px 0 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; font-size: 10px; letter-spacing: .08em; color: var(--muted); }
 .kq-follow span { margin-right: 2px; }
 .kq-follow button { padding: 6px 0; font-size: 10px; letter-spacing: .08em; color: rgba(237, 237, 234, .8); text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(237, 237, 234, .35); }
@@ -3971,7 +3974,7 @@ const KTOP = [
   ["徳川家康", "家康|二条城|大政奉還|崇伝|東本願寺|本願寺が東西|徳川家光|家光"], ["織田信長", "信長|本能寺|洛中洛外図"], ["幕末", "新選組|壬生|池田屋|近江屋|坂本龍馬|龍馬|寺田屋|禁門|蛤御門|大政奉還|松平容保|守護職|鳥羽・伏見|どんどん焼け|霊山|土方"],
   ["明治の京都", "明治|疏水|インクライン|蹴上|田辺朔郎|北垣|路面電車|内国勧業博覧会|番組小学校|舎密局|三大事業|帝国大学|新島襄|同志社|無鄰菴|山縣"], ["琵琶湖疏水", "疏水|インクライン|蹴上|水路閣|田辺朔郎|北垣|無鄰菴|小川治兵衛|植治|哲学の道"],
   ["空海・真言宗", "空海|弘法|東寺|真言|曼荼羅|神護寺|仁和寺|醍醐寺|聖宝"], ["最澄・天台宗", "最澄|延暦寺|比叡|天台|三千院|山法師|法灯|門跡|声明|大原"],
-  ["禅宗", "禅|臨済|曹洞|黄檗|栄西|道元|夢窓|一休|京都五山|五山之上|五山の第|建仁寺|南禅寺|東福寺|大徳寺|妙心寺|天龍寺|相国寺|萬福寺|隠元|龍安寺|宗峰|関山|崇伝|枯山水"],
+  ["禅宗", "禅宗|禅寺|禅僧|坐禅|臨済|曹洞|黄檗|栄西|道元|夢窓|一休|京都五山|五山之上|五山の第|建仁寺|南禅寺|東福寺|大徳寺|妙心寺|天龍寺|相国寺|萬福寺|隠元|龍安寺|宗峰|関山|崇伝|枯山水"],
   ["浄土の教え", "浄土|法然|親鸞|阿弥陀|知恩院|本願寺|空也|念仏|永観"], ["秦氏と太秦", "秦氏|太秦|広隆寺|松尾大社|伏見稲荷|牛祭"],
   ["夢窓疎石", "夢窓"], ["千利休・茶の湯", "利休|茶の湯|茶道|千家|待庵|密庵|わび茶|楽焼|長次郎|炉開き|初釜|茶室|野点|北野大茶湯"], ["お茶", "茶葉|碾茶|宇治茶|抹茶|茶園|茶を|煎茶|玉露|明恵|売茶翁|永谷宗円|一保堂"],
   ["小堀遠州と庭", "小堀遠州|遠州|作庭|庭園|の庭|小川治兵衛|重森三玲|石庭|枯山水|神苑"], ["琳派", "琳派|光琳|光悦|宗達|乾山|風神雷神|燕子花|鷹峯"], ["京の絵師", "狩野|等伯|海北友松|若冲|応挙|円山|探幽|永徳|雲龍図|蟠龍|障壁画|琳派"],
@@ -4123,8 +4126,7 @@ function renderKentei() {
       ${q.e ? `<p class="kq-e">${esc(q.e)}</p>` : ""}
       ${sp ? `<button type="button" class="kq-spot" data-open="${esc(sp.id)}"><span class="rt">${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : ""}</span><span class="rn">${esc(shortName(sp))}<small>${esc(KIND[sp.kind] || "")} · ${esc(sp.area)}</small></span><span class="kgo">→</span></button>` : ""}
       ${links}
-      <button type="button" class="kbtn kq-next" data-knext>NEXT${nx && nx.via ? `<small>${esc(kTagLabel(nx.via))}</small>` : ""}</button>
-      ${chips}
+      <div class="kq-foot">${chips || "<span></span>"}<button type="button" class="kbtn kq-next" data-knext>NEXT${nx && nx.via ? `<small>${esc(kTagLabel(nx.via))}</small>` : ""}</button></div>
     </div>` : ""}
   </div>`;
 }
