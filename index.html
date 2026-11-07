@@ -1122,6 +1122,10 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
 .kq-ch button.ng { text-decoration: none; }
 .kq-ch button.ng > span:nth-child(2) { text-decoration: line-through; text-decoration-thickness: 1px; }
 .kq-ch button.ng { border-color: rgba(237, 237, 234, .62); }
+.kq-ph { position: relative; margin: 0 0 4px; aspect-ratio: 16 / 9; overflow: hidden; background: #161616; }
+.kq-ph img { display: block; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .6s ease; }
+.kq-ph img.ld { opacity: 1; }
+.kq-ph figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 12px 8px; font-size: 10px; letter-spacing: .12em; color: #EDEDEA; background: linear-gradient(to bottom, rgba(13, 13, 13, 0), rgba(13, 13, 13, .7)); }
 .kq-spotlink { justify-self: start; padding: 4px 0; font-size: 10px; letter-spacing: .08em; color: rgba(237, 237, 234, .8); text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(237, 237, 234, .35); }
 .kq-ans { gap: 18px; }
 .kq-links ul { border-top: 0; }
@@ -4095,6 +4099,20 @@ function kRow(src, n, d) {
   const [ja, en] = kLabel(src);
   return `<li><button type="button" data-kstart="${esc(src)}"${n ? "" : " disabled"}${ksrc === src ? ' aria-current="true"' : ""}><span class="kn">${esc(ja)}<small>${en}</small></span><span class="kp">${d}</span></button></li>`;
 }
+// 問題に添える写真：問題の場所 → 手で選んだ場所 → 問題文に名前が出る場所。答えが場所の名前なら、答えてから出す
+const KPH = { "g-agaru": "gosho", "g-demachi": "shimogamo", "h-nagaoka": "daigokuden", "h-shoshidai": "nijojo", "h-ryozen": "omiya-ryoma", "t-kurama": "kurama-hi", "f-mukaegane": "okuribi", "f-hassaku": "miyako-odori", "f-kotohajime": "miyako-odori", "f-gokagai": "pontocho", "c-darari": "miyako-odori", "c-erikae": "miyako-odori", "c-wabicha": "daitokuji", "h2-tenmei": "gosho", "f-sandai": "gion-matsuri", "k-hamo": "gion-matsuri", "h-hojoki": "shimogamo" };
+const kNameKeys = s => [...new Set([s.name, shortName(s)].filter(Boolean).flatMap(n => [n, n.replace(/（.*?）|\(.*?\)/g, "")]).filter(n => n.length >= 2))];
+function kPhoto(q) {
+  const ok = s => { if (!s) return null; const p = photoOf(s); const u = p && (p.mine ? p.url : p.url || p.thumb); return u ? { s, u } : null; };
+  let r = null;
+  for (const id of kSpots(q).concat(KPH[q.id] || [])) if ((r = ok(findSpot(id)))) break;
+  if (!r) for (const s of allSpots()) if (PHOTOS[s.id] && kNameKeys(s).some(k => k.length >= 3 && q.q.includes(k)) && (r = ok(s))) break;
+  if (!r) return null;
+  const k = kNameKeys(r.s);
+  r.after = q.id === "t-kurama" || k.some(x => kRight(q).includes(x)) && !k.some(x => q.q.includes(x));
+  return r;
+}
+const kPhotoHtml = (r, cap) => `<figure class="kq-ph"><img src="${esc(r.u)}" alt="" decoding="async" onload="this.classList.add('ld')" onerror="this.closest('figure').remove()">${cap ? `<figcaption>${esc(shortName(r.s))}</figcaption>` : ""}</figure>`;
 function renderKentei() {
   $("#viewTitle").textContent = "KENTEI";
   const body = $("#viewBody");
@@ -4121,7 +4139,7 @@ function renderKentei() {
   const f = KF.find(k => k[0] === q.f), pick = kcur.pick, right = kRight(q);
   $("#viewNav").innerHTML = `<span class="kq-n">TODAY ${td.n}</span><button type="button" class="seg" data-khome>INDEX</button>`;
   const sp = pick !== null && kSpots(q).map(findSpot).find(Boolean);
-  const ph = sp && photoOf(sp), src = ph && (ph.thumb || ph.url);
+  const kph = kPhoto(q);
   // つながる知識：同じタグを持つ、もう答えたことのある問題の答えを並べる
   let links = "", chips = "", nx = null;
   if (pick !== null) {
@@ -4138,11 +4156,13 @@ function renderKentei() {
     kcur.next = nx.q.id; kcur.nextVia = nx.via;
   }
   body.innerHTML = `<div class="kt kq">
+    ${kph && !kph.after ? kPhotoHtml(kph, pick !== null) : ""}
     <p class="grp-h">${kcur.via ? `<span class="kvia">${esc(kTagLabel(kcur.via))} から</span>` : ""}${f ? f[2] : ""}${ksrc !== "all" ? ` · ${esc(kLabel(ksrc)[0])}` : ""}</p>
     <h2 class="kq-q">${esc(q.q)}</h2>
     <ol class="kq-ch">${kcur.ch.map((c, j) => `<li><button type="button" data-kpick="${j}"${pick !== null ? ` disabled class="${c === right ? "ok" : j === pick ? "ng" : "off"}"` : ""}><span class="kno">${j + 1}</span><span>${esc(c)}</span>${pick !== null && (c === right || j === pick) ? `<i class="kmk" aria-hidden="true">${c === right ? "○" : "×"}</i>` : ""}</button></li>`).join("")}</ol>
     ${pick !== null ? `<div class="kq-ans">
       ${kcur.ch[pick] === right ? `<p class="kq-res ok"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="15"/></svg><span>CORRECT</span><small>正解</small></p>` : `<p class="kq-res ng"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 8L32 32"/><path d="M32 8L8 32"/></svg><span>MISS</span><small>正解は「${esc(right)}」</small></p>`}
+      ${kph && kph.after ? kPhotoHtml(kph, true) : ""}
       ${q.e ? `<p class="kq-e">${esc(q.e)}</p>` : ""}
       ${sp ? `<button type="button" class="kq-spotlink" data-open="${esc(sp.id)}">${esc(shortName(sp))}を見る →</button>` : ""}
       ${links}
