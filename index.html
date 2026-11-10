@@ -1171,9 +1171,11 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
 .kq-map .kq-mark { font-size: 10px; letter-spacing: .08em; color: #8C8C88; }
 .kq-mapcap { display: flex; align-items: baseline; gap: 6px; padding: 8px 0 0; font-size: 13px; letter-spacing: .04em; color: #EDEDEA; }
 .kq-mapcap small { font-size: 10px; color: var(--muted); }
-.kq-foot { justify-content: flex-end; }
+.kq-foot { justify-content: space-between; align-items: center; }
+.kq-flag { padding: 8px 0; font-size: 10px; letter-spacing: .08em; color: var(--muted); background: none; border: 0; }
+.kq-flag[aria-pressed="true"] { color: #EDEDEA; }
 .krank { gap: 10px; padding-bottom: 10px; }
-.kscore button { width: 100%; display: grid; grid-template-columns: 11em 1fr 3em; align-items: center; gap: 12px; padding: 9px 0; font-size: 13px; letter-spacing: .04em; color: #EDEDEA; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); }
+.kscore button { width: 100%; display: grid; grid-template-columns: 12.5em 1fr 3em; align-items: center; gap: 12px; padding: 9px 0; font-size: 13px; letter-spacing: .04em; color: #EDEDEA; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); }
 .kscore li { display: block; }
 .kscore { gap: 0; border-top: 1px solid var(--line); }
 .kscore button:disabled { opacity: .4; }
@@ -4153,23 +4155,12 @@ function kenteiAuto() {
   const arch = SPOTS.filter(s => s.kind === "arch" && s.by && !/営繕|宮家|上皇|改修|協会|ほか|新館|デザイン/.test(s.by));
   const bys = [...new Set(arch.map(s => s.by))];
   const key = b => b.replace(/[（(].*$/, "").slice(0, 4);
-  return arch.map(s => ({ id: "a-by-" + s.id, f: "arch", s: s.id, auto: true, q: `「${shortName(s)}」を設計したのは？`, ans: s.by,
+  return arch.map(s => ({ id: "a-by-" + s.id, f: "arch", s: s.id, auto: true, q: `「${shortName(s)}」を設計したのは？`, ans: s.by.replace(/（(設計競技案|改修)）$/, ""),
     pool: bys.filter(b => b !== s.by && !b.includes(key(s.by)) && !s.by.includes(key(b))),
     e: [s.year && s.year !== 9999 ? s.year + "年" : "", s.style || ""].filter(Boolean).join("・") + (s.desc ? "。" + s.desc.split("。")[0] + "。" : "") }));
 }
 let KALL = null;
-// 同じ知識を逆から聞く：「○○寺は？」の問題から「○○寺にあてはまるのは？」を作る。選択肢は同じ種類の問題の説明文
-function kReverse() {
-  const kind = a => /(神社|大社|神宮|八幡宮|天満宮|宮)$/.test(a) ? "shrine" : /(寺|院|庵|堂)$/.test(a) ? "temple" : "";
-  const core = a => a.replace(/（.*?）|\(.*?\)/g, "").trim();
-  const src = KQ.filter(q => /は？$/.test(q.q) && kind(core(q.c[0])) && !q.q.includes(core(q.c[0])) && q.q.length <= 52)
-    .map(q => ({ q, a: core(q.c[0]), k: kind(core(q.c[0])), t: q.q.replace(/は？$/, "").replace(/の$/, "") }));
-  return src.map(o => {
-    const pool = src.filter(x => x.k === o.k && x.a !== o.a && !x.t.includes(o.a) && !o.t.includes(x.a)).map(x => x.t);
-    return pool.length >= 3 ? { id: "r-" + o.q.id, rev: o.q.id, f: o.q.f, s: o.q.s, auto: true, q: `「${o.a}」にあてはまるのは？`, ans: o.t, pool, e: o.q.e } : null;
-  }).filter(Boolean);
-}
-function kAll() { return KALL || (KALL = KQ.concat(kenteiAuto(), kReverse())); }
+function kAll() { return KALL || (KALL = KQ.concat(kenteiAuto())); }
 const kPair = (a, b) => a.rev === b.id || b.rev === a.id;
 const KS_KEY = LS_KEY + "-kentei";
 let kst = {}; try { kst = JSON.parse(localStorage.getItem(KS_KEY) || "{}") || {}; } catch (e) {}
@@ -4250,7 +4241,9 @@ const KG_KEY = LS_KEY + "-kentei-game";
 let kgame = { pts: 0, combo: 0, best: 0 }; try { Object.assign(kgame, JSON.parse(localStorage.getItem(KG_KEY) || "{}")); } catch (e) {}
 const kSaveGame = () => { try { localStorage.setItem(KG_KEY, JSON.stringify(kgame)); } catch (e) {} };
 // 段位：通算の得点で上がる
-const K_RANKS = [[0, "見習い"], [3000, "一見さん"], [10000, "常連さん"], [25000, "旦那衆"], [50000, "目利き"], [90000, "京都通"], [150000, "都人"]];
+// 段位は点ではなく「覚えた」問題の数（日をあけて4回続けて正解）で上がる
+const K_RANKS = [[0, "見習い"], [10, "一見さん"], [40, "常連さん"], [100, "旦那衆"], [180, "目利き"], [280, "京都通"], [400, "都人"]];
+const kGot = () => kAll().filter(kLearned).length;
 const kRankOf = pts => { let i = 0; K_RANKS.forEach(([t], j) => { if (pts >= t) i = j; }); return i; };
 const K_TIME = 12;   // この秒数より早いほどスピードボーナス
 const kNum = n => n.toLocaleString("en-US");
@@ -4272,20 +4265,28 @@ function kPick(from, prefer) {
   const fresh = pool.filter(q => !recent.has(q.id));
   const cand = fresh.length ? fresh : pool;
   const best = list => { const m = Math.min(...list.map(kRank)); return kShuffle(list.filter(q => kRank(q) === m))[0]; };
-  if (from) {
+  // 最近24問で出た数がいちばん少ない分野（ただし今の出題範囲にある分野）
+  const fc = {}; KF.forEach(([k]) => fc[k] = 0); klog.slice(-24).forEach(x => { if (x.f in fc) fc[x.f]++; });
+  const inPool = new Set(cand.map(q => q.f)), low = Math.min(...[...inPool].map(f => fc[f] ?? 0));
+  const thin = q => (fc[q.f] ?? 0) <= low + 1;
+  // つながる問題は2問まで続けたら、出ていない分野へ移る
+  if (from && (prefer || (kcur && kcur.chain || 0) < 2)) {
     const rel = cand.filter(q => prefer ? kTags(q).includes(prefer) : kShared(from, q).length);
     let r = rel.filter(q => kRank(q) < 3);
+    if (!prefer) { const t = r.filter(thin); r = t.length ? t : r.filter(q => q.f !== from.f).length >= 2 ? r.filter(q => q.f !== from.f) : r; }
     // 同じつながりばかりが続かないよう、直前とは別のタグでつながる問題があればそちらへ
     const last = kcur && kcur.via;
     if (!prefer && last) { const d = r.filter(q => kShared(from, q)[0] !== last); if (d.length) r = d; }
     if (r.length) { const q = best(r); const sh = kShared(from, q); return { q, via: prefer || (sh.find(t => t !== last) || sh[0]) }; }
   }
-  return { q: best(cand), via: null };
+  const t = cand.filter(thin);
+  return { q: best(t.length ? t : cand), via: null };
 }
 function kServe(q, via) {
   const right = kRight(q);
   const wrong = q.auto ? kShuffle(q.pool).slice(0, 3) : q.c.slice(1);
-  kcur = { id: q.id, ch: kShuffle([right].concat(wrong)), pick: null, via: via || null, t0: Date.now() };
+  const chain = via && kcur ? (kcur.chain || 0) + 1 : 0;
+  kcur = { id: q.id, ch: kShuffle([right].concat(wrong)), pick: null, via: via || null, chain, t0: Date.now() };
   khist.push(q.id); if (khist.length > 40) khist = khist.slice(-40);
   kSaveNow();
 }
@@ -4312,6 +4313,9 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden) { kHiddenAt = Date.now(); return; }
   if (viewKind === "kentei" && !kHomeOpen && kcur && kcur.pick !== null && kHiddenAt && Date.now() - kHiddenAt > 60000) { kOpen(); $("#viewBody").scrollTop = 0; }
 });
+const KFL_KEY = LS_KEY + "-kentei-flag";
+let kflag = []; try { kflag = JSON.parse(localStorage.getItem(KFL_KEY) || "[]") || []; } catch (e) {}
+const kSaveFlag = () => { try { localStorage.setItem(KFL_KEY, JSON.stringify(kflag)); } catch (e) {} };
 const KL_KEY = LS_KEY + "-kentei-log";
 let klog = []; try { klog = JSON.parse(localStorage.getItem(KL_KEY) || "[]") || []; } catch (e) {}
 // 分野ごとの最近20問の正答率（5問未満は出さない）
@@ -4357,15 +4361,16 @@ function renderKentei() {
     const all = kAll(), got = all.filter(kLearned).length;
     const frac = p => { const l = p.filter(kLearned).length; return `${l}<i>/</i>${p.length}`; };
     const vis = kPoolOf("visited"), miss = kPoolOf("missed");
-    const ri = kRankOf(kgame.pts), nx = K_RANKS[ri + 1];
+    const ri = kRankOf(got), nx = K_RANKS[ri + 1];
     const rates = KF.map(([k, ja]) => [k, ja, kFieldRate(k)]);
     const weak = kWeakFields(), wpool = kPoolOf("weak");
     body.innerHTML = `<div class="kt">
-      <div class="krank"><p class="krank-name">${K_RANKS[ri][1]}<small>${kNum(kgame.pts)} PT</small></p><div class="kt-bar"><i style="width:${nx ? (kgame.pts - K_RANKS[ri][0]) / (nx[0] - K_RANKS[ri][0]) * 100 : 100}%"></i></div><p class="kt-sub">${nx ? `次の「${nx[1]}」まで ${kNum(nx[0] - kgame.pts)}　·　` : ""}覚えた ${got}/${all.length}　·　今日 ${td.n}問</p></div>
+      <div class="krank"><p class="krank-name">${K_RANKS[ri][1]}<small>覚えた ${got} / ${all.length}</small></p><div class="kt-bar"><i style="width:${nx ? (got - K_RANKS[ri][0]) / (nx[0] - K_RANKS[ri][0]) * 100 : 100}%"></i></div><p class="kt-sub">${nx ? `次の「${nx[1]}」まで あと${nx[0] - got}問　·　` : ""}今日 ${td.n}問 ${kNum(td.pts || 0)} PT</p><p class="kt-sub">覚えた＝日をあけて4回続けて正解（最短で11日）</p></div>
       <p class="grp-h">FIELD<small>最近20問の正答率　線が合格ライン70%</small></p>
       <ul class="kscore">${kScoreRow("all", "すべて", null, all.length)}${rates.map(([k, ja, r]) => kScoreRow(k, ja, r, kPoolOf(k).length)).join("")}</ul>
       <p class="grp-h">REVIEW</p>
       <ul class="vlist kt-rows">${kRow("weak", wpool.length, weak.length ? weak.length + "分野" : "—")}${kRow("missed", miss.length, miss.length ? miss.length + "問" : "—")}${vis.length ? kRow("visited", vis.length, vis.length + "問") : ""}</ul>
+      ${kflag.length ? `<p class="grp-h">FLAGGED<small>いまいちに印をつけた問題</small></p><ul class="vlist kt-rows"><li><button type="button" data-kflagsend><span class="kn">${kflag.length}問を送る<small>SEND</small></span><span class="kp">コピー</span></button></li></ul>` : ""}
       <p class="kt-note">京都検定2級の出題区分に合わせた1問ずつのクイズ。間違えた問題は先に、正解した問題は日をあけて出し直します。</p>
     </div>`;
     return;
@@ -4394,7 +4399,7 @@ function renderKentei() {
       ${kph && kph.after ? kPhotoHtml(kph, true) : ""}
       ${q.e ? `<p class="kq-e">${esc(q.e)}</p>` : ""}
       ${sp ? `<button type="button" class="kq-map" data-open="${esc(sp.id)}" aria-label="${esc(shortName(sp))}を見る"><span class="kq-mapc" id="kqMap"></span><span class="kq-mapcap">${esc(shortName(sp))}<small>を見る →</small></span></button>` : ""}
-      <div class="kq-foot"><button type="button" class="kbtn kq-next" data-knext>NEXT${nx && nx.via ? `<small>${esc(kTagLabel(nx.via))}</small>` : ""}</button></div>
+      <div class="kq-foot"><button type="button" class="kq-flag" data-kflag aria-pressed="${kflag.includes(q.id)}">${kflag.includes(q.id) ? "△ いまいちに印済み" : "△ いまいち"}</button><button type="button" class="kbtn kq-next" data-knext>NEXT${nx && nx.via ? `<small>${esc(kTagLabel(nx.via))}</small>` : ""}</button></div>
     </div>` : ""}
   </div>`;
   if (sp) kDrawMap(sp);
@@ -4431,20 +4436,31 @@ $("#viewBody").addEventListener("click", e => {
     // 得点：基本100＋スピード（最大100）に、コンボの倍率（10連続で2倍まで）
     const td = kToday(); td.n++;
     const sec = Math.max(0, (Date.now() - (kcur.t0 || Date.now())) / 1000);
-    const rank0 = kRankOf(kgame.pts);
+    const rank0 = kRankOf(kGot() - (kLearned(q) ? 1 : 0));
     if (ok) {
       const speed = Math.max(0, Math.round((K_TIME - sec) / K_TIME * 100));
       const mult = 1 + Math.min(kgame.combo, 10) * 0.1;
       kgame.combo++; kgame.best = Math.max(kgame.best, kgame.combo); td.best = Math.max(td.best || 0, kgame.combo);
       const gain = Math.round((100 + speed) * mult);
       kgame.pts += gain; td.pts = (td.pts || 0) + gain;
-      kcur.g = { gain, speed, combo: kgame.combo, mult, up: kRankOf(kgame.pts) > rank0 ? kRankOf(kgame.pts) : 0 };
+      kcur.g = { gain, speed, combo: kgame.combo, mult, up: kRankOf(kGot()) > rank0 ? kRankOf(kGot()) : 0 };
     } else { kcur.g = { gain: 0, lost: kgame.combo }; kgame.combo = 0; }
     kSaveGame(); kSaveNow();
     try { if (navigator.vibrate) navigator.vibrate(ok ? 25 : [40, 50, 40]); } catch (e) {}
     renderKentei();
     if (ok) { const fl = document.createElement("div"); fl.className = "kflash"; document.body.appendChild(fl); setTimeout(() => fl.remove(), 600); }
     const a = $(".kq-ans"); if (a && a.scrollIntoView) a.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    return;
+  }
+  if (e.target.closest("[data-kflag]") && kcur) {
+    const i = kflag.indexOf(kcur.id); if (i < 0) kflag.push(kcur.id); else kflag.splice(i, 1);
+    kSaveFlag(); renderKentei(); return;
+  }
+  if (e.target.closest("[data-kflagsend]")) {
+    const txt = "いまいちな問題\n" + kflag.map(id => { const q = kById(id); return q ? `${id}｜${q.q}｜${kRight(q)}` : id; }).join("\n");
+    const done = () => { const b = e.target.closest("[data-kflagsend]"); if (b) b.querySelector(".kp").textContent = "コピーしました"; };
+    if (navigator.share) navigator.share({ text: txt }).catch(() => {});
+    else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, () => {});
     return;
   }
   const nb = e.target.closest("[data-knext]");
