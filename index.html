@@ -4443,6 +4443,7 @@ function kPoolOf(src) {
   const all = kAll();
   if (src === "all") return all;
   if (src === "missed") return all.filter(kMissed);
+  if (src === "past") return all.filter(q => /^p\d/.test(q.id));
   if (src === "weak") { const w = kWeakFields(); return all.filter(q => w.includes(q.f)); }
   if (src === "visited") return all.filter(q => kSpots(q).some(id => isDone(id)));
   if (src.startsWith("spot:")) { const id = src.slice(5); return all.filter(q => kSpots(q).includes(id)); }
@@ -4598,6 +4599,7 @@ function kLabel(src) {
   if (src === "weak") return ["苦手な分野（70%未満）", "WEAK"];
   if (src === "all") return ["すべて", "ALL"];
   if (src === "missed") return ["間違えた問題", "MISSED"];
+  if (src === "past") return ["過去問レベル", "PAST"];
   if (src === "visited") return ["行った所から", "VISITED"];
   if (src.startsWith("tag:")) return [kTagLabel(src.slice(4)), "TOPIC"];
   if (src.startsWith("spot:")) { const s = findSpot(src.slice(5)); return [s ? shortName(s) : "", "SPOT"]; }
@@ -4641,6 +4643,8 @@ function renderKentei() {
       <div class="krank"><p class="krank-name">${K_RANKS[ri][1]}<small>覚えた ${got} / ${all.length}</small></p><div class="kt-bar"><i style="width:${nx ? (got - K_RANKS[ri][0]) / (nx[0] - K_RANKS[ri][0]) * 100 : 100}%"></i></div><p class="kt-sub">${nx ? `次の「${nx[1]}」まで あと${nx[0] - got}問　·　` : ""}今日 ${td.n}問${td.r ? `　·　合格 ${td.w || 0}/${td.r}局` : ""}</p><p class="kt-sub">覚えた＝日をあけて4回続けて正解（最短で11日）</p></div>
       <p class="grp-h">FIELD<small>最近20問の正答率　線が合格ライン70%</small></p>
       <ul class="kscore">${kScoreRow("all", "すべて", null, all.length)}${rates.map(([k, ja, r]) => kScoreRow(k, ja, r, kPoolOf(k).length)).join("")}</ul>
+      <p class="grp-h">PAST<small>2級の過去問で問われた事実と深さに合わせた問題</small></p>
+      <ul class="vlist kt-rows">${(() => { const pp = kPoolOf("past"); return kRow("past", pp.length, `${pp.filter(kLearned).length}<i>/</i>${pp.length}`); })()}</ul>
       <p class="grp-h">THEME<small>2026年12月 2級の公開テーマ（10問出題）</small></p>
       <ul class="vlist kt-rows">${(() => { const src = "tag:" + K_THEME, tp = kPoolOf2(src); return `<li><button type="button" data-kstart="${esc(src)}"${ksrc === src ? ' aria-current="true"' : ""}><span class="kn">豊臣家と京都<small>TOYOTOMI</small></span><span class="kp">${tp.filter(kLearned).length}<i>/</i>${tp.length}</span></button></li>`; })()}</ul>
       <p class="grp-h">REVIEW</p>
