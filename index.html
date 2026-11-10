@@ -4611,7 +4611,9 @@ function kPick(from, prefer) {
   if (!pool.length) pool = kAll();
   const fresh = pool.filter(q => !recent.has(q.id));
   const cand = fresh.length ? fresh : pool;
-  const best = list => { const m = Math.min(...list.map(kRank)); return kShuffle(list.filter(q => kRank(q) === m))[0]; };
+  // 同じ優先度の中では、過去問レベル（p-）と公開テーマ（tt-）の問題を4回に3回えらぶ
+  const deep = q => /^(p\d|tt-)/.test(q.id);
+  const best = list => { const m = Math.min(...list.map(kRank)); const l = list.filter(q => kRank(q) === m), d = l.filter(deep); return kShuffle(d.length && Math.random() < .75 ? d : l)[0]; };
   // 最近24問で出た数がいちばん少ない分野（ただし今の出題範囲にある分野）
   const fc = {}; KF.forEach(([k]) => fc[k] = 0); klog.slice(-24).forEach(x => { if (x.f in fc) fc[x.f]++; });
   const inPool = new Set(cand.map(q => q.f)), low = Math.min(...[...inPool].map(f => fc[f] ?? 0));
