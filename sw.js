@@ -1,7 +1,7 @@
 // AGARU service worker: アプリ本体とフォントだけをキャッシュする
 // 掲載写真（Wikimedia）と地図（国土地理院）はキャッシュしない。他サイトの画像を入れると、
 // ブラウザが1枚あたり数MBとして容量を数えてしまい、端末の保存容量を大きく使うため
-const VERSION = "v115";
+const VERSION = "v116";
 const CORE = ["./", "index.html", "manifest.webmanifest", "vendor/leaflet.js", "vendor/leaflet.css", "icons/icon-192-v5.png", "icons/icon-512-v5.png", "icons/apple-touch-icon-v5.png", "icons/icon-v5.svg"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
