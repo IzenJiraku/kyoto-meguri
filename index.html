@@ -1183,15 +1183,16 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
 .kbar.none { background: none; }
 .kbar.none::after { display: none; }
 /* 一局10問（2026-11-10） */
-.kdots { display: inline-flex; gap: 4px; vertical-align: middle; }
-.kdots i { width: 8px; height: 8px; border: 1px solid rgba(237, 237, 234, .4); }
-.kdots i.ok { background: #EDEDEA; border-color: #EDEDEA; }
-.kdots i.ng { border-color: #8C8C88; background: linear-gradient(to top right, transparent 46%, #8C8C88 46%, #8C8C88 54%, transparent 54%); }
-.kround { display: flex; align-items: center; gap: 14px; margin: 0; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 13px; letter-spacing: .2em; color: var(--muted); animation: kPop .5s cubic-bezier(.2, 1.6, .4, 1) both; }
-.kround b { margin-left: auto; font-family: var(--f-disp); font-weight: 400; font-size: 20px; letter-spacing: .06em; color: #EDEDEA; }
-.kround b small { font-size: 13px; color: var(--muted); }
+.kline { display: flex; gap: 3px; height: 2px; margin: -14px 0 4px; }
+.kline i { flex: 1; background: rgba(237, 237, 234, .12); transition: background .4s; }
+.kline i.ok { background: #EDEDEA; }
+.kline i.ng { background: #5E5E5B; }
+.kline i.now { background: rgba(237, 237, 234, .4); }
+.kq-n .knum { font-family: var(--f-disp); font-size: 13px; letter-spacing: .14em; color: var(--muted); }
+.kround { display: flex; align-items: baseline; gap: 16px; margin: 0; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 13px; letter-spacing: .24em; color: var(--muted); animation: kPop .5s cubic-bezier(.2, 1.6, .4, 1) both; }
+.kround b { font-family: var(--f-disp); font-weight: 400; font-size: 20px; letter-spacing: .06em; color: #EDEDEA; }
+.kround b small { margin-left: 2px; font-size: 13px; color: var(--muted); }
 .kround.pass span { color: #EDEDEA; }
-.kround .kdots i { width: 10px; height: 10px; }
 .ke-area { width: 100%; box-sizing: border-box; padding: 14px; border: 1px solid var(--line); border-radius: 0; background: #0D0D0D; color: #EDEDEA; font: inherit; font-size: 13px; line-height: 2; letter-spacing: .04em; resize: vertical; }
 .ke-area:focus { outline: none; border-color: rgba(237, 237, 234, .62); }
 .ke-count { margin: -6px 0 0; text-align: right; font-family: var(--f-disp); font-size: 10px; letter-spacing: .12em; color: var(--muted); }
@@ -4415,6 +4416,78 @@ KQ.push(
   { id: "p25-suminokura", f: "history", q: "高瀬川や大堰川の水運を開いた豪商は？", c: ["角倉了以", "茶屋四郎次郎", "灰屋紹益", "後藤庄三郎"], e: "子の素庵とともに事業を進めた。灰屋紹益は吉野太夫を妻にした豪商。" },
   { id: "p25-ogai", f: "craft", q: "高瀬舟を題材にした短編小説『高瀬舟』を書いたのは？", c: ["森鷗外", "谷崎潤一郎", "梶井基次郎", "川端康成"], e: "梶井基次郎は京都の丸善を舞台にした『檸檬』、川端康成は『古都』。" },
 );
+// 過去問（第23回・2023年 2級）で問われた事実をもとにした自作問題
+KQ.push(
+  { id: "p23-byakko", f: "history", q: "四神相応で、平安京の西を守る「白虎」にあたるとされたのは？", c: ["山陰道", "巨椋池", "船岡山", "鴨川"], e: "東の青龍は鴨川、南の朱雀は巨椋池、北の玄武は船岡山。白虎は西へ向かう大道（山陰道）とされる。" },
+  { id: "p23-jobo", f: "history", q: "平安京の、碁盤の目のような都市区画の制度は？", c: ["条坊制", "条里制", "班田制", "郡県制"], e: "条坊制は都の中の区画。条里制は地方の田地を碁盤目に区切った制度で、混同しやすい。" },
+  { id: "p23-rakuyo", f: "history", q: "平安京の右京を長安城と呼んだのに対して、左京は何と呼ばれた？", c: ["洛陽城", "開封城", "北京城", "南京城"], e: "右京がさびれ左京が栄えたので、京都を「洛」と呼ぶようになった。「上洛」「洛中」もここから。" },
+  { id: "p23-reishi", f: "history", q: "嵯峨天皇の皇女に始まる賀茂斎院で、最後の斎院となった後鳥羽天皇の皇女は？", c: ["礼子内親王", "有智子内親王", "選子内親王", "式子内親王"], e: "有智子内親王は初代。選子内親王は5代の天皇の時代に斎院を務め「大斎院」と呼ばれた。式子内親王は歌人として名高い斎院。" },
+  { id: "p23-kagariya", f: "history", q: "鎌倉時代、六波羅探題のもとで京中の辻々48か所に置かれた警固の詰所は？", c: ["篝屋", "番屋", "京職", "大番役"], e: "夜にかがり火をたいて守ったことから。大番役は御家人が交代で京を警固した役目そのもの。" },
+  { id: "p23-kanbun", f: "history", q: "江戸時代、京都所司代の板倉重矩のもとで鴨川に築かれ、先斗町が生まれるもとになった堤は？", c: ["寛文新堤", "御土居", "防鴨河使", "デ・レーケ堤"], e: "1670年ごろ、今出川から五条までの石垣の堤。防鴨河使は平安時代に鴨川の治水を担った官職。" },
+  { id: "p23-mukaijima", f: "history", q: "宇治川の水運の要所で、本丸町・二ノ丸町の町名が残る「向島城」を築いたのは？", c: ["豊臣秀吉", "徳川家康", "織田信長", "松平定綱"], e: "伏見城の出城として築かれた。松平定綱は江戸初期に淀城を築いた大名。" },
+  { id: "p23-iemochi", f: "history", q: "1863年、将軍として229年ぶりに上洛し、二条城に入った徳川将軍は？", c: ["徳川家茂", "徳川慶喜", "徳川家光", "徳川家斉"], e: "前の上洛は1634年の家光。慶喜は将軍になる前から京都にいて、将軍として二条城で大政奉還を表明した。" },
+  { id: "p23-kikujiro", f: "history", q: "京都市三大事業（第二琵琶湖疏水・上水道・道路拡築と市電）を進めた2代目京都市長は？", c: ["西郷菊次郎", "内貴甚三郎", "北垣国道", "槇村正直"], e: "西郷隆盛の長男。内貴甚三郎は初代市長、北垣国道と槇村正直は京都府知事。" },
+  { id: "p23-mitoshiro", f: "festival", q: "7月1日に五穀豊穣を祈る「御戸代会神事」があり、明神川沿いに社家町が残る神社は？", c: ["上賀茂神社", "下鴨神社", "松尾大社", "貴船神社"], e: "上賀茂神社は山城国一之宮（下鴨神社とともに）。社家町は重要伝統的建造物群保存地区。" },
+  { id: "p23-rokuson", f: "temple", q: "清和源氏の祖・源経基を祀り、本殿の裏に経基の墓がある南区の神社は？", c: ["六孫王神社", "若宮八幡宮", "首途八幡宮", "五條天神宮"], e: "子の満仲が西八条の旧宅跡に建てた。満仲誕生の産湯に使った誕生水弁財天社がある。" },
+  { id: "p23-awo", f: "temple", q: "熊谷直実（法力房蓮生）が開いた念仏三昧院に始まり、法然の「張子の御影」がある長岡京市の寺は？", c: ["光明寺（粟生）", "金戒光明寺", "報国寺", "知恩院"], e: "法然の火葬の地とも伝わる西山浄土宗の総本山。金戒光明寺（黒谷）にも熊谷直実ゆかりの鎧掛けの松がある。" },
+  { id: "p23-takaradera", f: "temple", q: "聖武天皇の即位伝説にまつわる打出と小槌を伝え、「宝寺」と呼ばれる大山崎の寺は？", c: ["宝積寺", "宝塔寺", "宝筐院", "宝鏡寺"], e: "天王山の中腹にある。宝塔寺は伏見の日蓮宗の寺、宝筐院は嵯峨の楠木正行ゆかりの寺、宝鏡寺は人形の寺。" },
+  { id: "p23-darumadera", f: "temple", q: "「だるま寺」と呼ばれ、達磨堂に8000体ものだるまが奉納されている寺は？", c: ["法輪寺（中京区）", "東林院", "福勝寺", "称念寺"], e: "嵐山の法輪寺（虚空蔵さん）とは別。称念寺は「猫寺」、福勝寺は「ひょうたん寺」と呼ばれる。" },
+  { id: "p23-chohoji", f: "temple", q: "西国三十三所第18番で、親鸞が百日参籠したことで知られる寺は？", c: ["頂法寺（六角堂）", "行願寺（革堂）", "六波羅蜜寺", "清水寺"], e: "聖徳太子の創建と伝わり、いけばなの池坊が住職を務める。革堂は19番、六波羅蜜寺は17番、清水寺は16番。" },
+  { id: "p23-hitokoto", f: "temple", q: "醍醐寺の別格本山で、一生に一度ひとことだけ願えばかなう「一言観音」がある寺は？", c: ["金剛王院", "理性院", "即成院", "観智院"], e: "一言寺とも呼ばれる。観智院は東寺の塔頭で宮本武蔵の絵がある、即成院は泉涌寺の塔頭で二十五菩薩。" },
+  { id: "p23-hachimanzukuri", f: "arch", q: "本殿が八幡造で、八幡市でただ一つ国宝の建物がある神社は？", c: ["石清水八幡宮", "御所八幡宮", "三宅八幡宮", "篠村八幡宮"], e: "八幡造は前後二つの建物を連結する形。篠村八幡宮は足利尊氏が倒幕の兵を挙げた亀岡の神社。" },
+  { id: "p23-komayose", f: "arch", q: "京町家の軒下に置かれ、道と敷地の境を示し、昔は馬をつないだともいわれる低い柵は？", c: ["駒寄", "犬矢来", "ばったり床几", "虫籠窓"], e: "犬矢来は外壁の裾を守る曲がった竹の囲い。" },
+  { id: "p23-bunkacho", f: "arch", q: "2023年に文化庁が移った京都の庁舎は、もとは何の建物？", c: ["京都府警察本部本館", "京都府庁旧本館", "京都府立図書館", "京都文化博物館別館"], e: "1928年築の建物を改修した。京都府庁旧本館は松室重光設計の1904年の建物で、今も公開されている。" },
+  { id: "p23-tsukinoniwa", f: "arch", q: "洛中の「雪月花三名園」のうち、清水寺の成就院の庭は？", c: ["月の庭", "雪の庭", "花の庭", "巴の庭"], e: "雪の庭は妙満寺、花の庭は北野天満宮の旧庭（現存しない）とされる。巴の庭は本法寺の光悦作と伝わる庭。" },
+  { id: "p23-gakubuchi", f: "arch", q: "天寧寺の「額縁門」から、絵のように見える山は？", c: ["比叡山", "愛宕山", "如意ヶ岳", "鞍馬山"], e: "天寧寺は寺町鞍馬口の曹洞宗の寺。門の枠が比叡山を切り取る。" },
+  { id: "p23-seiho", f: "arch", q: "「班猫」で知られ、第1回の文化勲章を受けた京都画壇の画家は？", c: ["竹内栖鳳", "土田麦僊", "上村松園", "都路華香"], e: "上村松園は栖鳳の弟子で、女性で初めて文化勲章を受けた。土田麦僊も栖鳳の門下で国画創作協会を結成した。" },
+  { id: "p23-jooo", f: "craft", q: "千利休の師で、四畳半の草庵の茶室を営み、わび茶を深めた茶人は？", c: ["武野紹鴎", "村田珠光", "古田織部", "小堀遠州"], e: "珠光はわび茶の祖で一休宗純に参禅した。古田織部は利休の弟子、小堀遠州は織部の弟子で「綺麗さび」。" },
+  { id: "p23-sagagoryu", f: "craft", q: "いけばな嵯峨御流の総司所があり、嵯峨天皇の命日に華道祭を行う寺は？", c: ["大覚寺", "清凉寺", "鹿王院", "二尊院"], e: "嵯峨天皇が大沢池の菊を手折って生けたのが始まりと伝わる。" },
+  { id: "p23-shigeyama", f: "craft", q: "江戸後期に京都で台頭した狂言の茂山家を召し抱えた大名家は？", c: ["彦根藩井伊家", "加賀藩前田家", "尾張藩徳川家", "長州藩毛利家"], e: "茂山家は「お豆腐狂言」の家として知られる。" },
+  { id: "p23-takeuma", f: "festival", q: "顔見世のころ、南座で見られる花街から役者への贈り物は？", c: ["竹馬", "羽子板", "京人形", "まねき"], e: "祇園の芸舞妓が役者に贈り、劇場の中に飾られる。まねきは役者の名を書いた看板で、贈り物ではない。" },
+  { id: "p23-hanayagi", f: "craft", q: "上七軒の芸舞妓が習う舞の流派は？", c: ["花柳流", "井上流", "尾上流", "若柳流"], e: "祇園甲部は井上流、先斗町は尾上流、宮川町は若柳流、祇園東は藤間流。" },
+  { id: "p23-erikae", f: "life", q: "舞妓が芸妓になることを花街で何という？", c: ["襟替え", "店出し", "仕込み", "おちょぼ"], e: "赤い襟から白い襟に替わることから。店出しは舞妓としてのデビュー、仕込みは舞妓になる前の修業期間、おちょぼは髪形のこと。" },
+  { id: "p23-okame", f: "festival", q: "千本釈迦堂（大報恩寺）にある、本堂を建てた大工の妻にちなむ塚は？", c: ["おかめ塚", "扇塚", "筆塚", "鬼塚"], e: "夫の失敗を救う知恵を出し、上棟の前に自ら命を絶ったと伝わる。節分にはおかめが鬼を笑顔でなだめる。" },
+  { id: "p23-shato", f: "festival", q: "葵祭で、行列が下鴨・上賀茂の両社に着いたあと、勅使が御祭文を奏上する儀式は？", c: ["社頭の儀", "路頭の儀", "宮中の儀", "進発の儀"], e: "葵祭は宮中の儀・路頭の儀・社頭の儀の三つからなり、今は宮中の儀は行われない。" },
+  { id: "p23-moso", f: "festival", q: "祇園祭の山で、病の母のために雪の中で筍を探した孝行息子の話を表すのは？", c: ["孟宗山", "郭巨山", "占出山", "太子山"], e: "中国の「二十四孝」の話。郭巨山も二十四孝で、母を養うために子を埋めようとして黄金を掘り当てた話。" },
+  { id: "p23-kujitorazu", f: "festival", q: "後祭の「くじ取らず」の山鉾で、北観音山と隔年で巡行順を入れ替えることになったのは？", c: ["南観音山", "橋弁慶山", "鷹山", "大船鉾"], e: "橋弁慶山は後祭の先頭、大船鉾はしんがりで固定。" },
+  { id: "p23-toriigata", f: "festival", q: "五山送り火で、いちばん西の曼荼羅山に灯るのは？", c: ["鳥居形", "左大文字", "舟形", "妙・法"], e: "嵯峨鳥居本。点火は最後で、松明を火床に差して灯す独特の方法。" },
+  { id: "p23-kumogahata", f: "festival", q: "8月の松上げのうち、松明を投げ上げるのではなく、割り木で毎年違う文字をつくって灯すのは？", c: ["雲ケ畑", "花脊", "広河原", "久多"], e: "雲ケ畑の松上げ。花脊・広河原・久多は灯籠木の上の籠に松明を投げ入れる。" },
+  { id: "p23-awata", f: "festival", q: "10月の神幸祭で、剣鉾差しが約40kgの剣鉾を一人で持って歩き、祇園祭の鉾の原形ともされる祭りは？", c: ["粟田祭", "今宮祭", "藤森祭", "御霊祭"], e: "粟田神社の祭り。夜渡り神事では提灯をつけた大燈呂が出る。" },
+  { id: "p23-muromachi", f: "festival", q: "2007年に時代祭に加わった列は？", c: ["室町幕府執政列", "藤原公卿参朝列", "楠公上洛列", "中世婦人列"], e: "桓武天皇千二百年大祭を機に加わった。藤原公卿参朝列は平安時代の列、楠公上洛列は吉野時代の列、中世婦人列には大原女や桂女が登場する。" },
+  { id: "p23-kakurenembutsu", f: "festival", q: "六波羅蜜寺の「かくれ念仏」を始めたとされる僧は？", c: ["空也", "一遍", "法然", "良忍"], e: "疫病の流行を鎮めようと念仏を唱えた。一遍は踊念仏、良忍は融通念仏の祖。" },
+  { id: "p23-hanpei", f: "food", q: "10月のえびす講に食べる汁物「笹に小判」で、小判に見立てる食材は？", c: ["はんぺい", "丸餅", "ひろうす", "湯葉"], e: "青菜を笹に見立てる。京都のはんぺいは関東のはんぺんとは違う。" },
+  { id: "p23-manganji", f: "food", q: "万願寺とうがらしの名の由来の「万願寺」地区がある市は？", c: ["舞鶴市", "綾部市", "福知山市", "亀岡市"], e: "伏見とうがらしとカリフォルニア・ワンダーの交配といわれる。" },
+  { id: "p23-aruhei", f: "food", q: "室町時代末にポルトガル人から伝わった南蛮菓子は？", c: ["有平糖", "羊羹", "落雁", "八ツ橋"], e: "カステラ・ボーロ・金平糖・有平糖などが南蛮菓子。羊羹は中国から禅僧が伝えた点心がもと、落雁は中国伝来の打ち物、八ツ橋は江戸時代の京の菓子。" },
+  { id: "p23-shinseimame", f: "food", q: "真盛上人が北野で説法したとき、炒った黒豆に大根の葉の粉をまぶして配ったのが始まりの豆菓子は？", c: ["真盛豆", "五色豆", "州浜", "福豆"], e: "西陣の老舗に伝わる。五色豆は5色の砂糖衣の豆、州浜は大豆粉の菓子。" },
+  { id: "p23-1212", f: "life", q: "旧家などで逆さに貼られる「十二月十二日」のお札は、何のまじない？", c: ["盗難除け", "火除け", "疫病除け", "雷除け"], e: "石川五右衛門が捕まった日（処刑された日とも）にちなむという。" },
+  { id: "p23-ikaki", f: "life", q: "京ことばの「イカキ」の意味は？", c: ["ざる", "茶せん", "竹籠", "おたま"], e: "竹で編んだざるのこと。" },
+  { id: "p23-shinkikusai", f: "life", q: "「もどかしい、じれったい」を京ことばで何という？", c: ["シンキクサイ", "イケズ", "ヤニコイ", "モッサイ"], e: "イケズは意地悪、ヤニコイはもろい・弱い、モッサイはやぼったい。" },
+  { id: "p23-chazuke", f: "life", q: "主人と客の気づかいを表し、口先だけで実のないことのたとえにも使われる言葉は？", c: ["京の茶漬け", "京の着倒れ", "京の底冷え", "東男に京女"], e: "「ぶぶ漬けでもどうどす」は帰りをうながす意味だという話にもとづく。" },
+  { id: "p23-taikonoishi", f: "life", q: "秀吉が気に入って聚楽第に運ばせたが、夜にうめき声がしたので戻したという「太閤の石仏」がある地は？", c: ["北白川", "伏見", "西陣", "上賀茂"], e: "北白川の子安観音（太閤の石仏）。白川道の分かれ道にある。" },
+  { id: "p23-shomen", f: "street", q: "東山の「正面通」の名は、何の正面にあたることから？", c: ["方広寺の大仏殿", "三十三間堂", "智積院", "豊国神社"], e: "秀吉が建てた方広寺大仏殿の正面に通じる道。西本願寺・東本願寺の前にも続く。" },
+  { id: "p23-senryogatsuji", f: "street", q: "江戸中期、西陣が栄えたころ、今出川大宮あたりは何と呼ばれた？", c: ["千両ヶ辻", "札ノ辻", "四つ辻", "千本辻"], e: "一日に千両の取引があったことから。" },
+  { id: "p23-imoarai", f: "street", q: "巨椋池の西岸で、三方が沼で入口が一つだけだったことから「一口」と書く地名の読みは？", c: ["いもあらい", "ひとくち", "いもぐち", "かずくち"], e: "久御山町の地名。疱瘡（いも）を洗い清めることに由来するともいわれる。" },
+  { id: "p23-amidaji", f: "temple", q: "弾誓上人の即身仏が安置され、初夏に約600株のクリンソウが咲く大原の古知谷の寺は？", c: ["阿弥陀寺", "三千院", "寂光院", "勝林院"], e: "大原の北の山中にある。" },
+  { id: "p23-jakoshima", f: "street", q: "舞鶴湾にあり、旧海軍のガソリン庫が残る島は？", c: ["蛇島", "冠島", "沓島", "戸島"], e: "日本遺産「鎮守府」の構成文化財。冠島はオオミズナギドリの繁殖地。" },
+  { id: "p23-fuchokyu", f: "arch", q: "松室重光の設計で、旧議場の見学もでき、2023年にカフェが開いた建物は？", c: ["京都府庁旧本館", "旧武徳殿", "京都ハリストス正教会", "京都文化博物館別館"], e: "1904年の完成で、重要文化財。旧武徳殿・ハリストス正教会も松室重光の設計。" },
+  { id: "p23-oguraike", f: "street", q: "京都競馬場のコースの中にある池は、かつて近くにあった何という池の名残？", c: ["巨椋池", "深泥池", "広沢池", "宝ヶ池"], e: "巨椋池は昭和の干拓で農地になった。深泥池は氷河期の生き物が残る北区の池。" },
+  { id: "p23-geidai", f: "arch", q: "明治13年の京都府画学校を母体とし、2023年に京都駅の東へ移った大学は？", c: ["京都市立芸術大学", "京都精華大学", "京都工芸繊維大学", "嵯峨美術大学"], e: "日本で初めての公立の絵画の専門学校がもと。" },
+  { id: "p23-uchujiin", f: "temple", s: "daigoji", q: "宇宙寺院「劫蘊寺」を人工衛星で打ち上げる計画を進める伏見区の寺は？", c: ["醍醐寺", "法界寺", "萬福寺", "城南宮"], e: "醍醐寺の別院として計画された。法界寺は日野薬師。" },
+  { id: "p23-oiwasan", f: "street", q: "京都一周トレイル東山コースの、伏見区と山科区にまたがる山で、堂本印象が寄進した鳥居がある神社がある山は？", c: ["大岩山", "稲荷山", "将軍塚", "男山"], e: "大岩神社の鳥居は印象のデザイン。" },
+  { id: "p23-yakuozaka", f: "street", q: "鞍馬から静原へ越える「薬王坂」の名は、誰が越えたとき薬王が現れたことから？", c: ["最澄", "空海", "法然", "円仁"], e: "最澄が鞍馬から比叡山へ帰るとき、薬王如来が現れたと伝わる。" },
+  { id: "p23-shigetsu", f: "street", q: "京都一周トレイル北山西部コースで、清滝川に架かる朱色の橋は？", c: ["指月橋", "渡月橋", "高雄橋", "落合橋"], e: "西明寺の参道にかかる。渡月橋は嵐山。" },
+  { id: "p23-himuro", f: "temple", q: "北区西賀茂の氷室の近くにあり、氷室の守り神を祀る神社は？", c: ["氷室神社", "福王子神社", "今宮神社", "久我神社"], e: "平安時代、宮中に氷を納めた氷室の跡がある。" },
+  { id: "p23-akiko", f: "craft", q: "清滝の落合橋の近くに「ほととぎす 嵯峨へは一里 京へ三里 水の清滝 夜の明けやすき」の歌碑がある歌人は？", c: ["与謝野晶子", "吉井勇", "九条武子", "大田垣蓮月"], e: "晶子は京都をたびたび訪れた。吉井勇は祇園白川の歌碑、大田垣蓮月は幕末の歌人で陶芸家。" },
+  { id: "p23-takenotera", f: "temple", q: "「竹の寺」と呼ばれ、「十六羅漢の庭」で知られる西京区の寺は？", c: ["地蔵院", "華厳寺", "法輪寺", "乙訓寺"], e: "細川頼之が建てた。華厳寺は「鈴虫寺」。" },
+  { id: "p23-yamakuni", f: "temple", q: "時代祭の先頭の維新勤王隊列のもとになった山国隊ゆかりの、京北の神社は？", c: ["山國神社", "八幡宮社", "九頭神社", "常照皇寺"], e: "山国隊は戊辰戦争に加わった農兵隊。" },
+  { id: "p23-garaku", f: "street", q: "阪急京都線の、京都河原町と大阪梅田を結ぶ観光列車は？", c: ["京とれいん 雅洛", "ひえい", "丹後くろまつ号", "あをによし"], e: "ひえいは叡山電鉄、丹後くろまつ号は京都丹後鉄道、あをによしは近鉄の列車。" },
+  { id: "p23-hosoishi", f: "temple", q: "西院春日神社にあり、病気平癒の信仰を集める石は？", c: ["疱瘡石", "おもかる石", "月読石", "登天石"], e: "淳和天皇の皇女・崇子内親王の疱瘡を身代わりに受けたと伝わる。おもかる石は伏見稲荷など。" },
+  { id: "p23-chiyonokodo", f: "street", q: "梅宮大社から広沢池あたりまで石の道標が立ち、古歌にも詠まれた道は？", c: ["千代の古道", "竹林の小径", "さわらびの道", "あじろぎの道"], e: "平安貴族が嵯峨野へ通った道。さわらびの道・あじろぎの道は宇治の散策路。" },
+  { id: "p23-denden", f: "temple", q: "嵐山の法輪寺にある、電気・電波の神を祀る鎮守社は？", c: ["電電宮", "瀧尾神社", "車折神社", "野宮神社"], e: "microSDカードのお守りでも知られる。法輪寺は十三まいりの寺。" },
+  { id: "p23-tennozan", f: "street", q: "「天王山」の名は、酒解神社に何を祀って「天王社」と呼んだことから？", c: ["牛頭天王", "火雷天神", "吉備大臣", "伊予親王"], e: "天王山は山崎の戦いの舞台。" },
+  { id: "p23-rikyu-hachiman", f: "temple", q: "大山崎にあり、日本の製油発祥の地とされる神社は？", c: ["離宮八幡宮", "石清水八幡宮", "平岡八幡宮", "首途八幡宮"], e: "中世、荏胡麻油の専売権をもつ「大山崎油座」の本所として栄えた。" },
+  { id: "p23-takamura-jizo", f: "temple", q: "六地蔵めぐりの6体の地蔵を、一本の木から刻んだと伝わるのは？", c: ["小野篁", "後白河法皇", "西光法師", "平清盛"], e: "西光法師は後白河法皇の近臣で、6体を街道の入口に分けて祀ったと伝わる。" },
+);
 // 建築は、各スポットの設計者から問題を作る（データにある設計者がそのまま答え）
 function kenteiAuto() {
   const arch = SPOTS.filter(s => s.kind === "arch" && s.by && !/営繕|宮家|上皇|改修|協会|ほか|新館|デザイン/.test(s.by));
@@ -4512,7 +4585,7 @@ const KR_KEY = LS_KEY + "-kentei-kyoku";
 let kround = []; try { kround = JSON.parse(localStorage.getItem(KR_KEY) || "[]") || []; } catch (e) {}
 const kSaveRound = () => { try { localStorage.setItem(KR_KEY, JSON.stringify(kround)); } catch (e) {} };
 const kRoundNext = () => { if (kround.length >= 10) { kround = []; kSaveRound(); } };
-const kDots = () => `<span class="kdots" aria-label="一局 ${kround.filter(Boolean).length}/${kround.length}">${Array.from({ length: 10 }, (_, i) => `<i class="${i < kround.length ? (kround[i] ? "ok" : "ng") : ""}"></i>`).join("")}</span>`;
+const kLine = () => `<div class="kline" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i class="${i < kround.length ? (kround[i] ? "ok" : "ng") : i === kround.length && kcur && kcur.pick === null ? "now" : ""}"></i>`).join("")}</div>`;
 // 段位：通算の得点で上がる
 // 段位は点ではなく「覚えた」問題の数（日をあけて4回続けて正解）で上がる
 const K_RANKS = [[0, "見習い"], [10, "一見さん"], [40, "常連さん"], [100, "旦那衆"], [180, "目利き"], [280, "京都通"], [400, "都人"]];
@@ -4656,7 +4729,7 @@ function renderKentei() {
   }
   const q = kById(kcur.id); if (!q) { kcur = null; return renderKentei(); }
   const f = KF.find(k => k[0] === q.f), pick = kcur.pick, right = kRight(q);
-  $("#viewNav").innerHTML = `<span class="kq-n">${kDots()}</span><button type="button" class="seg" data-khome>INDEX</button>`;
+  $("#viewNav").innerHTML = `<span class="kq-n"><span class="knum">${Math.min(kround.length + (pick === null ? 1 : 0), 10)} / 10</span></span><button type="button" class="seg" data-khome>INDEX</button>`;
   const kph = kPhoto(q);
   // 答えたあとに出す位置図：問題の場所 → 写真の場所
   const sp = pick !== null && ([...kSpots(q), ...(KPH[q.id] ? [KPH[q.id]] : [])].map(findSpot).find(x => x && coordOf(x)) || (kph && coordOf(kph.s) ? kph.s : null));
@@ -4666,12 +4739,13 @@ function renderKentei() {
     kcur.next = nx.q.id; kcur.nextVia = nx.via; kSaveNow();
   }
   body.innerHTML = `<div class="kt kq">
+    ${kLine()}
     ${kph && !kph.after ? kPhotoHtml(kph, pick !== null) : ""}
     <p class="grp-h">${kcur.via ? `<span class="kvia">${esc(kTagLabel(kcur.via))} から</span>` : ""}${f ? f[2] : ""}${ksrc !== "all" ? ` · ${esc(kLabel(ksrc)[0])}` : ""}</p>
     <h2 class="kq-q">${esc(q.q)}</h2>
     <ol class="kq-ch">${kcur.ch.map((c, j) => `<li><button type="button" data-kpick="${j}"${pick !== null ? ` disabled class="${c === right ? "ok" : j === pick ? "ng kshake" : "off"}"` : ""}><span class="kno">${j + 1}</span><span>${esc(c)}</span>${pick !== null && (c === right || j === pick) ? `<i class="kmk" aria-hidden="true">${c === right ? "○" : "×"}</i>` : ""}</button></li>`).join("")}</ol>
     ${pick !== null ? `<div class="kq-ans">
-      ${kcur.g && kcur.g.done != null ? `<p class="kround${kcur.g.done >= 7 ? " pass" : ""}">${kDots()}<b>${kcur.g.done}<small>/10</small></b><span>${kcur.g.done >= 7 ? "合格" : "不合格"}</span></p>` : ""}
+      ${kcur.g && kcur.g.done != null ? `<p class="kround${kcur.g.done >= 7 ? " pass" : ""}"><b>${kcur.g.done}<small>/10</small></b><span>${kcur.g.done >= 7 ? "合格" : "不合格"}</span></p>` : ""}
       ${kcur.ch[pick] === right ? `<p class="kq-res ok"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="15"/></svg><span>正解</span></p>${kcur.g && kcur.g.up ? `<p class="krankup">RANK UP<b>${K_RANKS[kcur.g.up][1]}</b></p>` : ""}` : `<p class="kq-res ng"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 8L32 32"/><path d="M32 8L8 32"/></svg><small>正解は「${esc(right)}」</small></p>`}
       ${kph && kph.after ? kPhotoHtml(kph, true) : ""}
       ${q.e ? `<p class="kq-e">${esc(q.e)}</p>` : ""}
