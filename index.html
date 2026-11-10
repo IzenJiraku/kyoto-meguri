@@ -1182,6 +1182,21 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
 .kscore button[aria-current="true"] > span { text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 1px; }
 .kbar.none { background: none; }
 .kbar.none::after { display: none; }
+/* 一局10問（2026-11-10） */
+.kdots { display: inline-flex; gap: 4px; vertical-align: middle; }
+.kdots i { width: 8px; height: 8px; border: 1px solid rgba(237, 237, 234, .4); }
+.kdots i.ok { background: #EDEDEA; border-color: #EDEDEA; }
+.kdots i.ng { border-color: #8C8C88; background: linear-gradient(to top right, transparent 46%, #8C8C88 46%, #8C8C88 54%, transparent 54%); }
+.kround { display: flex; align-items: center; gap: 14px; margin: 0; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 13px; letter-spacing: .2em; color: var(--muted); animation: kPop .5s cubic-bezier(.2, 1.6, .4, 1) both; }
+.kround b { margin-left: auto; font-family: var(--f-disp); font-weight: 400; font-size: 20px; letter-spacing: .06em; color: #EDEDEA; }
+.kround b small { font-size: 13px; color: var(--muted); }
+.kround.pass span { color: #EDEDEA; }
+.kround .kdots i { width: 10px; height: 10px; }
+.ke-area { width: 100%; box-sizing: border-box; padding: 14px; border: 1px solid var(--line); border-radius: 0; background: #0D0D0D; color: #EDEDEA; font: inherit; font-size: 13px; line-height: 2; letter-spacing: .04em; resize: vertical; }
+.ke-area:focus { outline: none; border-color: rgba(237, 237, 234, .62); }
+.ke-count { margin: -6px 0 0; text-align: right; font-family: var(--f-disp); font-size: 10px; letter-spacing: .12em; color: var(--muted); }
+.ke-count.over { color: #EDEDEA; }
+.ke .kq-foot { border-top: 0; }
 </style>
 
 </head>
@@ -2991,6 +3006,7 @@ const TREE = [
   { key: "cal", en: "CALENDAR", act: true },
   { key: "rank", en: "RANKING", act: true },
   { key: "kentei", en: "KENTEI", act: true },
+  { key: "essay", en: "ESSAY", act: true },
   { key: "write", ja: "書く", en: "EDIT", items: () => [["add", "スポットを追加"], ["export", "記録を書き出す"], ["import", "記録を読み込む"], ["sync", "PCとスマホの同期"]] },
 ];
 // メニューの枝の右に添える線だけのアイコン（24×24）
@@ -3034,7 +3050,7 @@ function renderTree() {
   $("#menuReset").hidden = !filtersActive();
   $("#menuNow").textContent = $("#current").textContent;
   // FILTER（絞る）／ ARCHIVE（行った記録を眺める）／ EDIT の3つに分ける
-  const GROUPS = [["FILTER", ["kind", "area", "status"]], ["ARCHIVE", ["map", "cal", "rank"]], ["STUDY", ["kentei"]], ["", ["write"]]];
+  const GROUPS = [["FILTER", ["kind", "area", "status"]], ["ARCHIVE", ["map", "cal", "rank"]], ["STUDY", ["kentei", "essay"]], ["", ["write"]]];
   const branch = b => b.act ? `<li><button type="button" class="branch" data-act-branch="${b.key}">${b.en}${brIcon(b.key)}</button></li>` : `<li>
     <button type="button" class="branch" data-branch="${b.key}" aria-expanded="${openBranch === b.key}">${b.en}${brIcon(b.key)}</button>
     ${openBranch === b.key ? `<ul class="twigs">${b.items().map(([v, l]) => `<li><button type="button" class="twig" data-key="${b.key}" data-v="${esc(v)}" aria-current="${currentOf(b.key) === v}">${esc(l)}</button></li>`).join("")}</ul>` : ""}
@@ -3103,8 +3119,81 @@ function openView(k) {
   viewKind = k;
   $("#view").hidden = false; document.body.classList.add("view-open");
   const vw = $("#view"); if (vw.animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) vw.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }], { duration: 280, easing: "cubic-bezier(.2, .8, .2, 1)" });
-  if (k === "map") renderMap(); else if (k === "rank") renderRank(); else if (k === "kentei") kOpen(); else renderCal();
+  if (k === "map") renderMap(); else if (k === "rank") renderRank(); else if (k === "kentei") kOpen(); else if (k === "essay") renderEssay(); else renderCal();
 }
+/* ==== ESSAY：京都検定1級の記述を見すえた小論文（書いて、Claudeに添削してもらう） ==== */
+const KE = [
+  ["toyotomi-toshi", "豊臣秀吉が京都で行った都市改造（御土居・天正の地割・寺町など）について、その内容とねらいを述べなさい。", 300],
+  ["toyotomi-family", "豊臣家ゆかりの京都の社寺を一つ選び、豊臣家の誰とどのように関わるかを述べなさい。", 200],
+  ["heiankyo", "平安京の都市の形（条坊制・朱雀大路・東寺と西寺など）と、それが今の京都の町に残っているところを述べなさい。", 300],
+  ["gion", "祇園祭の起こりと、山鉾巡行が今の形になるまでの移り変わりを述べなさい。", 300],
+  ["aoi", "葵祭の正式な名前と、行列の見どころ、上賀茂・下鴨両社との関わりを述べなさい。", 200],
+  ["okuribi", "五山送り火の五つの文字・形と、送り火が行われる意味を述べなさい。", 200],
+  ["zen", "京都五山とは何か。五山の寺と、別格とされた寺について述べなさい。", 200],
+  ["kitayama-higashiyama", "北山文化と東山文化の違いを、金閣と銀閣を例に述べなさい。", 300],
+  ["teien", "枯山水の庭とは何か。京都の代表的な枯山水の庭を一つ挙げて、その特徴を述べなさい。", 200],
+  ["machiya", "京町家のつくり（通り庭・虫籠窓・犬矢来など）と、それぞれの役目を述べなさい。", 200],
+  ["sosui", "琵琶湖疏水が明治の京都に果たした役割を、水力発電や水運にもふれて述べなさい。", 300],
+  ["meiji", "明治の東京遷都のあと、京都が衰えを防ぐために行った近代化の取り組みを述べなさい。", 300],
+  ["wagashi", "京菓子と季節の関わりについて、具体的な菓子を挙げて述べなさい。", 200],
+  ["kyoryori", "京料理を形づくる四つの流れ（大饗料理・精進料理・本膳料理・懐石料理）について述べなさい。", 300],
+  ["kotoba", "京ことばの特徴を、例となる言葉を挙げて述べなさい。", 200],
+  ["kagai", "京都の五花街の名前と、それぞれの春の踊りについて述べなさい。", 200],
+  ["nishijin", "西陣織の歴史を、応仁の乱との関わりと明治の技術革新にふれて述べなさい。", 300],
+  ["kimon", "京都に残る鬼門除けの例を挙げ、平安京以来の方角の考え方を述べなさい。", 200],
+  ["bakumatsu", "幕末の京都で起きた出来事を一つ選び、その場所と歴史上の意味を述べなさい。", 200],
+  ["kindai-kenchiku", "京都の近代建築を一つ選び、設計者・建てられた時代・建物の特徴を述べなさい。", 200],
+  ["museum", "京都の博物館・美術館を一つ選び、その成り立ちと見どころを述べなさい。", 200],
+];
+const KE_KEY = LS_KEY + "-essay";
+let kess = { cur: KE[0][0], txt: {} }; try { Object.assign(kess, JSON.parse(localStorage.getItem(KE_KEY) || "{}")); } catch (e) {}
+const keSave = () => { try { localStorage.setItem(KE_KEY, JSON.stringify(kess)); } catch (e) {} };
+const keCur = () => KE.find(x => x[0] === kess.cur) || KE[0];
+function kePrompt(t, ans) {
+  return `京都検定（京都・観光文化検定試験）の記述問題の練習です。添削してください。
+
+【お題】${t[1]}（${t[2]}字程度）
+
+【私の解答】
+${ans}
+
+次の順でお願いします。
+1. 10点満点の採点と、ひとことの講評
+2. 事実の誤りや、あいまいなところ（正しい内容も）
+3. 入れると点が上がる要点
+4. ${t[2]}字程度の模範解答`;
+}
+function renderEssay() {
+  $("#viewTitle").textContent = "ESSAY";
+  $("#viewNav").innerHTML = `<button type="button" class="seg" data-enext>NEXT</button>`;
+  const t = keCur(), v = kess.txt[t[0]] || "", i = KE.indexOf(t);
+  $("#viewBody").innerHTML = `<div class="kt ke">
+    <p class="grp-h">${String(i + 1).padStart(2, "0")} / ${KE.length}<small>${t[2]}字程度</small></p>
+    <h2 class="kq-q">${esc(t[1])}</h2>
+    <textarea class="ke-area" id="keArea" rows="12" placeholder="ここに書く">${esc(v)}</textarea>
+    <p class="ke-count" id="keCount"></p>
+    <div class="kq-foot"><span></span><button type="button" class="kbtn kq-next" data-esend>CLAUDEに添削してもらう</button></div>
+    <p class="kt-note">押すと、お題と解答をClaudeに渡して新しい会話を開きます（開けないときは文章をコピーします）。書いた文はこの端末に残ります。</p>
+  </div>`;
+  keCount();
+}
+function keCount() { const a = $("#keArea"), t = keCur(); if (!a) return; const n = a.value.replace(/\s/g, "").length; $("#keCount").textContent = `${n} / ${t[2]}字`; $("#keCount").classList.toggle("over", n > t[2] * 1.2); }
+$("#viewBody").addEventListener("input", e => {
+  if (viewKind !== "essay" || e.target.id !== "keArea") return;
+  kess.txt[keCur()[0]] = e.target.value; keSave(); keCount();
+});
+$("#viewBody").addEventListener("click", e => {
+  if (viewKind !== "essay" || !e.target.closest("[data-esend]")) return;
+  const t = keCur(), ans = (kess.txt[t[0]] || "").trim();
+  if (!ans) { $("#keArea").focus(); return; }
+  const txt = kePrompt(t, ans);
+  try { if (navigator.clipboard) navigator.clipboard.writeText(txt); } catch (err) {}
+  window.open("https://claude.ai/new?q=" + encodeURIComponent(txt), "_blank", "noopener");
+});
+$("#viewNav").addEventListener("click", e => {
+  if (viewKind !== "essay" || !e.target.closest("[data-enext]")) return;
+  const i = KE.indexOf(keCur()); kess.cur = KE[(i + 1) % KE.length][0]; keSave(); renderEssay(); $("#viewBody").scrollTop = 0;
+});
 function closeView() { viewKind = null; $("#view").hidden = true; document.body.classList.remove("view-open"); }
 $("#viewClose").addEventListener("click", closeView);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && viewKind && !$("#sheetRoot").innerHTML) closeView(); });
@@ -3800,8 +3889,6 @@ KQ.push(
   { id: "h-hosokawa", f: "history", q: "応仁の乱で東軍の総大将だったのは？", c: ["細川勝元", "山名宗全", "畠山政長", "足利義政"], e: "西軍は山名宗全。" },
   { id: "h-nishijin", f: "history", q: "「西陣」という地名は、応仁の乱で誰が陣を置いたことに由来する？", c: ["山名宗全", "細川勝元", "足利義政", "織田信長"], e: "西軍の総大将・山名宗全の陣があった。戦後、職人が戻り織物の町になった。" },
   { id: "h-hananogosho", f: "history", q: "室町幕府の「花の御所」を造営したのは？", c: ["足利義満", "足利尊氏", "足利義政", "足利義昭"], e: "室町通に面していたことから、幕府が「室町幕府」と呼ばれる。" },
-  { id: "h-jurakudai", f: "history", q: "豊臣秀吉が平安宮の跡地近くに築いた、城郭風の邸宅は？", c: ["聚楽第", "伏見城", "二条城", "大坂城"], e: "1587年完成。わずか8年ほどで取り壊された。" },
-  { id: "h-hokoji", f: "history", q: "「国家安康」の鐘銘が大坂の陣のきっかけになった寺は？", c: ["方広寺", "東福寺", "妙法院", "知恩院"], e: "豊臣家が再建した大仏殿の鐘。家康の名を分断したと咎められた。" },
   { id: "h-bangumi", f: "history", s: "kaichi", q: "明治2年（1869年）、町衆の手で京都に64校開かれた学区制の小学校は？", c: ["番組小学校", "寺子屋", "藩校", "師範学校"], e: "国の学制（1872年）より早い。元開智小学校などの建物が今に残る。" },
   { id: "h-kitagaki", f: "history", s: "incline", q: "琵琶湖疏水を計画した京都府知事は？", c: ["北垣国道", "槇村正直", "岩倉具視", "大久保利通"], e: "東京遷都で沈んだ京都を立て直すため、田辺朔郎を抜擢した。" },
   { id: "h-hakurankai", f: "history", s: "heianjingu", q: "1895年、岡崎で開かれた博覧会は？", c: ["第4回内国勧業博覧会", "京都博覧会", "日本万国博覧会", "平安博覧会"], e: "平安神宮の創建と時代祭の始まりも同じ年。" },
@@ -4027,7 +4114,6 @@ KQ.push(
   { id: "x-mimizuka", f: "history", q: "豊臣秀吉の朝鮮出兵にかかわる供養塚で、豊国神社の西にあるのは？", c: ["耳塚（鼻塚）", "将軍塚", "首塚", "蛇塚"], e: "戦功の証として持ち帰られた耳や鼻を埋めたと伝わる。" },
   { id: "x-ichijo-modori", f: "life", q: "葬列の途中で父・三善清行が一時よみがえったという伝説から名が付いた橋は？", c: ["一条戻橋", "五条大橋", "三条大橋", "渡月橋"], e: "堀川に架かる。安倍晴明が式神を橋の下に隠したという話も伝わる。" },
   { id: "x-yamazaki", f: "street", q: "1582年、羽柴秀吉が明智光秀を破った戦いの地「天王山」がある町は？", c: ["大山崎町", "久御山町", "精華町", "井手町"], e: "「天下分け目の天王山」の語源。山崎は茶室「待庵」（妙喜庵）の地でもある。" },
-  { id: "x-kyotofu1", f: "history", q: "京都府の第3代知事として琵琶湖疏水を進めたのは？", c: ["北垣国道", "槇村正直", "長谷信篤", "岩倉具視"], e: "初代は長谷信篤、第2代は槇村正直。北垣は田辺朔郎を抜擢した。" },
   // 神社・寺院
   { id: "x-shinnyodo", f: "temple", q: "紅葉で知られる「真如堂」の正式な名前は？", c: ["真正極楽寺", "教王護国寺", "慈照寺", "蓮華王院"], e: "天台宗の寺で、11月の紅葉と十夜法要で知られる。" },
   { id: "x-iwashimizu", f: "temple", q: "エジソンが電球のフィラメントに八幡の竹を使ったことを記念する碑がある神社は？", c: ["石清水八幡宮", "伏見稲荷大社", "松尾大社", "城南宮"], e: "八幡市の男山に鎮座。本殿は国宝。" },
@@ -4149,6 +4235,35 @@ KQ.push(
   { id: "m-senoku", f: "arch", q: "住友家が集めた中国古代の青銅器で知られる、鹿ケ谷の美術館は？", c: ["泉屋博古館", "細見美術館", "承天閣美術館", "藤井斉成会有鄰館"], e: "住友家の別邸の地に建つ。" },
   { id: "y-seishinin", f: "life", q: "和泉式部が初代住職とされ、その墓と伝わる宝篋印塔がある新京極の寺は？", c: ["誠心院", "誓願寺", "蛸薬師堂", "錦天満宮"], e: "「和泉式部寺」とも呼ばれる。" },
 );
+// 2026年の2級公開テーマ「豊臣家と京都」（秀吉と弟・秀長の足跡）
+KQ.push(
+  { id: "tt-gyoko", f: "history", q: "1588年、豊臣秀吉が完成したばかりの聚楽第に迎えた天皇は？", c: ["後陽成天皇", "正親町天皇", "後水尾天皇", "後奈良天皇"], e: "諸大名に天皇と秀吉への忠誠を誓わせた。正親町天皇は秀吉の関白就任のときの天皇。" },
+  { id: "tt-hidetsugu", f: "history", q: "秀吉から関白と聚楽第を譲られ、のちに切腹を命じられた甥は？", c: ["豊臣秀次", "豊臣秀長", "豊臣秀勝", "小早川秀秋"], e: "1595年。聚楽第はその後まもなく取り壊され、建物は各地に移されたと伝わる。" },
+  { id: "tt-karamon-d", f: "temple", s: "daitokuji", q: "聚楽第の遺構と伝わる、国宝の唐門がある寺は？", c: ["大徳寺", "妙心寺", "南禅寺", "知恩院"], e: "大徳寺の唐門。豊国神社や西本願寺の唐門は、伏見城の遺構と伝わる。" },
+  { id: "tt-odoi-km", f: "history", s: "odoi", q: "秀吉が1591年に築いた御土居の総延長は、およそ何km？", c: ["約22.5km", "約12km", "約35km", "約50km"], e: "北は鷹峯、南は九条、東は鴨川、西は紙屋川のあたりまでを囲んだ。" },
+  { id: "tt-nanakuchi", f: "street", s: "odoi", q: "御土居の出入り口を、まとめて何と呼ぶ？", c: ["京の七口", "京の九門", "洛中五口", "十二口"], e: "鞍馬口・丹波口・粟田口など、今も地名に残る。実際の口の数は時代によって異なる。九門は京都御苑の門。" },
+  { id: "tt-teramachi", f: "street", q: "秀吉が洛中の寺院を集め、都の東の端に寺を並べて作った通りは？", c: ["寺町通", "寺之内通", "新京極通", "河原町通"], e: "寺之内も北の端に寺を集めた地区。新京極は明治に寺町の境内を開いてできた繁華街。" },
+  { id: "tt-daibutsu", f: "temple", q: "秀吉が奈良の東大寺にならって大仏殿を建てた寺は？", c: ["方広寺", "妙法院", "智積院", "蓮華王院"], e: "1595年に完成したが、翌年の慶長伏見地震で大仏が壊れた。大仏殿の石垣が今も残る。" },
+  { id: "tt-shomei", f: "history", q: "1614年、徳川家康が方広寺の鐘の銘文のどの言葉を問題にした？", c: ["国家安康", "天下布武", "厭離穢土", "一期一会"], e: "「家康」の名を分断し、豊臣を君とする（君臣豊楽）呪いだと難癖をつけ、大坂の陣のきっかけになった。鐘は今も方広寺に残る。" },
+  { id: "tt-amidagamine", f: "history", q: "秀吉の墓所「豊国廟」がある東山の峰は？", c: ["阿弥陀ヶ峰", "華頂山", "音羽山", "如意ヶ岳"], e: "豊国神社の東にあり、長い石段の上に五輪塔が立つ。音羽山は清水寺の山号、如意ヶ岳は大文字の山。" },
+  { id: "tt-karamon-h", f: "temple", q: "豊国神社の国宝の唐門は、どこの遺構と伝わる？", c: ["伏見城", "聚楽第", "大坂城", "淀城"], e: "二条城、南禅寺金地院を経て、明治に豊国神社へ移されたと伝わる。" },
+  { id: "tt-sanboin", f: "arch", s: "daigoji", q: "醍醐の花見に合わせて、秀吉が自ら基本の設計をしたとされる庭は？", c: ["醍醐寺三宝院の庭", "天龍寺の曹源池庭園", "金地院の鶴亀の庭", "大仙院の庭"], e: "聚楽第から運んだ名石「藤戸石」が据えられている。" },
+  { id: "tt-entokuin", f: "temple", s: "kodaiji", q: "北政所（ねね）が晩年を過ごし、今は高台寺の塔頭になっている寺は？", c: ["圓徳院", "月真院", "養源院", "寿聖院"], e: "伏見城の化粧御殿の前庭を移したと伝わる庭がある。養源院は淀殿が建てた寺。" },
+  { id: "tt-sanjo", f: "street", s: "sanjo-ohashi", q: "1590年、秀吉の命で石の柱の橋に架け替えられた橋は？", c: ["三条大橋", "五条大橋", "四条大橋", "渡月橋"], e: "奉行は増田長盛。今も擬宝珠に「天正十八年」の銘が残り、東海道の終点となった。" },
+  { id: "tt-gojo", f: "street", q: "秀吉が方広寺の大仏への道筋として、今の場所に移した橋は？", c: ["五条大橋", "三条大橋", "七条大橋", "松原橋"], e: "もとの五条大橋は今の松原通（旧五条通）にあった。牛若丸と弁慶の出会いの場もこの旧五条の橋とされる。" },
+  { id: "tt-honganji", f: "temple", s: "nishihonganji", q: "1591年、秀吉が堀川七条に寺地を与えて大坂の天満から移らせた寺は？", c: ["本願寺（今の西本願寺）", "知恩院", "仏光寺", "興正寺"], e: "のち1602年に徳川家康が教如に寺地を与え、東本願寺ができた。" },
+  { id: "tt-sokenin", f: "temple", s: "daitokuji", q: "秀吉が織田信長の葬儀を行い、その菩提を弔うために大徳寺に建てた塔頭は？", c: ["総見院", "大光院", "黄梅院", "聚光院"], e: "1582年。大光院は秀長の菩提寺、黄梅院は信長が父のために建てた寺、聚光院は三好家ゆかり。" },
+  { id: "tt-hidenaga", f: "temple", s: "daitokuji", q: "秀吉の弟・秀長の菩提寺で、大和郡山から大徳寺の中に移されたのは？", c: ["大光院", "総見院", "三玄院", "龍源院"], e: "秀長は1591年に大和郡山で亡くなった。2026年の公開テーマでは秀長の足跡も出題範囲。" },
+  { id: "tt-shounji", f: "temple", q: "秀吉が幼くして亡くなった子・鶴松のために建てた祥雲寺の跡に、今あるのは？", c: ["智積院", "妙法院", "養源院", "方広寺"], e: "長谷川等伯一門の障壁画「楓図」「桜図」は、もとは祥雲寺のために描かれた。" },
+  { id: "tt-yodojo", f: "history", q: "秀吉が淀殿のために修築し、鶴松が生まれた城は？", c: ["淀城", "伏見城", "聚楽第", "勝竜寺城"], e: "1589年。淀殿の名はこの城にちなむ。今の淀城跡は江戸時代に築き直された別の城。" },
+  { id: "tt-zuisenji", f: "temple", q: "豊臣秀次とその一族の菩提を弔う、三条木屋町の寺は？", c: ["瑞泉寺", "誓願寺", "本能寺", "天性寺"], e: "1611年、高瀬川を開いた角倉了以が建てた。秀次の一族は三条河原で処刑された。" },
+  { id: "tt-jodoin", f: "temple", s: "kitano", q: "北野大茶湯で秀吉が湯を所望したことから「湯たく山茶くれん寺」と呼ばれる寺は？", c: ["浄土院", "大報恩寺", "東向観音寺", "引接寺"], e: "北野天満宮の近くにある。大報恩寺は千本釈迦堂、引接寺は千本ゑんま堂。" },
+  { id: "tt-taikoi", f: "temple", s: "kitano", q: "北野大茶湯の茶に使われたと伝わる、北野天満宮の境内の井戸は？", c: ["太閤井戸", "染井", "醒ヶ井", "音羽の滝"], e: "染井（梨木神社）と醒ヶ井は「京の名水」に数えられる別の水。" },
+  { id: "tt-kanpaku", f: "history", q: "秀吉が関白になった年は？", c: ["1585年", "1582年", "1590年", "1598年"], e: "翌1586年に太政大臣となり、豊臣の姓を受けた。1582年は本能寺の変、1590年は天下統一、1598年は秀吉の死。" },
+  { id: "tt-shigetsu", f: "history", q: "1596年の慶長伏見地震で倒れ、木幡山に建て直された秀吉の城は？", c: ["指月の伏見城", "聚楽第", "淀城", "二条城"], e: "秀吉は1598年、木幡山の伏見城で亡くなった。" },
+  { id: "tt-toji", f: "temple", s: "toji", q: "1603年、豊臣秀頼が再建した東寺の建物は？", c: ["金堂", "五重塔", "講堂", "御影堂"], e: "本尊は薬師如来。五重塔は1644年、徳川家光の寄進による再建。" },
+  { id: "tt-ogon", f: "history", q: "1586年、秀吉が黄金の茶室を運び込んで正親町天皇に茶を献じた場所は？", c: ["御所（小御所）", "聚楽第", "北野天満宮", "大坂城"], e: "組み立て式の茶室で、のちに北野大茶湯でも披露された。" },
+);
 // 建築は、各スポットの設計者から問題を作る（データにある設計者がそのまま答え）
 function kenteiAuto() {
   const arch = SPOTS.filter(s => s.kind === "arch" && s.by && !/営繕|宮家|上皇|改修|協会|ほか|新館|デザイン/.test(s.by));
@@ -4188,7 +4303,7 @@ const KTOP = [
   ["院政と平家", "白河上皇|白河法皇|後白河|院政|平清盛|平家|六波羅(?!蜜)|鹿ケ谷|建礼門院|祇王"], ["源氏物語・平安文学", "源氏物語|紫式部|清少納言|枕草子|方丈記|鴨長明|徒然草|宇治十帖|梁塵秘抄|池亭記"],
   ["藤原氏", "藤原道長|藤原頼通|平等院|鳳凰堂|彰子"], ["菅原道真", "菅原道真|道真|北野天満宮|天神|天満宮"], ["御霊信仰", "御霊|怨霊|疫病|やすらい|上御霊"],
   ["足利義満", "足利義満|義満|金閣|鹿苑寺|北山文化|北山殿|花の御所|相国寺|世阿弥|観阿弥"], ["足利義政", "足利義政|義政|銀閣|慈照寺|東山殿|東山文化|向月台"], ["足利尊氏", "足利尊氏|尊氏|天龍寺|等持院|後醍醐"],
-  ["応仁の乱", "応仁|山名宗全|細川勝元|上御霊"], ["町衆", "町衆|法華|天文法華"], ["豊臣秀吉", "秀吉|聚楽第|御土居|北野大茶湯|醍醐の花見|方広寺|高台寺|北政所|天正の地割|伏見城|秀頼|堀川ごぼう"],
+  ["応仁の乱", "応仁|山名宗全|細川勝元|上御霊"], ["町衆", "町衆|法華|天文法華"], ["豊臣家と京都（2026公開テーマ）", "秀吉|秀長|秀次|秀頼|豊臣|淀殿|北政所|聚楽第|御土居|北野大茶湯|醍醐の花見|方広寺|豊国|天正の地割|伏見城|鶴松|堀川ごぼう"],
   ["徳川家康", "家康|二条城|大政奉還|崇伝|東本願寺|本願寺が東西|徳川家光|家光"], ["織田信長", "信長|本能寺|洛中洛外図"], ["幕末", "新選組|壬生浪士|池田屋|近江屋|坂本龍馬|龍馬|寺田屋|禁門|蛤御門|大政奉還|松平容保|守護職|鳥羽・伏見|どんどん焼け|霊山|土方"],
   ["明治の京都", "明治|疏水|インクライン|蹴上発電所|蹴上インクライン|田辺朔郎|北垣|路面電車|内国勧業博覧会|番組小学校|舎密局|三大事業|帝国大学|新島襄|同志社|無鄰菴|山縣"], ["琵琶湖疏水", "疏水|インクライン|蹴上発電所|蹴上インクライン|水路閣|田辺朔郎|北垣|無鄰菴|小川治兵衛|植治|哲学の道"],
   ["空海・真言宗", "空海|弘法|東寺|真言|曼荼羅|神護寺|仁和寺|醍醐寺|聖宝"], ["最澄・天台宗", "最澄|延暦寺|比叡|天台|三千院|山法師|法灯|門跡|声明"],
@@ -4239,9 +4354,16 @@ function kToday() { const t = today(); if (kday.d !== t) kday = { d: t, n: 0, pt
 const KG_KEY = LS_KEY + "-kentei-game";
 let kgame = { pts: 0, combo: 0, best: 0 }; try { Object.assign(kgame, JSON.parse(localStorage.getItem(KG_KEY) || "{}")); } catch (e) {}
 const kSaveGame = () => { try { localStorage.setItem(KG_KEY, JSON.stringify(kgame)); } catch (e) {} };
+// 一局＝10問。本番と同じ7割で合格。○×だけを10個のマスに並べる
+const KR_KEY = LS_KEY + "-kentei-kyoku";
+let kround = []; try { kround = JSON.parse(localStorage.getItem(KR_KEY) || "[]") || []; } catch (e) {}
+const kSaveRound = () => { try { localStorage.setItem(KR_KEY, JSON.stringify(kround)); } catch (e) {} };
+const kRoundNext = () => { if (kround.length >= 10) { kround = []; kSaveRound(); } };
+const kDots = () => `<span class="kdots" aria-label="一局 ${kround.filter(Boolean).length}/${kround.length}">${Array.from({ length: 10 }, (_, i) => `<i class="${i < kround.length ? (kround[i] ? "ok" : "ng") : ""}"></i>`).join("")}</span>`;
 // 段位：通算の得点で上がる
 // 段位は点ではなく「覚えた」問題の数（日をあけて4回続けて正解）で上がる
 const K_RANKS = [[0, "見習い"], [10, "一見さん"], [40, "常連さん"], [100, "旦那衆"], [180, "目利き"], [280, "京都通"], [400, "都人"]];
+const K_THEME = "豊臣家と京都（2026公開テーマ）";
 const kGot = () => kAll().filter(kLearned).length;
 const kRankOf = pts => { let i = 0; K_RANKS.forEach(([t], j) => { if (pts >= t) i = j; }); return i; };
 const K_TIME = 12;   // この秒数より早いほどスピードボーナス
@@ -4302,7 +4424,7 @@ function kOpen() {
   // 答え終わった問題のまま開いたときは、次の問題から始める
   else if (kcur.pick !== null) {
     const from = kById(kcur.id), n = kcur.next && kById(kcur.next) ? { q: kById(kcur.next), via: kcur.nextVia } : kPick(from);
-    if (n && n.q) kServe(n.q, n.via);
+    if (n && n.q) { kRoundNext(); kServe(n.q, n.via); }
   }
   renderKentei();
 }
@@ -4364,9 +4486,11 @@ function renderKentei() {
     const rates = KF.map(([k, ja]) => [k, ja, kFieldRate(k)]);
     const weak = kWeakFields(), wpool = kPoolOf("weak");
     body.innerHTML = `<div class="kt">
-      <div class="krank"><p class="krank-name">${K_RANKS[ri][1]}<small>覚えた ${got} / ${all.length}</small></p><div class="kt-bar"><i style="width:${nx ? (got - K_RANKS[ri][0]) / (nx[0] - K_RANKS[ri][0]) * 100 : 100}%"></i></div><p class="kt-sub">${nx ? `次の「${nx[1]}」まで あと${nx[0] - got}問　·　` : ""}今日 ${td.n}問 ${kNum(td.pts || 0)} PT</p><p class="kt-sub">覚えた＝日をあけて4回続けて正解（最短で11日）</p></div>
+      <div class="krank"><p class="krank-name">${K_RANKS[ri][1]}<small>覚えた ${got} / ${all.length}</small></p><div class="kt-bar"><i style="width:${nx ? (got - K_RANKS[ri][0]) / (nx[0] - K_RANKS[ri][0]) * 100 : 100}%"></i></div><p class="kt-sub">${nx ? `次の「${nx[1]}」まで あと${nx[0] - got}問　·　` : ""}今日 ${td.n}問${td.r ? `　·　合格 ${td.w || 0}/${td.r}局` : ""}</p><p class="kt-sub">覚えた＝日をあけて4回続けて正解（最短で11日）</p></div>
       <p class="grp-h">FIELD<small>最近20問の正答率　線が合格ライン70%</small></p>
       <ul class="kscore">${kScoreRow("all", "すべて", null, all.length)}${rates.map(([k, ja, r]) => kScoreRow(k, ja, r, kPoolOf(k).length)).join("")}</ul>
+      <p class="grp-h">THEME<small>2026年12月 2級の公開テーマ（10問出題）</small></p>
+      <ul class="vlist kt-rows">${(() => { const src = "tag:" + K_THEME, tp = kPoolOf2(src); return `<li><button type="button" data-kstart="${esc(src)}"${ksrc === src ? ' aria-current="true"' : ""}><span class="kn">豊臣家と京都<small>TOYOTOMI</small></span><span class="kp">${tp.filter(kLearned).length}<i>/</i>${tp.length}</span></button></li>`; })()}</ul>
       <p class="grp-h">REVIEW</p>
       <ul class="vlist kt-rows">${kRow("weak", wpool.length, weak.length ? weak.length + "分野" : "—")}${kRow("missed", miss.length, miss.length ? miss.length + "問" : "—")}${vis.length ? kRow("visited", vis.length, vis.length + "問") : ""}</ul>
       ${kflag.length ? `<p class="grp-h">FLAGGED<small>いまいちに印をつけた問題</small></p><ul class="vlist kt-rows"><li><button type="button" data-kflagsend><span class="kn">${kflag.length}問を送る<small>SEND</small></span><span class="kp">コピー</span></button></li></ul>` : ""}
@@ -4376,9 +4500,7 @@ function renderKentei() {
   }
   const q = kById(kcur.id); if (!q) { kcur = null; return renderKentei(); }
   const f = KF.find(k => k[0] === q.f), pick = kcur.pick, right = kRight(q);
-  $("#viewNav").innerHTML = `<span class="kq-n">${kgame.combo >= 2 ? `<b class="kcb">${kgame.combo} COMBO</b>` : ""}${kNum(td.pts || 0)} PT</span><button type="button" class="seg" data-khome>INDEX</button>`;
-  if (pick === null && !kcur.t0) kcur.t0 = Date.now();
-  const left = pick === null ? Math.max(0, K_TIME - (Date.now() - kcur.t0) / 1000) : 0;
+  $("#viewNav").innerHTML = `<span class="kq-n">${kDots()}</span><button type="button" class="seg" data-khome>INDEX</button>`;
   const kph = kPhoto(q);
   // 答えたあとに出す位置図：問題の場所 → 写真の場所
   const sp = pick !== null && ([...kSpots(q), ...(KPH[q.id] ? [KPH[q.id]] : [])].map(findSpot).find(x => x && coordOf(x)) || (kph && coordOf(kph.s) ? kph.s : null));
@@ -4391,10 +4513,10 @@ function renderKentei() {
     ${kph && !kph.after ? kPhotoHtml(kph, pick !== null) : ""}
     <p class="grp-h">${kcur.via ? `<span class="kvia">${esc(kTagLabel(kcur.via))} から</span>` : ""}${f ? f[2] : ""}${ksrc !== "all" ? ` · ${esc(kLabel(ksrc)[0])}` : ""}</p>
     <h2 class="kq-q">${esc(q.q)}</h2>
-    ${pick === null ? `<div class="ktimer" aria-hidden="true"><i style="animation-duration:${K_TIME}s;animation-delay:-${(K_TIME - left).toFixed(2)}s"></i></div>` : ""}
     <ol class="kq-ch">${kcur.ch.map((c, j) => `<li><button type="button" data-kpick="${j}"${pick !== null ? ` disabled class="${c === right ? "ok" : j === pick ? "ng kshake" : "off"}"` : ""}><span class="kno">${j + 1}</span><span>${esc(c)}</span>${pick !== null && (c === right || j === pick) ? `<i class="kmk" aria-hidden="true">${c === right ? "○" : "×"}</i>` : ""}</button></li>`).join("")}</ol>
     ${pick !== null ? `<div class="kq-ans">
-      ${kcur.ch[pick] === right ? `<p class="kq-res ok"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="15"/></svg><span>正解</span>${kcur.g && kcur.g.gain ? `<b class="kpt">+${kNum(kcur.g.gain)}</b>` : ""}</p>${kcur.g && kcur.g.up ? `<p class="krankup">RANK UP<b>${K_RANKS[kcur.g.up][1]}</b></p>` : ""}` : `<p class="kq-res ng"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 8L32 32"/><path d="M32 8L8 32"/></svg><small>正解は「${esc(right)}」</small></p>`}
+      ${kcur.g && kcur.g.done != null ? `<p class="kround${kcur.g.done >= 7 ? " pass" : ""}">${kDots()}<b>${kcur.g.done}<small>/10</small></b><span>${kcur.g.done >= 7 ? "合格" : "不合格"}</span></p>` : ""}
+      ${kcur.ch[pick] === right ? `<p class="kq-res ok"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="15"/></svg><span>正解</span></p>${kcur.g && kcur.g.up ? `<p class="krankup">RANK UP<b>${K_RANKS[kcur.g.up][1]}</b></p>` : ""}` : `<p class="kq-res ng"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 8L32 32"/><path d="M32 8L8 32"/></svg><small>正解は「${esc(right)}」</small></p>`}
       ${kph && kph.after ? kPhotoHtml(kph, true) : ""}
       ${q.e ? `<p class="kq-e">${esc(q.e)}</p>` : ""}
       ${sp ? `<button type="button" class="kq-map" data-open="${esc(sp.id)}" aria-label="${esc(shortName(sp))}を見る"><span class="kq-mapc" id="kqMap"></span><span class="kq-mapcap">${esc(shortName(sp))}<small>を見る →</small></span></button>` : ""}
@@ -4432,22 +4554,15 @@ $("#viewBody").addEventListener("click", e => {
     kst[q.id] = r; kSave();
     klog.push({ f: q.f, ok: ok ? 1 : 0, t: Date.now() }); if (klog.length > 800) klog = klog.slice(-800);
     try { localStorage.setItem(KL_KEY, JSON.stringify(klog)); } catch (e) {}
-    // 得点：基本100＋スピード（最大100）に、コンボの倍率（10連続で2倍まで）
     const td = kToday(); td.n++;
-    const sec = Math.max(0, (Date.now() - (kcur.t0 || Date.now())) / 1000);
     const rank0 = kRankOf(kGot() - (kLearned(q) ? 1 : 0));
-    if (ok) {
-      const speed = Math.max(0, Math.round((K_TIME - sec) / K_TIME * 100));
-      const mult = 1 + Math.min(kgame.combo, 10) * 0.1;
-      kgame.combo++; kgame.best = Math.max(kgame.best, kgame.combo); td.best = Math.max(td.best || 0, kgame.combo);
-      const gain = Math.round((100 + speed) * mult);
-      kgame.pts += gain; td.pts = (td.pts || 0) + gain;
-      kcur.g = { gain, speed, combo: kgame.combo, mult, up: kRankOf(kGot()) > rank0 ? kRankOf(kGot()) : 0 };
-    } else { kcur.g = { gain: 0, lost: kgame.combo }; kgame.combo = 0; }
+    kround.push(ok ? 1 : 0); kSaveRound();
+    let done = null;
+    if (kround.length >= 10) { done = kround.filter(Boolean).length; td.r = (td.r || 0) + 1; if (done >= 7) td.w = (td.w || 0) + 1; }
+    kcur.g = { done, up: kRankOf(kGot()) > rank0 ? kRankOf(kGot()) : 0 };
     kSaveGame(); kSaveNow();
-    try { if (navigator.vibrate) navigator.vibrate(ok ? 25 : [40, 50, 40]); } catch (e) {}
+    try { if (navigator.vibrate) navigator.vibrate(ok ? 12 : [30, 40, 30]); } catch (e) {}
     renderKentei();
-    if (ok) { const fl = document.createElement("div"); fl.className = "kflash"; document.body.appendChild(fl); setTimeout(() => fl.remove(), 600); }
     const a = $(".kq-ans"); if (a && a.scrollIntoView) a.scrollIntoView({ block: "nearest", behavior: "smooth" });
     return;
   }
@@ -4466,7 +4581,7 @@ $("#viewBody").addEventListener("click", e => {
   if (nb && kcur) {
     const t = nb.dataset.knext, from = kById(kcur.id);
     const n = t ? kPick(from, t) : (kcur.next && kById(kcur.next) ? { q: kById(kcur.next), via: kcur.nextVia } : kPick(from));
-    kServe(n.q, n.via); renderKentei(); $("#viewBody").scrollTop = 0; return;
+    kRoundNext(); kServe(n.q, n.via); renderKentei(); $("#viewBody").scrollTop = 0; return;
   }
 });
 $("#viewNav").addEventListener("click", e => {
