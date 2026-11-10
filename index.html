@@ -1198,6 +1198,21 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
 .ke-count { margin: -6px 0 0; text-align: right; font-family: var(--f-disp); font-size: 10px; letter-spacing: .12em; color: var(--muted); }
 .ke-count.over { color: #EDEDEA; }
 .ke .kq-foot { border-top: 0; }
+/* 一局の振り返り（2026-11-11） */
+.krv .kround { border-bottom: 0; }
+.krv-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.krv-list li { border-bottom: 1px solid var(--line); }
+.krv-list summary { display: flex; gap: 14px; align-items: baseline; padding: 14px 0; font-size: 13px; line-height: 1.7; letter-spacing: .04em; color: #EDEDEA; cursor: pointer; list-style: none; }
+.krv-list summary::-webkit-details-marker { display: none; }
+.krv-list summary i { flex: none; width: 1em; font-style: normal; font-size: 13px; }
+.krv-list li.ng summary i { color: #8C8C88; }
+.krv-list li.ok summary span { color: var(--muted); }
+.krv-a { margin: -4px 0 6px 28px; font-size: 13px; color: #EDEDEA; }
+.krv-a::before { content: "正解　"; font-size: 10px; letter-spacing: .1em; color: var(--muted); }
+.krv-e { margin: 0 0 14px 28px; font-size: 13px; line-height: 1.9; letter-spacing: .04em; color: var(--muted); }
+.krv-acts { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; padding-top: 6px; }
+.krv-acts .kbtn { padding: 12px 16px; font-family: var(--f-body); font-size: 13px; letter-spacing: .1em; }
+.krv-acts .kq-next { font-family: var(--f-disp); letter-spacing: .2em; }
 </style>
 
 </head>
@@ -4584,7 +4599,13 @@ const kSaveGame = () => { try { localStorage.setItem(KG_KEY, JSON.stringify(kgam
 const KR_KEY = LS_KEY + "-kentei-kyoku";
 let kround = []; try { kround = JSON.parse(localStorage.getItem(KR_KEY) || "[]") || []; } catch (e) {}
 const kSaveRound = () => { try { localStorage.setItem(KR_KEY, JSON.stringify(kround)); } catch (e) {} };
-const kRoundNext = () => { if (kround.length >= 10) { kround = []; kSaveRound(); } };
+const KRQ_KEY = LS_KEY + "-kentei-kyoku-q";
+let kroundQ = []; try { kroundQ = JSON.parse(localStorage.getItem(KRQ_KEY) || "[]") || []; } catch (e) {}
+const kSaveRoundQ = () => { try { localStorage.setItem(KRQ_KEY, JSON.stringify(kroundQ)); } catch (e) {} };
+const kRoundNext = () => { if (kround.length >= 10) { kround = []; kroundQ = []; kSaveRound(); kSaveRoundQ(); } };
+// 10問を解き終えたら、次へ進む前に振り返りをはさむ
+let kRev = false, kretry = [];
+const kRoundDone = () => kround.length >= 10;
 const kLine = () => `<div class="kline" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i class="${i < kround.length ? (kround[i] ? "ok" : "ng") : i === kround.length && kcur && kcur.pick === null ? "now" : ""}"></i>`).join("")}</div>`;
 // 段位：通算の得点で上がる
 // 段位は点ではなく「覚えた」問題の数（日をあけて4回続けて正解）で上がる
@@ -4646,10 +4667,21 @@ function kStart(src) {
   kServe(q, null);
   renderKentei(); $("#viewBody").scrollTop = 0;
 }
+function renderReview() {
+  const n = kround.filter(Boolean).length, miss = kroundQ.filter((id, i) => !kround[i] && kById(id)).length;
+  $("#viewNav").innerHTML = `<span class="kq-n"><span class="knum">REVIEW</span></span><button type="button" class="seg" data-khome>INDEX</button>`;
+  $("#viewBody").innerHTML = `<div class="kt kq krv">
+    ${kLine()}
+    <p class="kround${n >= 7 ? " pass" : ""}"><b>${n}<small>/10</small></b><span>${n >= 7 ? "合格" : "不合格"}</span></p>
+    <ol class="krv-list">${kroundQ.map((id, i) => { const q = kById(id); if (!q) return ""; const ok = kround[i]; return `<li class="${ok ? "ok" : "ng"}"><details${ok ? "" : " open"}><summary><i aria-hidden="true">${ok ? "○" : "×"}</i><span>${esc(q.q)}</span></summary><p class="krv-a">${esc(kRight(q))}</p>${q.e ? `<p class="krv-e">${esc(q.e)}</p>` : ""}</details></li>`; }).join("")}</ol>
+    <div class="krv-acts">${miss ? `<button type="button" class="kbtn" data-kretry>間違えた${miss}問をもう一度</button>` : ""}<button type="button" class="kbtn kq-next" data-knewround>次の一局</button></div>
+  </div>`;
+}
 function kOpen() {
   kHomeOpen = false;
   if (!kcur || !kById(kcur.id)) { const { q } = kPick(null); if (q) kServe(q, null); }
   // 答え終わった問題のまま開いたときは、次の問題から始める
+  else if (kcur.pick !== null && kRoundDone()) kRev = true;
   else if (kcur.pick !== null) {
     const from = kById(kcur.id), n = kcur.next && kById(kcur.next) ? { q: kById(kcur.next), via: kcur.nextVia } : kPick(from);
     if (n && n.q) { kRoundNext(); kServe(n.q, n.via); }
@@ -4729,6 +4761,7 @@ function renderKentei() {
     </div>`;
     return;
   }
+  if (kRev) return renderReview();
   const q = kById(kcur.id); if (!q) { kcur = null; return renderKentei(); }
   const f = KF.find(k => k[0] === q.f), pick = kcur.pick, right = kRight(q);
   $("#viewNav").innerHTML = `<span class="kq-n"><span class="knum">${Math.min(kround.length + (pick === null ? 1 : 0), 10)} / 10</span></span><button type="button" class="seg" data-khome>INDEX</button>`;
@@ -4788,7 +4821,7 @@ $("#viewBody").addEventListener("click", e => {
     try { localStorage.setItem(KL_KEY, JSON.stringify(klog)); } catch (e) {}
     const td = kToday(); td.n++;
     const rank0 = kRankOf(kGot() - (kLearned(q) ? 1 : 0));
-    kround.push(ok ? 1 : 0); kSaveRound();
+    kround.push(ok ? 1 : 0); kSaveRound(); kroundQ.push(q.id); kSaveRoundQ();
     let done = null;
     if (kround.length >= 10) { done = kround.filter(Boolean).length; td.r = (td.r || 0) + 1; if (done >= 7) td.w = (td.w || 0) + 1; }
     kcur.g = { done, up: kRankOf(kGot()) > rank0 ? kRankOf(kGot()) : 0 };
@@ -4809,7 +4842,15 @@ $("#viewBody").addEventListener("click", e => {
     else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, () => {});
     return;
   }
+  if (e.target.closest("[data-knewround]") || e.target.closest("[data-kretry]")) {
+    if (e.target.closest("[data-kretry]")) kretry = kroundQ.filter((id, i) => !kround[i] && kById(id));
+    kRev = false; kRoundNext();
+    const r = kretry.length ? { q: kById(kretry.shift()), via: null } : (kcur.next && kById(kcur.next) ? { q: kById(kcur.next), via: kcur.nextVia } : kPick(kById(kcur.id)));
+    kServe(r.q, r.via); renderKentei(); $("#viewBody").scrollTop = 0; return;
+  }
   const nb = e.target.closest("[data-knext]");
+  if (nb && kcur && kRoundDone()) { kRev = true; renderKentei(); $("#viewBody").scrollTop = 0; return; }
+  if (nb && kcur && kretry.length) { kServe(kById(kretry.shift()), null); renderKentei(); $("#viewBody").scrollTop = 0; return; }
   if (nb && kcur) {
     const t = nb.dataset.knext, from = kById(kcur.id);
     const n = t ? kPick(from, t) : (kcur.next && kById(kcur.next) ? { q: kById(kcur.next), via: kcur.nextVia } : kPick(from));
