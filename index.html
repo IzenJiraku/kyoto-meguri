@@ -1172,8 +1172,6 @@ h1, h2, h3, .pin .nm, .rn, .vlist button, #tree, .sec-sum, .facts dd, .hero-acts
 .kq-mapcap { display: flex; align-items: baseline; gap: 6px; padding: 8px 0 0; font-size: 13px; letter-spacing: .04em; color: #EDEDEA; }
 .kq-mapcap small { font-size: 10px; color: var(--muted); }
 .kq-foot { justify-content: space-between; align-items: center; }
-.kq-flag { padding: 8px 0; font-size: 10px; letter-spacing: .08em; color: var(--muted); background: none; border: 0; }
-.kq-flag[aria-pressed="true"] { color: #EDEDEA; }
 .krank { gap: 10px; padding-bottom: 10px; }
 .kscore button { width: 100%; display: grid; grid-template-columns: 12.5em 1fr 3em; align-items: center; gap: 12px; padding: 9px 0; font-size: 13px; letter-spacing: .04em; color: #EDEDEA; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); }
 .kscore li { display: block; }
@@ -3771,7 +3769,17 @@ $("#importFile").addEventListener("change", async e => {
   renderCover();
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
   render();
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  // 新しい版を公開したら、アプリに戻ってきたときに確かめて、入れ替わったら自動で読み直す
+  if ("serviceWorker" in navigator) {
+    const hadSW = !!navigator.serviceWorker.controller; let swReloaded = false;
+    navigator.serviceWorker.register("sw.js").then(reg => {
+      const skip = () => { if (reg.waiting) reg.waiting.postMessage("skip"); };
+      skip();
+      reg.addEventListener("updatefound", () => { const w = reg.installing; if (w) w.addEventListener("statechange", () => { if (w.state === "installed") skip(); }); });
+      document.addEventListener("visibilitychange", () => { if (!document.hidden) reg.update().then(skip).catch(() => {}); });
+    }).catch(() => {});
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (!hadSW || swReloaded) return; swReloaded = true; location.reload(); });
+  }
   locateForSort(false);
   syncNow();
 })();
@@ -4694,9 +4702,6 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden) { kHiddenAt = Date.now(); return; }
   if (viewKind === "kentei" && !kHomeOpen && kcur && kcur.pick !== null && kHiddenAt && Date.now() - kHiddenAt > 60000) { kOpen(); $("#viewBody").scrollTop = 0; }
 });
-const KFL_KEY = LS_KEY + "-kentei-flag";
-let kflag = []; try { kflag = JSON.parse(localStorage.getItem(KFL_KEY) || "[]") || []; } catch (e) {}
-const kSaveFlag = () => { try { localStorage.setItem(KFL_KEY, JSON.stringify(kflag)); } catch (e) {} };
 const KL_KEY = LS_KEY + "-kentei-log";
 let klog = []; try { klog = JSON.parse(localStorage.getItem(KL_KEY) || "[]") || []; } catch (e) {}
 // 分野ごとの最近20問の正答率（5問未満は出さない）
@@ -4756,7 +4761,6 @@ function renderKentei() {
       <ul class="vlist kt-rows">${(() => { const src = "tag:" + K_THEME, tp = kPoolOf2(src); return `<li><button type="button" data-kstart="${esc(src)}"${ksrc === src ? ' aria-current="true"' : ""}><span class="kn">豊臣家と京都<small>TOYOTOMI</small></span><span class="kp">${tp.filter(kLearned).length}<i>/</i>${tp.length}</span></button></li>`; })()}</ul>
       <p class="grp-h">REVIEW</p>
       <ul class="vlist kt-rows">${kRow("weak", wpool.length, weak.length ? weak.length + "分野" : "—")}${kRow("missed", miss.length, miss.length ? miss.length + "問" : "—")}${vis.length ? kRow("visited", vis.length, vis.length + "問") : ""}</ul>
-      ${kflag.length ? `<p class="grp-h">FLAGGED<small>いまいちに印をつけた問題</small></p><ul class="vlist kt-rows"><li><button type="button" data-kflagsend><span class="kn">${kflag.length}問を送る<small>SEND</small></span><span class="kp">コピー</span></button></li></ul>` : ""}
       <p class="kt-note">京都検定2級の出題区分に合わせた1問ずつのクイズ。間違えた問題は先に、正解した問題は日をあけて出し直します。</p>
     </div>`;
     return;
@@ -4785,7 +4789,7 @@ function renderKentei() {
       ${kph && kph.after ? kPhotoHtml(kph, true) : ""}
       ${q.e ? `<p class="kq-e">${esc(q.e)}</p>` : ""}
       ${sp ? `<button type="button" class="kq-map" data-open="${esc(sp.id)}" aria-label="${esc(shortName(sp))}を見る"><span class="kq-mapc" id="kqMap"></span><span class="kq-mapcap">${esc(shortName(sp))}<small>を見る →</small></span></button>` : ""}
-      <div class="kq-foot"><button type="button" class="kq-flag" data-kflag aria-pressed="${kflag.includes(q.id)}">${kflag.includes(q.id) ? "△ いまいちに印済み" : "△ いまいち"}</button><button type="button" class="kbtn kq-next" data-knext>NEXT${nx && nx.via ? `<small>${esc(kTagLabel(nx.via))}</small>` : ""}</button></div>
+      <div class="kq-foot"><span></span><button type="button" class="kbtn kq-next" data-knext>NEXT${nx && nx.via ? `<small>${esc(kTagLabel(nx.via))}</small>` : ""}</button></div>
     </div>` : ""}
   </div>`;
   if (sp) kDrawMap(sp);
@@ -4829,17 +4833,6 @@ $("#viewBody").addEventListener("click", e => {
     try { if (navigator.vibrate) navigator.vibrate(ok ? 12 : [30, 40, 30]); } catch (e) {}
     renderKentei();
     const a = $(".kq-ans"); if (a && a.scrollIntoView) a.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    return;
-  }
-  if (e.target.closest("[data-kflag]") && kcur) {
-    const i = kflag.indexOf(kcur.id); if (i < 0) kflag.push(kcur.id); else kflag.splice(i, 1);
-    kSaveFlag(); renderKentei(); return;
-  }
-  if (e.target.closest("[data-kflagsend]")) {
-    const txt = "いまいちな問題\n" + kflag.map(id => { const q = kById(id); return q ? `${id}｜${q.q}｜${kRight(q)}` : id; }).join("\n");
-    const done = () => { const b = e.target.closest("[data-kflagsend]"); if (b) b.querySelector(".kp").textContent = "コピーしました"; };
-    if (navigator.share) navigator.share({ text: txt }).catch(() => {});
-    else if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, () => {});
     return;
   }
   if (e.target.closest("[data-knewround]") || e.target.closest("[data-kretry]")) {
