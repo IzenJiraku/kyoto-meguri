@@ -1292,7 +1292,7 @@ const AREAS = ["四条界隈", "三条・御池", "御所・二条", "今出川�
 
 const SPOTS = [
   // ---- 建築 ----
-  { id: "fucho", tips: ["京都府庁の場所は、幕末に京都守護職の上屋敷があった所。"], fest: true, kind: "arch", name: "京都府庁旧本館", kana: "きょうとふちょうきゅうほんかん", area: "御所・二条", addr: "上京区下立売通新町西入薮ノ内町", year: 1904, style: "ネオ・ルネサンス", by: "松室重光",
+  { id: "fucho", tips: ["京都府庁の場所は、幕末に京都守護職の上屋敷があった所。"], kind: "arch", name: "京都府庁旧本館", kana: "きょうとふちょうきゅうほんかん", area: "御所・二条", addr: "上京区下立売通新町西入薮ノ内町", year: 1904, style: "ネオ・ルネサンス", by: "松室重光",
     desc: "煉瓦造2階建ての府庁舎。創建時の姿を残す現役の官公庁建物としては日本最古級とされ、国の重要文化財。中庭の桜と、正庁・旧知事室の内装が見どころ。",
     note: "平日を中心に一般公開" },
   { id: "bunpaku", kind: "arch", name: "京都文化博物館 別館（旧日本銀行京都支店）", kana: "きょうとぶんかはくぶつかんべっかん", area: "三条・御池", addr: "中京区三条通高倉西入菱屋町", year: 1906, style: "辰野式", by: "辰野金吾・長野宇平治",
@@ -1301,22 +1301,22 @@ const SPOTS = [
   { id: "chukyo-post", kind: "arch", name: "中京郵便局", kana: "なかぎょうゆうびんきょく", area: "三条・御池", addr: "中京区三条通東洞院東入菱屋町", year: 1902, style: "ネオ・ルネサンス", by: "逓信省（吉井茂則・三橋四郎）",
     desc: "明治の郵便局舎。1978年に外壁だけを残して内部を建て替えた、日本の外壁保存の先駆けとして知られる。今も郵便局として使われている。",
     note: "" },
-  { id: "shinpukan", fest: true, kind: "arch", name: "新風館（旧京都中央電話局）", kana: "しんぷうかん", area: "三条・御池", addr: "中京区烏丸通姉小路下ル場之町", year: 1926, style: "逓信建築・初期モダニズム", by: "吉田鉄郎（逓信省）",
+  { id: "shinpukan", kind: "arch", name: "新風館（旧京都中央電話局）", kana: "しんぷうかん", area: "三条・御池", addr: "中京区烏丸通姉小路下ル場之町", year: 1926, style: "逓信建築・初期モダニズム", by: "吉田鉄郎（逓信省）",
     desc: "大正末の電話局舎を活かした商業施設。2020年に隈研吾の設計で再生し、エースホテル京都が入る。アーチ窓が並ぶ烏丸通側の外観が当時のまま。",
     note: "" },
-  { id: "1928", fest: true, kind: "arch", name: "1928ビル（旧大阪毎日新聞社京都支局）", kana: "せんきゅうひゃくにじゅうはちびる", area: "三条・御池", addr: "中京区三条通御幸町東入弁慶石町", year: 1928, style: "アール・デコ", by: "武田五一",
+  { id: "1928", kind: "arch", name: "1928ビル（旧大阪毎日新聞社京都支局）", kana: "せんきゅうひゃくにじゅうはちびる", area: "三条・御池", addr: "中京区三条通御幸町東入弁慶石町", year: 1928, style: "アール・デコ", by: "武田五一",
     desc: "星形の窓とバルコニーが目印。星は毎日新聞の社章に由来する。現在はギャラリーやカフェ、劇場が入る複合ビル。",
     note: "" },
   { id: "meirin", kind: "arch", name: "京都芸術センター（旧明倫小学校）", kana: "きょうとげいじゅつせんたー", area: "四条界隈", addr: "中京区室町通蛸薬師下ル山伏山町", year: 1931, style: "スパニッシュ風", by: "京都市営繕課",
     desc: "呉服商の町衆が支えた番組小学校の昭和初期の校舎。洋風の外観に瓦屋根を載せ、教室や講堂、和室が残る。国の登録有形文化財。館内に喫茶店がある。",
     note: "" },
-  { id: "cityhall", fest: true, kind: "arch", name: "京都市役所 本庁舎", kana: "きょうとしやくしょほんちょうしゃ", area: "三条・御池", addr: "中京区寺町通御池上ル上本能寺前町", year: 1927, style: "ネオ・バロック＋東洋的意匠", by: "中野進一（武田五一 監修）",
+  { id: "cityhall", kind: "arch", name: "京都市役所 本庁舎", kana: "きょうとしやくしょほんちょうしゃ", area: "三条・御池", addr: "中京区寺町通御池上ル上本能寺前町", year: 1927, style: "ネオ・バロック＋東洋的意匠", by: "中野進一（武田五一 監修）",
     desc: "1927年に東側、1931年に西側が完成。洋風の構成に、塔屋や細部の東洋風デザインを合わせている。2021年の改修で耐震化され、正面の姿は保存された。",
     note: "" },
-  { id: "harisutosu", church: true, fest: true, kind: "arch", name: "京都ハリストス正教会 生神女福音聖堂", kana: "きょうとはりすとすせいきょうかい", area: "御所・二条", addr: "中京区柳馬場通二条上ル", year: 1903, style: "ビザンチン様式（木造）", by: "松室重光",
+  { id: "harisutosu", church: true, kind: "arch", name: "京都ハリストス正教会 生神女福音聖堂", kana: "きょうとはりすとすせいきょうかい", area: "御所・二条", addr: "中京区柳馬場通二条上ル", year: 1903, style: "ビザンチン様式（木造）", by: "松室重光",
     desc: "府庁旧本館と同じ松室重光による木造の正教会聖堂。白い外壁と玉ねぎ形の屋根飾りが、町家の並ぶ通りの中で目を引く。京都府指定文化財。",
     note: "内部見学は要確認" },
-  { id: "heian-meiji", fest: true, kind: "arch", name: "平安女学院 明治館", kana: "へいあんじょがくいんめいじかん", area: "御所・二条", addr: "上京区下立売通烏丸西入", year: 1895, style: "ゴシック調の煉瓦造", by: "J.M.ガーディナー",
+  { id: "heian-meiji", kind: "arch", name: "平安女学院 明治館", kana: "へいあんじょがくいんめいじかん", area: "御所・二条", addr: "上京区下立売通烏丸西入", year: 1895, style: "ゴシック調の煉瓦造", by: "J.M.ガーディナー",
     desc: "長楽館も手がけた米国人建築家ガーディナーによる赤煉瓦の校舎。隣の聖アグネス教会と並ぶ烏丸通の景色が美しい。",
     note: "外観見学" },
   { id: "doshisha", kind: "arch", name: "同志社大学 今出川キャンパスの煉瓦建築群", kana: "どうししゃだいがく", area: "今出川・京大周辺", addr: "上京区今出川通烏丸東入", year: 1884, style: "アメリカン・ゴシックほか", by: "D.C.グリーン、R.ゼール ほか",
@@ -1328,22 +1328,22 @@ const SPOTS = [
   { id: "komai", kind: "arch", name: "駒井家住宅（駒井卓・静江記念館）", kana: "こまいけじゅうたく", area: "今出川・京大周辺", addr: "左京区北白川伊織町64", year: 1927, style: "スパニッシュ様式", by: "W.M.ヴォーリズ",
     desc: "遺伝学者・駒井卓の自邸。ヴォーリズが手がけた住宅で、サンルームや造り付けの家具が当時のまま残る。日本ナショナルトラストが管理。",
     note: "公開は時期限定の金・土曜、事前予約制" },
-  { id: "kyocera", tips: ["1933年に昭和天皇の即位を記念して「大礼記念京都美術館」として開館した。"], fest: true, kind: "arch", name: "京都市京セラ美術館", kana: "きょうとしきょうせらびじゅつかん", area: "岡崎・南禅寺", addr: "左京区岡崎円勝寺町124", year: 1933, style: "帝冠様式", by: "前田健二郎（設計競技案）",
+  { id: "kyocera", tips: ["1933年に昭和天皇の即位を記念して「大礼記念京都美術館」として開館した。"], kind: "arch", name: "京都市京セラ美術館", kana: "きょうとしきょうせらびじゅつかん", area: "岡崎・南禅寺", addr: "左京区岡崎円勝寺町124", year: 1933, style: "帝冠様式", by: "前田健二郎（設計競技案）",
     desc: "洋風の建物に和風の屋根を載せた昭和初期の美術館。現存する日本最古の公立美術館建築とされる。2020年に青木淳・西澤徹夫の改修で、正面にガラスの入口ができた。",
     note: "" },
-  { id: "fu-library", fest: true, kind: "arch", name: "京都府立図書館", kana: "きょうとふりつとしょかん", area: "岡崎・南禅寺", addr: "左京区岡崎成勝寺町9", year: 1909, style: "明治の洋風建築", by: "武田五一",
+  { id: "fu-library", kind: "arch", name: "京都府立図書館", kana: "きょうとふりつとしょかん", area: "岡崎・南禅寺", addr: "左京区岡崎成勝寺町9", year: 1909, style: "明治の洋風建築", by: "武田五一",
     desc: "明治の図書館の正面外壁を残して2001年に建て替えた。岡崎公園に面した煉瓦と石の正面が当時の姿。",
     note: "" },
-  { id: "rohm", fest: true, kind: "arch", name: "ロームシアター京都（旧京都会館）", kana: "ろーむしあたーきょうと", area: "岡崎・南禅寺", addr: "左京区岡崎最勝寺町13", year: 1960, style: "戦後モダニズム", by: "前川國男",
+  { id: "rohm", kind: "arch", name: "ロームシアター京都（旧京都会館）", kana: "ろーむしあたーきょうと", area: "岡崎・南禅寺", addr: "左京区岡崎最勝寺町13", year: 1960, style: "戦後モダニズム", by: "前川國男",
     desc: "大きく張り出した庇と打ち放しコンクリートの劇場。2016年に香山壽夫の改修で再開。中庭に面したカフェや書店もある。",
     note: "" },
-  { id: "chorakukan", tips: ["村井吉兵衛は「サンライス」「ヒーロー」などの紙巻たばこで財を成した「たばこ王」。"], fest: true, kind: "arch", name: "長楽館", kana: "ちょうらくかん", area: "祇園・東山", addr: "東山区円山町604", year: 1909, style: "外観ルネサンス、内装は各国様式", by: "J.M.ガーディナー",
+  { id: "chorakukan", tips: ["村井吉兵衛は「サンライス」「ヒーロー」などの紙巻たばこで財を成した「たばこ王」。"], kind: "arch", name: "長楽館", kana: "ちょうらくかん", area: "祇園・東山", addr: "東山区円山町604", year: 1909, style: "外観ルネサンス、内装は各国様式", by: "J.M.ガーディナー",
     desc: "煙草王・村井吉兵衛の別邸として円山公園に建った迎賓館。部屋ごとにロココ、新古典、中国風、イスラム風、和風と内装が変わる。2024年に国の重要文化財に指定。カフェで中に入れる。",
     note: "" },
-  { id: "kyohaku", fest: true, kind: "arch", name: "京都国立博物館 明治古都館", kana: "きょうとこくりつはくぶつかんめいじこと", area: "祇園・東山", addr: "東山区茶屋町527", year: 1895, style: "フレンチ・ルネサンス（バロック）", by: "片山東熊",
+  { id: "kyohaku", kind: "arch", name: "京都国立博物館 明治古都館", kana: "きょうとこくりつはくぶつかんめいじこと", area: "祇園・東山", addr: "東山区茶屋町527", year: 1895, style: "フレンチ・ルネサンス（バロック）", by: "片山東熊",
     desc: "赤坂離宮と同じ宮廷建築家・片山東熊の作。正面の破風には伎芸天と毘首羯磨の彫刻。国の重要文化財。",
     note: "展示は休止中で、特別公開時のみ内部に入れる。外観は見学可" },
-  { id: "tokasaikan", tips: ["四条大橋の対岸の南座は、歌舞伎発祥の地とされる「出雲の阿国」ゆかりの劇場。"], fest: true, kind: "arch", name: "東華菜館 本店", kana: "とうかさいかん", area: "四条界隈", addr: "下京区四条大橋西詰", year: 1926, style: "スパニッシュ・バロック", by: "W.M.ヴォーリズ",
+  { id: "tokasaikan", tips: ["四条大橋の対岸の南座は、歌舞伎発祥の地とされる「出雲の阿国」ゆかりの劇場。"], kind: "arch", name: "東華菜館 本店", kana: "とうかさいかん", area: "四条界隈", addr: "下京区四条大橋西詰", year: 1926, style: "スパニッシュ・バロック", by: "W.M.ヴォーリズ",
     desc: "もとは西洋料理店「矢尾政」として建てられ、戦後に北京料理店となった。入口の装飾や、今も動く日本最古級のエレベーターが見もの。",
     note: "北京料理店として営業" },
   { id: "dendoin", kind: "arch", name: "本願寺伝道院", kana: "ほんがんじでんどういん", area: "京都駅周辺", addr: "下京区油小路通正面下ル", year: 1912, style: "インド・サラセン風", by: "伊東忠太",
@@ -1365,16 +1365,16 @@ const SPOTS = [
   { id: "kawaramachi-church", church: true, kind: "arch", name: "カトリック河原町教会（聖フランシスコ・ザビエル大聖堂）", kana: "かとりっくかわらまちきょうかい", area: "三条・御池", addr: "中京区河原町通三条上ル", year: 1967, style: "戦後モダニズムの聖堂", by: "フロイラー修道士",
     desc: "カトリック京都教区の大聖堂。社寺の屋根を思わせる反った屋根の現代的な聖堂で、スイスの作家によるステンドグラスが並ぶ。前の木造聖堂（1890年）は明治村に移築されている。",
     note: "" },
-  { id: "fukkatsu", fest: true, church: true, kind: "arch", name: "京都復活教会", kana: "きょうとふっかつきょうかい", area: "洛北", addr: "北区紫野西御所田町63", year: 1935, style: "ゴシック", by: "W.M.ヴォーリズ",
+  { id: "fukkatsu", church: true, kind: "arch", name: "京都復活教会", kana: "きょうとふっかつきょうかい", area: "洛北", addr: "北区紫野西御所田町63", year: 1935, style: "ゴシック", by: "W.M.ヴォーリズ",
     desc: "堀川北大路の目印になっている白い教会。高い鐘楼、尖頭アーチとトレーサリーの窓、礼拝堂の木の小屋組みが見どころ。",
     note: "" },
-  { id: "kamogawa-lutheran", fest: true, church: true, kind: "arch", name: "日本福音ルーテル賀茂川教会", kana: "にほんふくいんるーてるかもがわきょうかい", area: "洛北", addr: "北区小山下内河原町14", year: 1954, style: "中世イタリアの教会風", by: "W.M.ヴォーリズ",
+  { id: "kamogawa-lutheran", church: true, kind: "arch", name: "日本福音ルーテル賀茂川教会", kana: "にほんふくいんるーてるかもがわきょうかい", area: "洛北", addr: "北区小山下内河原町14", year: 1954, style: "中世イタリアの教会風", by: "W.M.ヴォーリズ",
     desc: "ヴォーリズが戦後に手がけた教会。赤い瓦屋根とクリーム色の壁、角の塔と小さなバラ窓が、賀茂川近くの住宅街にとけこむ。",
     note: "" },
-  { id: "nishijin-church", fest: true, church: true, kind: "arch", name: "カトリック西陣教会", kana: "かとりっくにしじんきょうかい", area: "西陣・衣笠", addr: "上京区一条通（一条殿町502-1）", year: 1950, era: "戦後の占領期に建設", style: "ロマネスク風の木造聖堂", by: "ウィリアム・ニーリー修道士",
+  { id: "nishijin-church", church: true, kind: "arch", name: "カトリック西陣教会", kana: "かとりっくにしじんきょうかい", area: "西陣・衣笠", addr: "上京区一条通（一条殿町502-1）", year: 1950, era: "戦後の占領期に建設", style: "ロマネスク風の木造聖堂", by: "ウィリアム・ニーリー修道士",
     desc: "戦後の占領期に、米国のメリノール宣教会の支援で建てられた木造の聖堂。重厚なロマネスク風のつくりで、幕末の志士の屋敷跡に建つ。",
     note: "" },
-  { id: "marutamachi-church", fest: true, church: true, kind: "arch", name: "京都丸太町教会", kana: "きょうとまるたまちきょうかい", area: "岡崎・南禅寺", addr: "左京区丸太町通川端東入東丸太町24-2", year: 1995, style: "現代の教会建築", by: "岩井要",
+  { id: "marutamachi-church", church: true, kind: "arch", name: "京都丸太町教会", kana: "きょうとまるたまちきょうかい", area: "岡崎・南禅寺", addr: "左京区丸太町通川端東入東丸太町24-2", year: 1995, style: "現代の教会建築", by: "岩井要",
     desc: "木の質感と自然光をいかした簡素な礼拝堂。パイプオルガンと、三浦啓子によるステンドグラスの光が空間を彩る。",
     note: "" },
 
@@ -1650,10 +1650,10 @@ const SPOTS = [
     tips: ["京料理は、宮中の有職料理・寺の精進料理・茶の湯の懐石料理・庶民のおばんざいが合わさったものといわれる。"] },
 
   // ---- 喫茶 ----
-  { id: "francois", tips: ["創業者の立野正一は、戦時中に反戦の雑誌に関わった文化人で、店は芸術家や学生が集うサロンだった。"], fest: true, kind: "cafe", name: "フランソア喫茶室", kana: "ふらんそわきっさしつ", area: "四条界隈", addr: "下京区西木屋町通四条下ル船頭町184", year: 1934, style: "イタリアン・バロック風の内装",
+  { id: "francois", tips: ["創業者の立野正一は、戦時中に反戦の雑誌に関わった文化人で、店は芸術家や学生が集うサロンだった。"], kind: "cafe", name: "フランソア喫茶室", kana: "ふらんそわきっさしつ", area: "四条界隈", addr: "下京区西木屋町通四条下ル船頭町184", year: 1934, style: "イタリアン・バロック風の内装",
     desc: "豪華客船の客室を思わせるドーム天井と赤いビロードの椅子。名曲喫茶として始まり、2003年に喫茶店として初めて国の登録有形文化財になった。",
     note: "建物も見どころ" },
-  { id: "soiree", fest: true, kind: "cafe", name: "喫茶ソワレ", kana: "きっさそわれ", area: "四条界隈", addr: "下京区西木屋町通四条上ル真町95", year: 1948, style: "",
+  { id: "soiree", kind: "cafe", name: "喫茶ソワレ", kana: "きっさそわれ", area: "四条界隈", addr: "下京区西木屋町通四条上ル真町95", year: 1948, style: "",
     desc: "高瀬川沿い。青い照明に東郷青児の絵が浮かぶ店内で、色とりどりのゼリーが入ったゼリーポンチが名物。",
     note: "" },
   { id: "tsukiji", kind: "cafe", name: "築地", kana: "つきじ", area: "四条界隈", addr: "中京区米屋町384-2（河原町四条上ル一筋目東入）", year: 1934, style: "",
@@ -1687,95 +1687,94 @@ const SPOTS = [
     desc: "北大路通沿い。創業当時の外観と内装をできるだけ残した広い店内で、ナポリタンやオムライスなど喫茶の軽食がそろう。",
     note: "" },
 
-  // ---- 京都モダン建築祭 2026 の公開建物から ----
-  { id: "jingenkan", fest: true, kind: "arch", name: "大谷大学 尋源館", kana: "おおたにだいがくじんげんかん", area: "洛北", addr: "北区小山上総町", year: 1913, style: "和洋折衷（煉瓦造に瓦屋根）", by: "松任外次郎ほか",
+  { id: "jingenkan", kind: "arch", name: "大谷大学 尋源館", kana: "おおたにだいがくじんげんかん", area: "洛北", addr: "北区小山上総町", year: 1913, style: "和洋折衷（煉瓦造に瓦屋根）", by: "松任外次郎ほか",
     desc: "大谷大学の旧本館。煉瓦の壁に瓦屋根を載せた和洋折衷の外観が、北大路通からよく見える。国の登録有形文化財。",
     note: "" },
-  { id: "dwc", fest: true, kind: "arch", name: "同志社女子大学 ジェームズ館・栄光館", kana: "どうししゃじょしだいがく", area: "今出川・京大周辺", addr: "上京区今出川通寺町西入玄武町602-1", year: 1914, style: "", by: "武田五一",
+  { id: "dwc", kind: "arch", name: "同志社女子大学 ジェームズ館・栄光館", kana: "どうししゃじょしだいがく", area: "今出川・京大周辺", addr: "上京区今出川通寺町西入玄武町602-1", year: 1914, style: "", by: "武田五一",
     desc: "宣教師の住まいを思わせるジェームズ館（1914）と、講堂と礼拝堂を備えた栄光館（1932）。どちらも武田五一の設計で、国の登録有形文化財。",
     note: "" },
-  { id: "pontocho", fest: true, kind: "arch", name: "先斗町歌舞練場", kana: "ぽんとちょうかぶれんじょう", area: "四条界隈", addr: "中京区先斗町通三条下ル橋下町130", year: 1927, style: "ライトの影響を受けた近代建築", by: "木村得三郎（顧問 武田五一）",
+  { id: "pontocho", kind: "arch", name: "先斗町歌舞練場", kana: "ぽんとちょうかぶれんじょう", area: "四条界隈", addr: "中京区先斗町通三条下ル橋下町130", year: 1927, style: "ライトの影響を受けた近代建築", by: "木村得三郎（顧問 武田五一）",
     desc: "鴨川をどりの劇場。水平線を強調した壁面やスクラッチタイル、レリーフタイルにF.L.ライトの影響が見える。当時は「東洋趣味を加味した近代建築」と評された。",
     note: "" },
-  { id: "rissei", fest: true, kind: "arch", name: "THE GATE HOTEL 京都高瀬川（元立誠小学校）", kana: "げーとほてるきょうとたかせがわ", area: "四条界隈", addr: "中京区蛸薬師通河原町東入備前島町310-2", year: 1928, style: "ロマネスク風", by: "京都市営繕課",
+  { id: "rissei", kind: "arch", name: "THE GATE HOTEL 京都高瀬川（元立誠小学校）", kana: "げーとほてるきょうとたかせがわ", area: "四条界隈", addr: "中京区蛸薬師通河原町東入備前島町310-2", year: 1928, style: "ロマネスク風", by: "京都市営繕課",
     desc: "高瀬川沿いの元立誠小学校。半円アーチの縦長窓が並ぶ校舎を残して、ホテルと店舗、ホールに生まれ変わった。軒の水平線にライトの影響がうかがえる。",
     note: "" },
-  { id: "kaichi", fest: true, kind: "arch", name: "京都市学校歴史博物館（元開智小学校）", kana: "きょうとしがっこうれきしはくぶつかん", area: "四条界隈", addr: "下京区御幸町通仏光寺下ル橘町437", year: 1936, style: "昭和初期のモダンな学校建築", by: "京都市営繕課",
+  { id: "kaichi", kind: "arch", name: "京都市学校歴史博物館（元開智小学校）", kana: "きょうとしがっこうれきしはくぶつかん", area: "四条界隈", addr: "下京区御幸町通仏光寺下ル橘町437", year: 1936, style: "昭和初期のモダンな学校建築", by: "京都市営繕課",
     desc: "元開智小学校の校舎を使った博物館。モザイクタイルの装飾が残り、明治の正門や、元成徳小から移した車寄せも見られる。",
     note: "" },
-  { id: "seitoku", fest: true, kind: "arch", name: "元成徳中学校", kana: "もとせいとくちゅうがっこう", area: "四条界隈", addr: "下京区繁昌町290", year: 1931, style: "ライトの影響を受けた学校建築", by: "京都市営繕課",
+  { id: "seitoku", kind: "arch", name: "元成徳中学校", kana: "もとせいとくちゅうがっこう", area: "四条界隈", addr: "下京区繁昌町290", year: 1931, style: "ライトの影響を受けた学校建築", by: "京都市営繕課",
     desc: "黄土色の石を貼った壁とアーチ窓の旧校舎。ライト風の階段手すり、タイル張りの玄関ホール、折上格天井の作法室が見どころ。",
     note: "普段の公開状況は要確認" },
-  { id: "kyuseigun", church: true, fest: true, kind: "arch", name: "救世軍京都小隊会館", kana: "きゅうせいぐんきょうとしょうたいかいかん", area: "四条界隈", addr: "下京区富小路通四条下ル徳正寺町37", year: 1936, style: "モダン・イングリッシュ様式", by: "W.M.ヴォーリズ",
+  { id: "kyuseigun", church: true, kind: "arch", name: "救世軍京都小隊会館", kana: "きゅうせいぐんきょうとしょうたいかいかん", area: "四条界隈", addr: "下京区富小路通四条下ル徳正寺町37", year: 1936, style: "モダン・イングリッシュ様式", by: "W.M.ヴォーリズ",
     desc: "ヴォーリズ設計の教会。木造2階建てを石造り風に見せた、ゴシック調の正面が四条の裏通りに静かに建つ。",
     note: "" },
-  { id: "funatsuru", fest: true, kind: "arch", name: "鮒鶴京都鴨川リゾート", kana: "ふなつるきょうとかもがわりぞーと", area: "四条界隈", addr: "下京区木屋町通松原上ル美濃屋町180", year: 1927, style: "近代の料理旅館建築", by: "新館 柴田四郎",
+  { id: "funatsuru", kind: "arch", name: "鮒鶴京都鴨川リゾート", kana: "ふなつるきょうとかもがわりぞーと", area: "四条界隈", addr: "下京区木屋町通松原上ル美濃屋町180", year: 1927, style: "近代の料理旅館建築", by: "新館 柴田四郎",
     desc: "鴨川沿いの元料理旅館。木造の本館（1927年頃）と鉄骨の新館（1932）からなり、今はレストランと結婚式場。国の登録有形文化財。",
     note: "レストランとして営業" },
-  { id: "tsugu", fest: true, kind: "arch", name: "TSUGU 京都三条（旧日本生命京都三条ビル）", kana: "つぐきょうとさんじょう", area: "三条・御池", addr: "中京区三条通柳馬場西入桝屋町75", year: 1914, style: "辰野式の流れをくむ洋風建築", by: "辰野・片岡建築事務所",
+  { id: "tsugu", kind: "arch", name: "TSUGU 京都三条（旧日本生命京都三条ビル）", kana: "つぐきょうとさんじょう", area: "三条・御池", addr: "中京区三条通柳馬場西入桝屋町75", year: 1914, style: "辰野式の流れをくむ洋風建築", by: "辰野・片岡建築事務所",
     desc: "角に青銅の尖塔を立てた大正の保険会社ビル。三条通の景色をつくる角の塔が見どころで、今はホテルとして使われている。国の登録有形文化財。",
     note: "ホテル（外観見学）" },
-  { id: "sacra", fest: true, kind: "arch", name: "SACRAビル（旧不動貯金銀行京都支店）", kana: "さくらびる", area: "三条・御池", addr: "中京区三条通富小路東入中之町20", year: 1916, style: "セセッション", by: "",
+  { id: "sacra", kind: "arch", name: "SACRAビル（旧不動貯金銀行京都支店）", kana: "さくらびる", area: "三条・御池", addr: "中京区三条通富小路東入中之町20", year: 1916, style: "セセッション", by: "",
     desc: "円や四角の幾何学的な装飾が特徴の大正の銀行建築。近代建築を店舗として再生した早い例で、国の登録有形文化財。",
     note: "" },
-  { id: "hachikuan", fest: true, kind: "arch", name: "八竹庵（旧川崎家住宅）", kana: "はちくあん", area: "三条・御池", addr: "中京区三条町340", year: 1926, style: "和洋折衷（町家に洋館）", by: "上坂浅次郎・高島屋装飾部（武田五一 参与）",
+  { id: "hachikuan", kind: "arch", name: "八竹庵（旧川崎家住宅）", kana: "はちくあん", area: "三条・御池", addr: "中京区三条町340", year: 1926, style: "和洋折衷（町家に洋館）", by: "上坂浅次郎・高島屋装飾部（武田五一 参与）",
     desc: "大正末の大きな町家に洋館を組み込んだ住宅。和室と洋間、庭が一度に見られる。京都市指定有形文化財。",
     note: "開館日は公式サイトで確認" },
-  { id: "gokomachi", church: true, fest: true, kind: "arch", name: "京都御幸町教会", kana: "きょうとごこまちきょうかい", area: "三条・御池", addr: "中京区御幸町通二条下ル山本町434", year: 1913, style: "ゴシック", by: "W.M.ヴォーリズ",
+  { id: "gokomachi", church: true, kind: "arch", name: "京都御幸町教会", kana: "きょうとごこまちきょうかい", area: "三条・御池", addr: "中京区御幸町通二条下ル山本町434", year: 1913, style: "ゴシック", by: "W.M.ヴォーリズ",
     desc: "尖頭アーチと控え壁をもつ煉瓦の教会。中は白い漆喰と木の窓枠で、簡素であたたかい空間。京都市指定有形文化財。",
     note: "" },
-  { id: "shimadzu", fest: true, kind: "arch", name: "島津製作所 創業記念資料館", kana: "しまづせいさくしょそうぎょうきねんしりょうかん", area: "三条・御池", addr: "中京区木屋町通二条下ル西生洲町478-1", year: 1888, style: "町家形式（ステンドグラス入り）", by: "",
+  { id: "shimadzu", kind: "arch", name: "島津製作所 創業記念資料館", kana: "しまづせいさくしょそうぎょうきねんしりょうかん", area: "三条・御池", addr: "中京区木屋町通二条下ル西生洲町478-1", year: 1888, style: "町家形式（ステンドグラス入り）", by: "",
     desc: "高瀬川沿い、島津製作所の創業の地に建つ本店兼住居。町家の造りに、北棟ではステンドグラスを取り入れている。国の登録有形文化財。",
     note: "土日は休館" },
-  { id: "agnes", church: true, fest: true, kind: "arch", name: "聖アグネス教会", kana: "せいあぐねすきょうかい", area: "御所・二条", addr: "上京区烏丸通下立売角", year: 1898, style: "煉瓦造のバシリカ", by: "J.M.ガーディナー",
+  { id: "agnes", church: true, kind: "arch", name: "聖アグネス教会", kana: "せいあぐねすきょうかい", area: "御所・二条", addr: "上京区烏丸通下立売角", year: 1898, style: "煉瓦造のバシリカ", by: "J.M.ガーディナー",
     desc: "平安女学院明治館の隣に建つ明治の聖堂。むき出しの木の小屋組と、バラ窓をはじめ30以上のステンドグラスが美しい。京都市指定有形文化財。",
     note: "" },
-  { id: "horikawa", fest: true, kind: "arch", name: "堀川団地", kana: "ほりかわだんち", area: "御所・二条", addr: "上京区長尾町（堀川通沿い）", year: 1951, style: "戦後の店舗付き集合住宅", by: "京都府住宅協会",
+  { id: "horikawa", kind: "arch", name: "堀川団地", kana: "ほりかわだんち", area: "御所・二条", addr: "上京区長尾町（堀川通沿い）", year: 1951, style: "戦後の店舗付き集合住宅", by: "京都府住宅協会",
     desc: "1階が商店、上が住宅の鉄筋コンクリート団地で、この形の日本初の例とされる。リノベーションが進み、若い作り手が集まる場所になっている。",
     note: "" },
-  { id: "mainichi", fest: true, kind: "arch", name: "毎日新聞京都ビル", kana: "まいにちしんぶんきょうとびる", area: "御所・二条", addr: "上京区河原町通丸太町上ル桝屋町354-2", year: 1999, style: "ポストモダン", by: "若林広幸",
+  { id: "mainichi", kind: "arch", name: "毎日新聞京都ビル", kana: "まいにちしんぶんきょうとびる", area: "御所・二条", addr: "上京区河原町通丸太町上ル桝屋町354-2", year: 1999, style: "ポストモダン", by: "若林広幸",
     desc: "打ち放しの外壁に大きな楕円の窓。先代の京都支局ビル（今の1928ビル）の意匠を受け継いでいて、見比べると面白い。",
     note: "外観見学" },
-  { id: "toho", fest: true, kind: "arch", name: "京都大学人文科学研究所 分館（旧東方文化学院京都研究所）", kana: "じんぶんかがくけんきゅうしょぶんかん", area: "今出川・京大周辺", addr: "左京区北白川東小倉町47", year: 1930, style: "修道院風（スパニッシュ）", by: "東畑謙三",
+  { id: "toho", kind: "arch", name: "京都大学人文科学研究所 分館（旧東方文化学院京都研究所）", kana: "じんぶんかがくけんきゅうしょぶんかん", area: "今出川・京大周辺", addr: "左京区北白川東小倉町47", year: 1930, style: "修道院風（スパニッシュ）", by: "東畑謙三",
     desc: "中庭を囲む白い修道院のような研究所。スペイン瓦、丸窓、アーチの廊下に東洋的な装飾が混ざる。国の登録有形文化財。",
     note: "普段は外観のみ" },
-  { id: "sonjodo", fest: true, kind: "arch", name: "京都大学 尊攘堂", kana: "そんじょうどう", area: "今出川・京大周辺", addr: "左京区吉田本町", year: 1903, style: "和洋折衷（煉瓦造）", by: "",
+  { id: "sonjodo", kind: "arch", name: "京都大学 尊攘堂", kana: "そんじょうどう", area: "今出川・京大周辺", addr: "左京区吉田本町", year: 1903, style: "和洋折衷（煉瓦造）", by: "",
     desc: "蔵のような小さな煉瓦造の平屋に、縦長窓と玄関ポーチを付けた和洋折衷の建物。今は資料室。国の登録有形文化財。",
     note: "普段は非公開（外観のみ）" },
-  { id: "mitsui", fest: true, kind: "arch", name: "旧三井家下鴨別邸", kana: "きゅうみついけしもがもべってい", area: "今出川・京大周辺", addr: "左京区下鴨宮河町58-2", year: 1925, style: "近代和風（望楼付き）", by: "",
+  { id: "mitsui", kind: "arch", name: "旧三井家下鴨別邸", kana: "きゅうみついけしもがもべってい", area: "今出川・京大周辺", addr: "左京区下鴨宮河町58-2", year: 1925, style: "近代和風（望楼付き）", by: "",
     desc: "下鴨神社の南にある三井家の別邸。木造3階の主屋に望楼を載せた近代の和風邸宅で、国の重要文化財。一般公開されている。",
     note: "水曜休館" },
-  { id: "westin", fest: true, kind: "arch", name: "ウェスティン都ホテル京都（佳水園）", kana: "うぇすてぃんみやこほてる", area: "岡崎・南禅寺", addr: "東山区粟田口華頂町1（蹴上）", year: 1960, style: "モダニズム＋数寄屋", by: "村野藤吾",
+  { id: "westin", kind: "arch", name: "ウェスティン都ホテル京都（佳水園）", kana: "うぇすてぃんみやこほてる", area: "岡崎・南禅寺", addr: "東山区粟田口華頂町1（蹴上）", year: 1960, style: "モダニズム＋数寄屋", by: "村野藤吾",
     desc: "村野藤吾が手がけた蹴上のホテル。曲線の階段や、数寄屋風の別館・佳水園（1959）に、和とモダンを溶け合わせる村野の手腕が見える。",
     note: "ホテル" },
-  { id: "goryukaku", fest: true, kind: "arch", name: "五龍閣（旧松風嘉定邸）", kana: "ごりゅうかく", area: "祇園・東山", addr: "東山区清水2丁目239", year: 1920, style: "和洋折衷", by: "武田五一",
+  { id: "goryukaku", kind: "arch", name: "五龍閣（旧松風嘉定邸）", kana: "ごりゅうかく", area: "祇園・東山", addr: "東山区清水2丁目239", year: 1920, style: "和洋折衷", by: "武田五一",
     desc: "清水坂にある製陶業・松風嘉定の邸宅。屋根に並ぶ鴟尾が目を引き、中は大正ロマンの空間。今は飲食店として入れる。国の登録有形文化財。",
     note: "飲食店として営業" },
-  { id: "kokogaku", fest: true, kind: "arch", name: "京都市考古資料館（旧西陣織物館）", kana: "きょうとしこうこしりょうかん", area: "西陣・衣笠", addr: "上京区今出川通大宮東入元伊佐町265-1", year: 1914, style: "初期モダニズム", by: "本野精吾",
+  { id: "kokogaku", kind: "arch", name: "京都市考古資料館（旧西陣織物館）", kana: "きょうとしこうこしりょうかん", area: "西陣・衣笠", addr: "上京区今出川通大宮東入元伊佐町265-1", year: 1914, style: "初期モダニズム", by: "本野精吾",
     desc: "モダニズムの先駆者・本野精吾の作。鉄筋コンクリートと煉瓦の混構造で、旧貴賓室には円や四角の幾何学模様と西陣織のクロスが残る。",
     note: "旧貴賓室は通常非公開" },
-  { id: "funaoka", fest: true, kind: "arch", name: "船岡温泉", kana: "ふなおかおんせん", area: "西陣・衣笠", addr: "北区紫野南舟岡町82-1", year: 1923, style: "唐破風の銭湯建築", by: "",
+  { id: "funaoka", kind: "arch", name: "船岡温泉", kana: "ふなおかおんせん", area: "西陣・衣笠", addr: "北区紫野南舟岡町82-1", year: 1923, style: "唐破風の銭湯建築", by: "",
     desc: "唐破風の入口、マジョリカタイルの浴場、格天井の脱衣場。欄間の彫刻まで見どころが詰まった、今も営業する銭湯。国の登録有形文化財。",
     note: "銭湯として営業" },
-  { id: "domoto", fest: true, kind: "arch", name: "京都府立堂本印象美術館", kana: "どうもといんしょうびじゅつかん", area: "西陣・衣笠", addr: "北区平野上柳町26-3", year: 1966, style: "装飾的モダン", by: "堂本印象（デザイン）",
+  { id: "domoto", kind: "arch", name: "京都府立堂本印象美術館", kana: "どうもといんしょうびじゅつかん", area: "西陣・衣笠", addr: "北区平野上柳町26-3", year: 1966, style: "装飾的モダン", by: "堂本印象（デザイン）",
     desc: "日本画家・堂本印象が自らデザインした美術館。外壁の曲線からドアノブまで、建物全体が印象の作品になっている。国の登録有形文化財。",
     note: "" },
-  { id: "kit", fest: true, kind: "arch", name: "京都工芸繊維大学 3号館", kana: "きょうとこうげいせんいだいがく", area: "洛北", addr: "左京区松ヶ崎橋上町", year: 1930, style: "モダニズム", by: "本野精吾",
+  { id: "kit", kind: "arch", name: "京都工芸繊維大学 3号館", kana: "きょうとこうげいせんいだいがく", area: "洛北", addr: "左京区松ヶ崎橋上町", year: 1930, style: "モダニズム", by: "本野精吾",
     desc: "本野精吾による鉄筋コンクリートの校舎。キャンパスには南禅寺界隈から移した洋館・和楽庵（1916）もある。国の登録有形文化財。",
     note: "普段の公開状況は要確認" },
-  { id: "concerthall", fest: true, kind: "arch", name: "京都コンサートホール", kana: "きょうとこんさーとほーる", area: "洛北", addr: "左京区下鴨半木町1-26", year: 1995, style: "ポストモダン", by: "磯崎新",
+  { id: "concerthall", kind: "arch", name: "京都コンサートホール", kana: "きょうとこんさーとほーる", area: "洛北", addr: "左京区下鴨半木町1-26", year: 1995, style: "ポストモダン", by: "磯崎新",
     desc: "磯崎新の設計。京都の古い都市軸を建物の構成に取り込み、エントランスから大ホールへ螺旋のスロープで上がっていく。",
     note: "" },
-  { id: "umekoji", fest: true, kind: "arch", name: "京都鉄道博物館 扇形車庫", kana: "きょうとてつどうはくぶつかん", area: "京都駅周辺", addr: "下京区観喜寺町", year: 1914, style: "鉄筋コンクリート造の機関車庫", by: "渡辺節（鉄道院）",
+  { id: "umekoji", kind: "arch", name: "京都鉄道博物館 扇形車庫", kana: "きょうとてつどうはくぶつかん", area: "京都駅周辺", addr: "下京区観喜寺町", year: 1914, style: "鉄筋コンクリート造の機関車庫", by: "渡辺節（鉄道院）",
     desc: "転車台を中心に放射状に並ぶ機関車庫。現存する国内最大級・最古の鉄筋コンクリート造の機関車庫とされ、国の重要文化財。",
     note: "" },
-  { id: "marufukuro", fest: true, kind: "arch", name: "丸福樓（任天堂旧本社）", kana: "まるふくろう", area: "京都駅周辺", addr: "下京区正面通加茂川西入鍵屋町342", year: 1930, style: "アール・デコ", by: "増岡建築事務所（改修 安藤忠雄 監修）",
+  { id: "marufukuro", kind: "arch", name: "丸福樓（任天堂旧本社）", kana: "まるふくろう", area: "京都駅周辺", addr: "下京区正面通加茂川西入鍵屋町342", year: 1930, style: "アール・デコ", by: "増岡建築事務所（改修 安藤忠雄 監修）",
     desc: "任天堂の旧本社の倉庫棟・住居棟・事務所棟（1930〜33）を、安藤忠雄の新棟と合わせて4室だけのホテルにした。",
     note: "ホテル（外観見学）" },
-  { id: "shichijo", fest: true, kind: "arch", name: "七条大橋", kana: "しちじょうおおはし", area: "京都駅周辺", addr: "鴨川・七条通", year: 1913, style: "セセッション", by: "柴田畦作（意匠 森山松之助）",
+  { id: "shichijo", kind: "arch", name: "七条大橋", kana: "しちじょうおおはし", area: "京都駅周辺", addr: "鴨川・七条通", year: 1913, style: "セセッション", by: "柴田畦作（意匠 森山松之助）",
     desc: "鴨川に架かる現存最古の橋とされる鉄筋コンクリートの五連アーチ橋。河原に降りるとアーチのリズムがよく見える。国の登録有形文化財。",
     note: "いつでも見られる" },
-  { id: "moan", fest: true, kind: "cafe", name: "茂庵", kana: "もあん", area: "今出川・京大周辺", addr: "左京区吉田神楽岡町8（吉田山山頂）", year: 1926, style: "大正の茶室群",
+  { id: "moan", kind: "cafe", name: "茂庵", kana: "もあん", area: "今出川・京大周辺", addr: "左京区吉田神楽岡町8（吉田山山頂）", year: 1926, style: "大正の茶室群",
     desc: "吉田山の上、数寄者・谷川茂次郎がつくった茶の施設の食堂棟がカフェになっている。大きな梁と、大文字山を望む窓辺の席が気持ちいい。国の登録有形文化財。",
     note: "建物も見どころ。見学のみの入店は不可" },
   // ---- 本屋 ----
@@ -1992,7 +1991,7 @@ let visits = {}, custom = {};
 try { visits = JSON.parse(localStorage.getItem(LS_KEY) || "{}") || {}; } catch (e) { visits = {}; }
 try { custom = JSON.parse(localStorage.getItem(LS_KEY + "-custom") || "{}") || {}; } catch (e) { custom = {}; }
 const ui = { filter: "all", status: "all", sort: "area", q: "", area: "", near: null, facet: null };
-try { const s = JSON.parse(localStorage.getItem(LS_KEY + "-ui2") || "null"); if (s) Object.assign(ui, { filter: s.filter || "all", status: s.status || "all", sort: s.sort || "area" }); } catch (e) {}
+try { const s = JSON.parse(localStorage.getItem(LS_KEY + "-ui2") || "null"); if (s) Object.assign(ui, { filter: (s.filter && s.filter !== "fest" ? s.filter : "all"), status: s.status || "all", sort: s.sort || "area" }); } catch (e) {}
 if (ui.filter.startsWith("area:")) ui.filter = "all";
 if (ui.filter === "mine") { ui.filter = "all"; ui.status = "mine"; }
 let openId = null, confirmDelete = false;
@@ -2066,7 +2065,7 @@ const yearText = s => s.mine ? (s.year !== 9999 ? s.year : "") : (s.era ? s.era.
 
 /* ---- filters ---- */
 function pills() {
-  const list = [["all", "すべて"], ["month", THIS_MONTH + "月の行事"], ["arch", "建築"], ["classic", "寺社・名所"], ["history", "史跡"], ["festival", "祭り・行事"], ["sweets", "和菓子"], ["food", "食・老舗"], ["cafe", "喫茶"], ["book", "本屋"], ["church", "教会"], ["fest", "建築祭2026"]];
+  const list = [["all", "すべて"], ["month", THIS_MONTH + "月の行事"], ["arch", "建築"], ["classic", "寺社・名所"], ["history", "史跡"], ["festival", "祭り・行事"], ["sweets", "和菓子"], ["food", "食・老舗"], ["cafe", "喫茶"], ["book", "本屋"], ["church", "教会"]];
   const ar = $("#area");
   if (!ar.options.length) ar.innerHTML = `<option value="">全エリア</option>` + AREAS.concat(["その他"]).map(a => `<option>${esc(a)}</option>`).join("");
   ar.value = ui.area;
@@ -2126,7 +2125,7 @@ function filtered() {
   const q = ui.q.trim().toLowerCase();
   const f = ui.filter;
   const list = allSpots().filter(s =>
-    (f === "all" || s.kind === f || (f === "fest" && s.fest) || (f === "church" && s.church) || (f === "mine" && s.mine) || (f === "month" && s.months && s.months.includes(THIS_MONTH))) &&
+    (f === "all" || s.kind === f || (f === "church" && s.church) || (f === "mine" && s.mine) || (f === "month" && s.months && s.months.includes(THIS_MONTH))) &&
     (!ui.area || s.area === ui.area) &&
     (!ui.near || ui.near.dist.has(s.id)) &&
     (!ui.facet || (s[ui.facet.k] || "").includes(ui.facet.v)) &&
@@ -2265,7 +2264,6 @@ function openSheet(id) {
         ${s.link ? `<a class="fine" href="${esc(s.link)}" target="_blank" rel="noopener">${esc(s.link)}</a>` : ""}
         ${s.tips && s.tips.length ? `<div class="mame"><h3>TRIVIA</h3><ul>${s.tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>` : ""}
         ${s.note ? `<div class="note">${esc(s.note)}</div>` : ""}
-        ${s.fest ? `<div class="fine">京都モダン建築祭2026（10/31〜11/8）の公開・特典の対象です。普段は入れない所が公開されることも。<a href="https://kyoto.kenchikusai.jp/program/" target="_blank" rel="noopener">プログラムを見る ↗</a></div>` : ""}
         <div class="actions">
           ${s.mine ? `<button type="button" class="btn" data-act="edit">EDIT</button><button type="button" class="btn${confirmDelete ? " danger" : ""}" data-act="del">${confirmDelete ? "PRESS AGAIN TO DELETE" : "DELETE"}</button>` : ""}
         </div>
@@ -3015,7 +3013,7 @@ $("#searchBtn").addEventListener("click", () => {
 });
 
 const TREE = [
-  { key: "kind", ja: "見る", en: "CATEGORY", items: () => [["all", "すべて"], ["month", THIS_MONTH + "月の行事"], ["arch", "建築"], ["classic", "寺社・名所"], ["history", "史跡"], ["festival", "祭り・行事"], ["sweets", "和菓子"], ["food", "食・老舗"], ["cafe", "喫茶"], ["book", "本屋"], ["church", "教会"], ["fest", "建築祭2026"]] },
+  { key: "kind", ja: "見る", en: "CATEGORY", items: () => [["all", "すべて"], ["month", THIS_MONTH + "月の行事"], ["arch", "建築"], ["classic", "寺社・名所"], ["history", "史跡"], ["festival", "祭り・行事"], ["sweets", "和菓子"], ["food", "食・老舗"], ["cafe", "喫茶"], ["book", "本屋"], ["church", "教会"]] },
   { key: "area", ja: "歩く", en: "AREA", items: () => [["", "全エリア"]].concat(AREAS.concat(["その他"]).map(a => [a, a])) },
   { key: "status", ja: "しるし", en: "STATUS", items: () => [["all", "ALL"], ["want", "WANT"], ["done", "VISITED"], ["again", "AGAIN"], ["todo", "NOT YET"]].concat(Object.keys(custom).length || ui.status === "mine" ? [["mine", "MINE"]] : []) },
   { key: "map", en: "MAP", act: true },
